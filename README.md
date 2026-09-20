@@ -1,0 +1,113 @@
+# GCA — منصة متابعة توريد المدربين
+
+منصة لمتابعة البرامج التدريبية والمدربين، مبنية لصالح **ديوان المحاسبة العامة** (بالتعاون مع يسير لإدارة المشاريع).
+
+- **الواجهة:** HTML + CSS + TypeScript (بدون أي إطار عمل — Vanilla)، مبنية عبر [Vite](https://vitejs.dev).
+- **قاعدة البيانات والمصادقة:** [Supabase](https://supabase.com) (Postgres + Auth).
+
+---
+
+## 1. المتطلبات
+
+- [Node.js](https://nodejs.org) الإصدار 18 أو أحدث.
+- حساب مجاني على [supabase.com](https://supabase.com).
+- [VS Code](https://code.visualstudio.com) (اختياري لكن موصى به).
+
+## 2. إنشاء مشروع Supabase
+
+1. سجّل الدخول إلى [supabase.com](https://supabase.com) وأنشئ مشروعًا جديدًا (New Project).
+2. من **Project Settings → API** انسخ:
+   - `Project URL`
+   - `anon public` key
+3. من **SQL Editor** داخل لوحة Supabase، الصق محتوى ملف [`supabase/schema.sql`](supabase/schema.sql) بالكامل ثم اضغط **Run**. هذا سينشئ الجداول والصلاحيات (RLS) اللازمة تلقائيًا.
+
+## 3. ربط المشروع بـ Supabase
+
+انسخ ملف البيئة النموذجي وأضف بياناتك:
+
+```bash
+cp .env.example .env
+```
+
+ثم افتح `.env` وضع القيم التي نسختها في الخطوة السابقة:
+
+```
+VITE_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
+```
+
+> ملف `.env` مستثنى من Git تلقائيًا — لن يُرفع بياناتك بالخطأ.
+
+## 4. التشغيل محليًا
+
+```bash
+npm install
+npm run dev
+```
+
+سيفتح الخادم على `http://localhost:5173` تلقائيًا. افتح المجلد في VS Code بالأمر:
+
+```bash
+code .
+```
+
+## 5. الحسابات والصلاحيات
+
+لا يوجد تسجيل عام — المنصة تستخدم **حسابين ثابتين فقط** عبر Supabase Auth الحقيقي:
+
+| الدور | البريد (اسم المستخدم) | كلمة المرور | الصلاحية |
+|---|---|---|---|
+| ديوان المحاسبة العامة (Viewer) | `viewer@gca.local` | `1234567` | مشاهدة فقط |
+| يسير لإدارة المشاريع (Admin) | `admin@gca.local` | `1234567` | إضافة/تعديل/حذف |
+
+> **تنبيه أمني:** هذه كلمة مرور بسيطة جدًا لمنصة تابعة لديوان المحاسبة العامة — مناسبة فقط للتجربة الداخلية. قبل أي استخدام فعلي أو مشاركة الرابط مع الديوان، غيّرها من لوحة Supabase (Authentication → Users → ⋮ → Reset password) إلى كلمتين مختلفتين وأقوى.
+
+### إنشاء الحسابين في Supabase (مرة واحدة فقط)
+
+1. من لوحة Supabase اذهب إلى **Authentication → Users → Add user → Create new user**.
+2. أنشئ المستخدم الأول:
+   - Email: `viewer@gca.local`
+   - Password: `1234567`
+   - فعّل **Auto Confirm User** حتى لا يحتاج تأكيد بريد.
+3. كرّر نفس الخطوة للمستخدم الثاني:
+   - Email: `admin@gca.local`
+   - Password: `1234567`
+4. عند إنشاء أي مستخدم، يقوم trigger موجود في `schema.sql` بإضافته تلقائيًا إلى جدول `profiles` بصلاحية `viewer` افتراضيًا.
+5. لترقية حساب `admin@gca.local` إلى صلاحية `admin`، افتح **SQL Editor** ونفّذ:
+
+```sql
+update public.profiles set role = 'admin' where email = 'admin@gca.local';
+```
+
+بعدها، زر "يسير لإدارة المشاريع" في شاشة الدخول سيمنح صلاحيات التعديل الكاملة، وزر "ديوان المحاسبة العامة" يبقى بصلاحية اطلاع فقط.
+
+## 6. البنية
+
+```
+GCA/
+├── index.html            نقطة الدخول HTML
+├── src/
+│   ├── main.ts            تشغيل التطبيق (bootstrap)
+│   ├── boot.ts             تسجيل الدخول/الخروج وحالة الجلسة
+│   ├── auth.ts             دوال Supabase Auth
+│   ├── data.ts             عمليات قاعدة البيانات (CRUD) للبرامج والمدربين
+│   ├── render.ts            كل دوال عرض الواجهة (لوحة المتابعة، الجداول، التقرير، البطاقة)
+│   ├── forms.ts             نماذج الإضافة/التعديل + التصدير (CSV/JSON) + الطباعة
+│   ├── state.ts             حالة التطبيق أثناء التشغيل
+│   ├── types.ts             أنواع TypeScript (Trainer, Program...)
+│   ├── constants.ts         قوائم الحالات الثابتة
+│   ├── utils.ts             أدوات مساعدة عامة
+│   └── styles.css           التنسيقات الكاملة
+├── supabase/
+│   └── schema.sql            السكيما الكاملة لقاعدة البيانات (نسخ ولصق في SQL Editor)
+├── .env.example
+└── package.json
+```
+
+## 7. البناء للإنتاج
+
+```bash
+npm run build
+```
+
+الناتج يكون في مجلد `dist/` — جاهز للنشر على أي استضافة ثابتة (Vercel, Netlify, Cloudflare Pages...).

@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GCA — منصة متابعة توريد المدربين</title>
+<script>
+  try {
+    var t = localStorage.getItem("gca.theme");
+    if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <div class="bars"><i></i><i></i><i></i><i></i></div>
+      <div><b>يسير لإدارة المشاريع</b><small>YAASEER PROJECT MANAGEMENT</small></div>
+    </div>
+    <div class="title">
+      <h1>منصة متابعة توريد المدربين</h1>
+      <p>ديوان المحاسبة العامة × يسير لإدارة المشاريع</p>
+    </div>
+    <button type="button" class="theme-toggle" id="themeToggle" aria-label="تبديل المظهر"></button>
+    <div class="identity" id="identity"><span class="dot"></span><div><b id="idName">لم يتم الدخول</b></div><button class="x" id="btnLogout" title="تسجيل الخروج" style="color:#fff;font-size:16px;margin-inline-start:6px">⎋</button></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="banner" id="banner"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="dash">لوحة المتابعة</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="programs">البرامج التدريبية</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="trainers">المدربون</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="reports">التقارير والتصدير</button>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <section class="panel active" id="panel-dash">
+    <div class="kpis" id="kpis"></div>
+
+    <div class="section-head"><h2>حالة البرامج</h2><span class="hint">مسار الاعتماد مع الديوان، ومسار التعاقد مع المدربين</span></div>
+    <div class="grid2">
+      <div class="card"><h3>الحالة مع ديوان المحاسبة العامة <span class="cnt" id="cntGca"></span></h3><div class="bars-chart" id="chartGca"></div></div>
+      <div class="card"><h3>الحالة مع المدربين <span class="cnt" id="cntTr"></span></h3><div class="bars-chart" id="chartTr"></div></div>
+    </div>
+
+    <div class="section-head"><h2>الجدول الزمني</h2></div>
+    <div class="grid3">
+      <div class="card"><h3>البرامج حسب الشهر <span class="cnt">آخر ٦ أشهر والأشهر الستة القادمة</span></h3><div class="months" id="months"></div><div class="mlabels" id="mlabels"></div></div>
+      <div class="card"><h3>البرامج القادمة <span class="cnt">خلال ٦٠ يومًا</span></h3><div class="upc" id="upcoming"></div></div>
+    </div>
+
+    <div class="section-head"><h2>المدربون وحِمل التدريب</h2></div>
+    <div class="tbl-wrap"><table><thead><tr><th>المدرب</th><th>التخصص</th><th>الحالة</th><th>البرامج</th><th>قيد التنفيذ</th><th>الساعات</th><th>آخر برنامج</th></tr></thead><tbody id="trainerLoad"></tbody></table></div>
+  </section>
+
+  <!-- ===== PROGRAMS ===== -->
+  <section class="panel" id="panel-programs">
+
+    <div class="gallery">
+      <div class="gallery-head">
+        <h2>نظرة سريعة على البرامج <span class="cnt" id="galleryCount"></span></h2>
+        <span class="spacer"></span>
+        <button type="button" class="btn gold sm" id="galleryShowAll">عرض الكل ‹</button>
+      </div>
+      <p class="gallery-progress" id="galleryProgressLabel"></p>
+      <div class="gallery-track"><i id="galleryTrackFill" style="width:0%"></i></div>
+
+      <div class="continue-tag" id="galleryContinueTag" hidden>‹ قيد المتابعة الآن</div>
+      <div class="rail" id="galleryRail"></div>
+      <p class="gallery-note" id="galleryEmpty" hidden>لا توجد برامج بعد — أضف برنامجًا من الزر أدناه.</p>
+    </div>
+
+    <div class="section-head" id="programsTableHead"><h2>سجل البرامج التدريبية</h2><span class="spacer"></span><button class="btn primary admin-only" id="btnNewProgram">＋ إضافة برنامج</button></div>
+    <div class="toolbar">
+      <input type="search" id="fSearch" placeholder="بحث باسم البرنامج أو المدرب أو الرقم المرجعي…">
+      <select id="fType"><option value="">كل الأنواع</option></select>
+      <select id="fGca"><option value="">كل حالات الديوان</option></select>
+      <select id="fTr"><option value="">كل حالات المدربين</option></select>
+      <select id="fTrainer"><option value="">كل المدربين</option></select>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>الحالة مع الديوان</th><th>الحالة مع المدرب</th><th class="admin-only"></th></tr></thead>
+      <tbody id="programsBody"></tbody>
+    </table></div>
+    <p class="hint" style="margin-top:8px" id="programsCount"></p>
+  </section>
+
+  <!-- ===== TRAINERS ===== -->
+  <section class="panel" id="panel-trainers">
+    <div class="section-head"><h2>قاعدة المدربين</h2><span class="spacer"></span><button class="btn primary admin-only" id="btnNewTrainer">＋ إضافة مدرب</button></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>الاسم</th><th>التخصص</th><th>المؤهل</th><th>التواصل</th><th>الحالة</th><th>البرامج</th><th>الساعات</th><th class="admin-only"></th></tr></thead>
+      <tbody id="trainersBody"></tbody>
+    </table></div>
+  </section>
+
+  <!-- ===== REPORTS ===== -->
+  <section class="panel" id="panel-reports">
+    <div class="section-head"><h2>التقرير الشامل</h2><span class="spacer"></span>
+      <div class="toolbar" style="margin:0">
+        <select id="rGca"><option value="">كل الحالات</option></select>
+        <input type="month" id="rFrom" title="من شهر"><input type="month" id="rTo" title="إلى شهر">
+        <button class="btn" id="btnPrintReport">🖨 طباعة / PDF</button>
+        <button class="btn" id="btnCsvPrograms">⬇ البرامج CSV</button>
+        <button class="btn" id="btnCsvTrainers">⬇ المدربون CSV</button>
+        <button class="btn admin-only" id="btnJson">⬇ نسخة احتياطية JSON</button><label class="btn admin-only" for="fileJson">⬆ استعادة JSON</label><input type="file" id="fileJson" accept=".json" hidden><button class="btn admin-only danger" id="btnReset">حذف جميع البيانات</button>
+      </div>
+    </div>
+    <div class="report" id="report"></div>
+  </section>
+</main>
+
+<!-- program card modal -->
+<div class="modal-bg" id="cardModal">
+  <div class="modal">
+    <div class="modal-h"><h3>بطاقة البرنامج</h3><button class="x" data-close="cardModal" aria-label="إغلاق">×</button></div>
+    <div class="modal-b" id="cardBody"></div>
+    <div class="modal-f">
+      <button class="btn primary" id="btnPrintCard">🖨 طباعة / حفظ PDF</button>
+      <button class="btn" id="btnDlCard">⬇ تنزيل البطاقة</button>
+      <span class="spacer"></span>
+      <button class="btn admin-only" id="btnEditFromCard">✎ تعديل</button>
+      <button class="btn" data-close="cardModal">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- program form modal -->
+<div class="modal-bg" id="programModal">
+  <div class="modal">
+    <div class="modal-h"><h3 id="programFormTitle">إضافة برنامج</h3><button class="x" data-close="programModal" aria-label="إغلاق">×</button></div>
+    <form class="modal-b" id="programForm">
+      <div class="form">
+        <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><input id="p_title" required></div>
+        <div class="field"><label>الرقم المرجعي</label><input id="p_ref" placeholder="يُولَّد تلقائيًا إن تُرك فارغًا"></div>
+        <div class="field"><label>نوع البرنامج <span class="req">*</span></label><select id="p_type" required></select></div>
+        <div class="field"><label>المدرب <span class="req">*</span></label><select id="p_trainer" required></select></div>
+        <div class="field"><label>أسلوب التنفيذ</label><select id="p_mode"><option>حضوري</option><option>عن بُعد</option><option>مدمج</option></select></div>
+        <div class="field"><label>تاريخ البداية <span class="req">*</span></label><input type="date" id="p_start" required></div>
+        <div class="field"><label>تاريخ النهاية <span class="req">*</span></label><input type="date" id="p_end" required></div>
+        <div class="field"><label>عدد الأيام</label><input type="number" id="p_days" min="1" placeholder="يُحسب من التواريخ"></div>
+        <div class="field"><label>عدد الساعات التدريبية</label><input type="number" id="p_hours" min="0" step="0.5"></div>
+        <div class="field"><label>مكان التنفيذ</label><input id="p_location" placeholder="مثال: مقر الديوان – الرياض"></div>
+        <div class="field"><label>الفئة المستهدفة</label><input id="p_target" placeholder="مثال: المراجعون الماليون"></div>
+        <div class="field"><label>عدد المتدربين</label><input type="number" id="p_participants" min="0"></div>
+        <div class="field"><label>المسؤول من جهة الديوان</label><input id="p_gcaContact"></div>
+        <fieldset><legend>حالة المشروع</legend>
+          <div class="field"><label>الحالة مع ديوان المحاسبة العامة</label><select id="p_statusGca"></select></div>
+          <div class="field"><label>الحالة مع المدرب</label><select id="p_statusTrainer"></select></div>
+        </fieldset>
+        <div class="field full"><label>ملاحظات</label><textarea id="p_notes"></textarea></div>
+      </div>
+      <input type="hidden" id="p_id">
+    </form>
+    <div class="modal-f">
+      <button class="btn danger" id="btnDeleteProgram" type="button">حذف البرنامج</button>
+      <span class="spacer"></span>
+      <button class="btn" data-close="programModal" type="button">إلغاء</button>
+      <button class="btn primary" id="btnSaveProgram" type="button">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- trainer form modal -->
+<div class="modal-bg" id="trainerModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-h"><h3 id="trainerFormTitle">إضافة مدرب</h3><button class="x" data-close="trainerModal" aria-label="إغلاق">×</button></div>
+    <form class="modal-b" id="trainerForm">
+      <div class="form">
+        <div class="field full"><label>اسم المدرب <span class="req">*</span></label><input id="t_name" required></div>
+        <div class="field"><label>التخصص</label><input id="t_specialty" placeholder="مثال: المراجعة الداخلية"></div>
+        <div class="field"><label>المؤهل / الشهادات</label><input id="t_qual" placeholder="مثال: CIA، CPA"></div>
+        <div class="field"><label>الجوال</label><input id="t_phone" dir="ltr"></div>
+        <div class="field"><label>البريد الإلكتروني</label><input id="t_email" dir="ltr" type="email"></div>
+        <div class="field"><label>الحالة</label><select id="t_status"></select></div>
+        <div class="field"><label>الجهة / المدينة</label><input id="t_city"></div>
+        <div class="field full"><label>ملاحظات</label><textarea id="t_notes"></textarea></div>
+      </div>
+      <input type="hidden" id="t_id">
+    </form>
+    <div class="modal-f">
+      <button class="btn danger" id="btnDeleteTrainer" type="button">حذف المدرب</button>
+      <span class="spacer"></span>
+      <button class="btn" data-close="trainerModal" type="button">إلغاء</button>
+      <button class="btn primary" id="btnSaveTrainer" type="button">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<div class="login" id="login">
+  <div class="gca-id">
+    <img class="gca-wordmark" src="/images/gca-wordmark.png" alt="الديوان العام للمحاسبة — General Court of Audit">
+    <img class="gca-emblem" src="/images/gca-emblem.png" alt="">
+  </div>
+  <div class="login-box">
+    <button type="button" class="theme-toggle on-surface" id="themeToggleLogin" aria-label="تبديل المظهر" style="float:inline-end"></button>
+    <div class="brand"><div class="bars"><i></i><i></i><i></i><i></i></div><div><b>يسير لإدارة المشاريع</b><small>YAASEER PROJECT MANAGEMENT</small></div></div>
+    <p>منصة متابعة توريد المدربين — اختر هوية الدخول</p>
+    <div class="roles">
+      <button type="button" class="role" id="roleAdmin"><span class="ic">ي</span><b>يسير لإدارة المشاريع</b><span>صلاحية الإدارة: إضافة البرامج والمدربين وتحديث الحالات</span></button>
+      <button type="button" class="role gov" id="roleViewer"><span class="ic">د</span><b>ديوان المحاسبة العامة</b><span>صلاحية الاطلاع: عرض البيانات والتقارير والبطاقات فقط</span></button>
+
+      <div class="pw" id="pwRowAdmin">
+        <div class="field full"><label>اسم المستخدم</label><input type="text" id="userAdmin" value="admin@gca.local" readonly dir="ltr"></div>
+        <div class="field full"><label>كلمة المرور</label><input type="password" id="pwAdmin" placeholder="كلمة المرور" autocomplete="current-password" dir="ltr"></div>
+        <button type="button" class="btn primary block" id="pwGoAdmin">دخول</button>
+      </div>
+      <div class="pw" id="pwRowViewer">
+        <div class="field full"><label>اسم المستخدم</label><input type="text" id="userViewer" value="viewer@gca.local" readonly dir="ltr"></div>
+        <div class="field full"><label>كلمة المرور</label><input type="password" id="pwViewer" placeholder="كلمة المرور" autocomplete="current-password" dir="ltr"></div>
+        <button type="button" class="btn primary block" id="pwGoViewer">دخول</button>
+      </div>
+    </div>
+    <div class="auth-error" id="authError" hidden></div>
+    <div class="login-note">حسابا الدخول ثابتان ويُنشآن من لوحة Supabase — راجع README.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
