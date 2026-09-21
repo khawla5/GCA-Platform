@@ -40,6 +40,13 @@ export interface Program {
   status_gca: string;
   status_trainer: string;
   notes: string | null;
+  contract_value: number | null;
+  due_portion: string | null;
+  entitlement_value: number | null;
+  due_date: string | null;
+  payment_status: string;
+  coc_number: string | null;
+  invoice_number: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +55,22 @@ export type ProgramInput = Omit<Program, "id" | "created_at" | "updated_at">;
 
 export type TrainerImport = Omit<Trainer, "created_at" | "updated_at">;
 export type ProgramImport = Omit<Program, "created_at" | "updated_at">;
+
+export interface ProjectPayment {
+  id: string;
+  program_name: string;
+  contract_value: number | null;
+  due_portion: string | null;
+  entitlement_value: number | null;
+  due_date: string | null;
+  status: string;
+  coc_number: string | null;
+  invoice_number: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ProjectPaymentInput = Omit<ProjectPayment, "id" | "created_at" | "updated_at">;
 
 export interface AppState {
   role: Role | null;

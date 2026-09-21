@@ -6,7 +6,16 @@
 -- ---------- الملحقات ----------
 create extension if not exists "pgcrypto";
 
--- ---------- جدول الملفات الشخصية (يمتد من auth.users) ----------
+-- ============================================================
+-- التحكم بالصلاحيات (RBAC)
+-- الأدوار: 'admin' (كامل الصلاحيات) و 'viewer' (اطلاع فقط — يقابل "user" في أنظمة RBAC العامة).
+-- التخزين: عمود profiles.role. القيمة الافتراضية 'viewer' لأي مستخدم جديد (عبر trigger أدناه).
+-- التطبيق الفعلي: سياسات RLS على trainers/programs تستخدم is_admin() — الرفض يحدث داخل
+-- قاعدة البيانات نفسها، وليس فقط بإخفاء الأزرار في الواجهة.
+-- منع تصعيد الصلاحية الذاتي: لا توجد أي policy من نوع UPDATE على جدول profiles، لذا لا يستطيع
+-- أي مستخدم (حتى admin) تغيير role عبر الواجهة أو الـ API مطلقًا. الترقية إلى admin تتم يدويًا
+-- فقط من Supabase Dashboard أو SQL Editor مباشرة (راجع أسفل الملف).
+-- ============================================================
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
@@ -78,6 +87,13 @@ create table if not exists public.programs (
   status_gca text not null default 'مقترح',
   status_trainer text not null default 'تم الترشيح',
   notes text,
+  contract_value numeric,
+  due_portion text,
+  entitlement_value numeric,
+  due_date date,
+  payment_status text not null default 'لم يُستحق بعد',
+  coc_number text,
+  invoice_number text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -85,10 +101,26 @@ create table if not exists public.programs (
 create index if not exists programs_trainer_id_idx on public.programs (trainer_id);
 create index if not exists programs_start_date_idx on public.programs (start_date);
 
+-- ---------- جدول مدفوعات المشاريع (زمالات/شهادات الاعتماد) ----------
+create table if not exists public.project_payments (
+  id uuid primary key default gen_random_uuid(),
+  program_name text not null,
+  contract_value numeric,
+  due_portion text,
+  entitlement_value numeric,
+  due_date date,
+  status text not null default 'لم يُستحق بعد',
+  coc_number text,
+  invoice_number text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- ---------- تفعيل أمان مستوى الصف (RLS) ----------
 alter table public.profiles enable row level security;
 alter table public.trainers enable row level security;
 alter table public.programs enable row level security;
+alter table public.project_payments enable row level security;
 
 -- profiles: كل مستخدم يقرأ ملفه الشخصي فقط
 drop policy if exists "read own profile" on public.profiles;
@@ -113,6 +145,16 @@ create policy "authenticated read programs" on public.programs
 -- programs: التعديل والإضافة والحذف لصلاحية admin فقط
 drop policy if exists "admin write programs" on public.programs;
 create policy "admin write programs" on public.programs
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- project_payments: أي مستخدم مسجّل دخول يمكنه القراءة
+drop policy if exists "authenticated read project_payments" on public.project_payments;
+create policy "authenticated read project_payments" on public.project_payments
+  for select using (auth.role() = 'authenticated');
+
+-- project_payments: التعديل والإضافة والحذف لصلاحية admin فقط
+drop policy if exists "admin write project_payments" on public.project_payments;
+create policy "admin write project_payments" on public.project_payments
   for all using (public.is_admin()) with check (public.is_admin());
 
 -- ---------- إجبار PostgREST على تحديث ذاكرة السكيما فورًا ----------

@@ -3,7 +3,7 @@ import { deleteProgram, deleteTrainer, replaceAllData, resetAllData, upsertProgr
 import { state } from "./state";
 import type { Program, ProgramImport, ProgramInput, Trainer, TrainerImport, TrainerInput } from "./types";
 import { $, $$, closeModal, csv, daysBetween, fill, openModal, save, toast, today, trainerName } from "./utils";
-import { cardHtml } from "./render";
+import { cardHtml, stageInfoForStatus } from "./render";
 import { refreshData } from "./boot";
 
 const v = (id: string): string => (($(`#${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)?.value || "").trim();
@@ -18,6 +18,14 @@ function nextRef(): string {
   return `GCA-${y}-${String(n).padStart(3, "0")}`;
 }
 
+// دفاع إضافي على مستوى الواجهة — الحماية الحقيقية هي سياسات RLS في قاعدة البيانات (is_admin())،
+// لكن هذا يمنع أي محاولة تعديل واجهة من الوصول لدوال الحفظ/الحذف حتى قبل إرسال الطلب.
+function requireAdmin(): boolean {
+  if (state.role === "admin") return true;
+  toast("هذا الإجراء متاح لصلاحية الإدارة فقط");
+  return false;
+}
+
 /* ---------- program card ---------- */
 export function openCard(id: string): void {
   const p = state.programs.find((x) => x.id === id);
@@ -28,7 +36,37 @@ export function openCard(id: string): void {
   openModal("cardModal");
 }
 
-/* ---------- program form ---------- */
+/* ---------- program form (full page) ---------- */
+function openProgramPage(): void {
+  $$(".panel").forEach((p) => p.classList.remove("active"));
+  $("#panel-programForm")?.classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function closeProgramPage(): void {
+  ($(`.tab[data-tab="programs"]`) as HTMLElement | null)?.click();
+}
+
+function updateStageHero(): void {
+  const ring = $("#stageRingLg") as HTMLElement | null;
+  const ringText = $("#stageRingLgText");
+  const heroTitle = $("#stageHeroTitle");
+  const heroMeta = $("#stageHeroMeta");
+  if (!ring || !ringText || !heroTitle || !heroMeta) return;
+
+  const { pct, ringColor, frac } = stageInfoForStatus(v("p_statusGca") || "مقترح");
+  ring.style.setProperty("--pct", String(pct));
+  ring.style.setProperty("--ring-color", ringColor);
+  ringText.textContent = frac;
+
+  heroTitle.textContent = v("p_title") || "برنامج جديد";
+
+  const trainerSelect = $("#p_trainer") as HTMLSelectElement | null;
+  const trainerLabel = trainerSelect?.selectedOptions[0]?.textContent?.trim();
+  const metaParts = [trainerSelect && v("p_trainer") ? trainerLabel : null, v("p_start") ? `يبدأ ${v("p_start")}` : null].filter(Boolean);
+  heroMeta.textContent = metaParts.length ? metaParts.join(" · ") : "حدّد المدرب والتواريخ لعرض التفاصيل";
+}
+
 export function openProgramForm(id?: string): void {
   if (state.role !== "admin") return;
   fill(
@@ -41,6 +79,8 @@ export function openProgramForm(id?: string): void {
   if (title) title.textContent = p ? "تعديل البرنامج" : "إضافة برنامج";
   const delBtn = $("#btnDeleteProgram") as HTMLButtonElement | null;
   if (delBtn) delBtn.style.display = p ? "" : "none";
+  const heroEl = $(".stage-hero") as HTMLElement | null;
+  if (heroEl) heroEl.style.display = p ? "" : "none";
 
   setv("p_id", p?.id);
   setv("p_title", p?.title);
@@ -58,13 +98,22 @@ export function openProgramForm(id?: string): void {
   setv("p_gcaContact", p?.gca_contact);
   setv("p_statusGca", p?.status_gca || "مقترح");
   setv("p_statusTrainer", p?.status_trainer || "تم الترشيح");
+  setv("p_contractValue", p?.contract_value ?? "");
+  setv("p_entitlementValue", p?.entitlement_value ?? "");
+  setv("p_duePortion", p?.due_portion);
+  setv("p_dueDate", p?.due_date);
+  setv("p_paymentStatus", p?.payment_status || "لم يُستحق بعد");
+  setv("p_coc", p?.coc_number);
+  setv("p_invoice", p?.invoice_number);
   setv("p_notes", p?.notes);
 
   if (!state.trainers.length) toast("أضف مدربًا أولًا من تبويب المدربين");
-  openModal("programModal");
+  updateStageHero();
+  openProgramPage();
 }
 
 async function saveProgram(): Promise<void> {
+  if (!requireAdmin()) return;
   const f = $("#programForm") as HTMLFormElement | null;
   if (!f || !f.reportValidity()) return;
   if (v("p_end") < v("p_start")) {
@@ -88,26 +137,34 @@ async function saveProgram(): Promise<void> {
     gca_contact: v("p_gcaContact"),
     status_gca: v("p_statusGca"),
     status_trainer: v("p_statusTrainer"),
+    contract_value: v("p_contractValue") ? +v("p_contractValue") : null,
+    entitlement_value: v("p_entitlementValue") ? +v("p_entitlementValue") : null,
+    due_portion: v("p_duePortion"),
+    due_date: v("p_dueDate") || null,
+    payment_status: v("p_paymentStatus"),
+    coc_number: v("p_coc"),
+    invoice_number: v("p_invoice"),
     notes: v("p_notes"),
   };
   try {
     await upsertProgram(id, input);
     toast(id ? "تم تحديث البرنامج" : "تمت إضافة البرنامج");
     await refreshData();
-    closeModal("programModal");
+    closeProgramPage();
   } catch (e) {
     toast("تعذّر الحفظ: " + ((e as Error)?.message || ""));
   }
 }
 
 async function removeProgram(): Promise<void> {
+  if (!requireAdmin()) return;
   const id = v("p_id");
   if (!id || !confirm("حذف هذا البرنامج نهائيًا؟")) return;
   try {
     await deleteProgram(id);
     toast("تم حذف البرنامج");
     await refreshData();
-    closeModal("programModal");
+    closeProgramPage();
   } catch (e) {
     toast("تعذّر الحذف: " + ((e as Error)?.message || ""));
   }
@@ -135,6 +192,7 @@ export function openTrainerForm(id?: string): void {
 }
 
 async function saveTrainer(): Promise<void> {
+  if (!requireAdmin()) return;
   const f = $("#trainerForm") as HTMLFormElement | null;
   if (!f || !f.reportValidity()) return;
   const id = v("t_id") || null;
@@ -159,6 +217,7 @@ async function saveTrainer(): Promise<void> {
 }
 
 async function removeTrainer(): Promise<void> {
+  if (!requireAdmin()) return;
   const id = v("t_id");
   if (!id) return;
   const n = state.programs.filter((p) => p.trainer_id === id).length;
@@ -176,6 +235,7 @@ async function removeTrainer(): Promise<void> {
     toast("تعذّر الحذف: " + ((e as Error)?.message || ""));
   }
 }
+
 
 /* ---------- downloads ---------- */
 function exportProgramsCsv(): void {
@@ -210,6 +270,7 @@ function exportJsonBackup(): void {
 }
 
 async function importJsonBackup(file: File): Promise<void> {
+  if (!requireAdmin()) return;
   try {
     const j = JSON.parse(await file.text()) as { trainers?: Trainer[]; programs?: Program[] };
     if (!Array.isArray(j.programs) || !Array.isArray(j.trainers)) throw new Error("bad shape");
@@ -222,6 +283,8 @@ async function importJsonBackup(file: File): Promise<void> {
       start_date: p.start_date, end_date: p.end_date, days: p.days, hours: p.hours, location: p.location,
       target_group: p.target_group, participants: p.participants, gca_contact: p.gca_contact,
       status_gca: p.status_gca, status_trainer: p.status_trainer, notes: p.notes,
+      contract_value: p.contract_value, due_portion: p.due_portion, entitlement_value: p.entitlement_value,
+      due_date: p.due_date, payment_status: p.payment_status, coc_number: p.coc_number, invoice_number: p.invoice_number,
     }));
     await replaceAllData(trainers, programs);
     toast("تمت استعادة النسخة");
@@ -232,6 +295,7 @@ async function importJsonBackup(file: File): Promise<void> {
 }
 
 async function resetData(): Promise<void> {
+  if (!requireAdmin()) return;
   if (!confirm("حذف جميع البرامج والمدربين والبدء بقاعدة فارغة؟")) return;
   try {
     await resetAllData();
@@ -300,10 +364,16 @@ export function wireForms(): void {
   $("#p_start")?.addEventListener("change", () => {
     const endEl = $("#p_end") as HTMLInputElement | null;
     if (endEl && (!v("p_end") || v("p_end") < v("p_start"))) endEl.value = v("p_start");
+    updateStageHero();
   });
+  $("#p_title")?.addEventListener("input", updateStageHero);
+  $("#p_statusGca")?.addEventListener("change", updateStageHero);
+  $("#p_trainer")?.addEventListener("change", updateStageHero);
   $("#btnNewProgram")?.addEventListener("click", () => openProgramForm());
   $("#btnSaveProgram")?.addEventListener("click", saveProgram);
   $("#btnDeleteProgram")?.addEventListener("click", removeProgram);
+  $("#btnBackFromProgram")?.addEventListener("click", closeProgramPage);
+  $("#btnCancelProgram")?.addEventListener("click", closeProgramPage);
 
   $("#btnNewTrainer")?.addEventListener("click", () => openTrainerForm());
   $("#btnSaveTrainer")?.addEventListener("click", saveTrainer);
