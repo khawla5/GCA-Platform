@@ -1,4 +1,4 @@
-import { AR_MONTHS, DEFAULT_CARD_COLOR, GCA_STATUS, TR_STATUS, TRAINER_STATUS, TYPES, TYPE_COLORS } from "./constants";
+import { AR_MONTHS, DEFAULT_CARD_COLOR, GCA_STATUS, PAYMENT_STATUS, TR_STATUS, TRAINER_STATUS, TYPES, TYPE_COLORS } from "./constants";
 import { state } from "./state";
 import type { Program } from "./types";
 import {
@@ -18,15 +18,72 @@ const GALLERY_STATUS_PRIORITY: Record<string, number> = {
 // مسار اعتماد البرنامج — كل برنامج يمر بهذه المراحل بالترتيب
 const GCA_STAGES = ["مقترح", "بانتظار اعتماد الديوان", "معتمد", "قيد التنفيذ", "منفَّذ"];
 
-function stageInfo(p: Program): { pct: number; ringColor: string; frac: string; label: string } {
-  if (p.status_gca === "ملغى") return { pct: 100, ringColor: "var(--bad)", frac: "✕", label: "ملغى" };
-  if (p.status_gca === "مؤجَّل") return { pct: 100, ringColor: "var(--warn)", frac: "⏸", label: "مؤجَّل" };
-  const idx = GCA_STAGES.indexOf(p.status_gca);
+export function stageInfoForStatus(status: string): { pct: number; ringColor: string; frac: string; label: string } {
+  if (status === "ملغى") return { pct: 100, ringColor: "var(--bad)", frac: "✕", label: "ملغى" };
+  if (status === "مؤجَّل") return { pct: 100, ringColor: "var(--warn)", frac: "⏸", label: "مؤجَّل" };
+  const idx = GCA_STAGES.indexOf(status);
   const step = idx === -1 ? 0 : idx + 1;
   const pct = Math.round((step / GCA_STAGES.length) * 100);
   const ringColor = step === GCA_STAGES.length ? "var(--ok)" : "var(--gold)";
-  return { pct, ringColor, frac: `${step}/${GCA_STAGES.length}`, label: p.status_gca };
+  return { pct, ringColor, frac: `${step}/${GCA_STAGES.length}`, label: status };
 }
+
+// نقطة على محيط الدائرة بزاوية بالدرجات (٠° = الأعلى، تزيد باتجاه عقارب الساعة)
+function pointOnCircle(cx: number, cy: number, r: number, angleDeg: number): [number, number] {
+  const rad = (angleDeg * Math.PI) / 180;
+  return [cx + r * Math.sin(rad), cy - r * Math.cos(rad)];
+}
+
+// يقسّم نصًا عربيًا طويلًا إلى سطرين عند أقرب فراغ للمنتصف
+function wrapTwoLines(text: string): string[] {
+  if (text.length <= 12) return [text];
+  const mid = Math.floor(text.length / 2);
+  let splitAt = text.lastIndexOf(" ", mid);
+  if (splitAt < 1) splitAt = text.indexOf(" ", mid);
+  if (splitAt < 1) return [text];
+  return [text.slice(0, splitAt), text.slice(splitAt + 1)];
+}
+
+export function buildStageWheel(status: string): string {
+  const cx = 150, cy = 150, R = 95, strokeW = 28, gapDeg = 6;
+  const isCancelled = status === "ملغى";
+  const isDeferred = status === "مؤجَّل";
+  const currentIdx = isCancelled || isDeferred ? -1 : GCA_STAGES.indexOf(status);
+
+  const segs = GCA_STAGES.map((stageName, i) => {
+    const startAngle = i * 72 + gapDeg / 2;
+    const endAngle = (i + 1) * 72 - gapDeg / 2;
+    const [x1, y1] = pointOnCircle(cx, cy, R, startAngle);
+    const [x2, y2] = pointOnCircle(cx, cy, R, endAngle);
+    const cls = currentIdx === -1 ? "seg-future" : i < currentIdx ? "seg-done" : i === currentIdx ? "seg-current" : "seg-future";
+
+    const midAngle = i * 72 + 36;
+    const [lx1, ly1] = pointOnCircle(cx, cy, R + strokeW / 2 + 6, midAngle);
+    const [lx2, ly2] = pointOnCircle(cx, cy, R + strokeW / 2 + 34, midAngle);
+    const isRightHalf = Math.sin((midAngle * Math.PI) / 180) >= 0;
+    const anchor = isRightHalf ? "start" : "end";
+    const labelX = lx2 + (isRightHalf ? 4 : -4);
+    const lines = wrapTwoLines(stageName);
+    const tspans = lines.map((line, li) => `<tspan x="${labelX}" dy="${li === 0 ? 0 : 14}">${esc(line)}</tspan>`).join("");
+
+    return `<g class="stage-seg">
+      <path class="seg-arc ${cls}" d="M${x1},${y1} A${R},${R} 0 0 1 ${x2},${y2}" pointer-events="stroke"></path>
+      <line class="seg-leader" x1="${lx1}" y1="${ly1}" x2="${lx2}" y2="${ly2}"></line>
+      <text class="seg-label" x="${labelX}" y="${ly2}" text-anchor="${anchor}" dominant-baseline="middle">${tspans}</text>
+    </g>`;
+  }).join("");
+
+  const centerColor = isCancelled ? "var(--bad)" : isDeferred ? "var(--warn)" : "var(--ink)";
+  const centerLabel = isCancelled ? "ملغى" : isDeferred ? "مؤجَّل" : status || "مقترح";
+
+  return `<svg viewBox="0 0 300 300" class="stage-wheel-svg">${segs}</svg>
+    <div class="stage-wheel-center">
+      <small>المرحلة الحالية</small>
+      <b style="color:${centerColor}">${esc(centerLabel)}</b>
+    </div>`;
+}
+
+const stageInfo = (p: Program) => stageInfoForStatus(p.status_gca);
 
 export function renderGallery(): void {
   const rail = $("#galleryRail");
@@ -205,22 +262,41 @@ function filteredPrograms(): Program[] {
     .sort((a, b) => (b.start_date || "").localeCompare(a.start_date || ""));
 }
 
+function programRowStart(p: Program): string {
+  return `<tr data-open="${esc(p.id)}"><td class="admin-only"><div class="icons"><button class="btn sm" data-edit="${esc(p.id)}">✎</button></div></td><td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td><td><span class="t">${esc(p.title)}</span>${p.target_group ? `<span class="sub">${esc(p.target_group)}</span>` : ""}</td><td>${esc(p.type || "—")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}${p.end_date && p.end_date !== p.start_date ? `<span class="sub">إلى ${fmtDate(p.end_date)}</span>` : ""}</td><td>${durationText(p)}</td>`;
+}
+
+const programRowEnd = "</tr>";
+
+const fmtMoney = (n: number | null): string => (n == null ? "—" : n.toLocaleString("ar-SA"));
+
+function paymentCells(p: Program): string {
+  return `<td>${esc(p.due_portion || "—")}</td><td>${fmtMoney(p.entitlement_value)}</td><td>${fmtDate(p.due_date)}</td><td>${pill(PAYMENT_STATUS, p.payment_status)}</td><td>${esc(p.coc_number || "—")}</td><td>${esc(p.invoice_number || "—")}</td>`;
+}
+
 export function renderPrograms(): void {
   fill("#fTrainer", state.trainers.map((t) => [t.id, t.name] as [string, string]), "كل المدربين");
   const rows = filteredPrograms();
-  const el = $("#programsBody");
-  if (el) {
-    el.innerHTML = rows.length
-      ? rows
-          .map(
-            (p) =>
-              `<tr data-open="${esc(p.id)}"><td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td><td><span class="t">${esc(p.title)}</span>${p.target_group ? `<span class="sub">${esc(p.target_group)}</span>` : ""}</td><td>${esc(p.type || "—")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}${p.end_date && p.end_date !== p.start_date ? `<span class="sub">إلى ${fmtDate(p.end_date)}</span>` : ""}</td><td>${durationText(p)}</td><td>${pill(GCA_STATUS, p.status_gca)}</td><td>${pill(TR_STATUS, p.status_trainer)}</td><td class="admin-only"><div class="icons"><button class="btn sm" data-edit="${esc(p.id)}">✎</button></div></td></tr>`
-          )
-          .join("")
-      : `<tr><td colspan="9"><div class="empty"><b>لا توجد برامج مطابقة</b>${state.role === "admin" ? "أضف برنامجًا جديدًا من الزر أعلاه" : "سيظهر هنا ما تضيفه يسير من برامج"}</div></td></tr>`;
+  const emptyMsg = (label: string, cols: number) =>
+    `<tr><td colspan="${cols}"><div class="empty"><b>${label}</b>${state.role === "admin" ? "أضف برنامجًا جديدًا من الزر أعلاه" : "سيظهر هنا ما تضيفه يسير من برامج"}</div></td></tr>`;
+
+  const gcaBody = $("#programsBodyGca");
+  if (gcaBody) {
+    gcaBody.innerHTML = rows.length
+      ? rows.map((p) => `${programRowStart(p)}<td>${pill(GCA_STATUS, p.status_gca)}</td>${programRowEnd}`).join("")
+      : emptyMsg("لا توجد برامج مطابقة", 8);
   }
-  const cnt = $("#programsCount");
-  if (cnt) cnt.textContent = `${rows.length} من ${state.programs.length} برنامج`;
+  const cntGca = $("#programsCountGca");
+  if (cntGca) cntGca.textContent = `${rows.length} من ${state.programs.length} برنامج`;
+
+  const trBody = $("#programsBodyTr");
+  if (trBody) {
+    trBody.innerHTML = rows.length
+      ? rows.map((p) => `${programRowStart(p)}<td>${pill(TR_STATUS, p.status_trainer)}</td>${paymentCells(p)}${programRowEnd}`).join("")
+      : emptyMsg("لا توجد برامج مطابقة", 14);
+  }
+  const cntTr = $("#programsCountTr");
+  if (cntTr) cntTr.textContent = `${rows.length} من ${state.programs.length} برنامج`;
 }
 
 export function renderTrainers(): void {
@@ -303,6 +379,7 @@ export function fillStaticSelects(): void {
   fill("#fTr", TR_STATUS.map((s) => s[0]), "كل حالات المدربين");
   fill("#rGca", GCA_STATUS.map((s) => s[0]), "كل الحالات");
   fill("#t_status", TRAINER_STATUS.map((s) => s[0]));
+  fill("#p_paymentStatus", PAYMENT_STATUS.map((s) => s[0]));
 }
 
 export function wireFilterInputs(): void {

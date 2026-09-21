@@ -10,10 +10,11 @@ export async function refreshData(): Promise<void> {
     const [trainers, programs] = await Promise.all([fetchTrainers(), fetchPrograms()]);
     state.trainers = trainers;
     state.programs = programs;
-    renderAll();
   } catch (e) {
     toast("تعذّر تحميل البيانات: " + ((e as Error)?.message || ""));
+    return;
   }
+  renderAll();
 }
 
 function setIdentity(): void {

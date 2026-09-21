@@ -33,6 +33,14 @@ export const TRAINER_STATUS: [string, string][] = [
   ["موقوف", "bad"],
 ];
 
+export const PAYMENT_STATUS: [string, string][] = [
+  ["لم يُستحق بعد", "neutral"],
+  ["قيد المراجعة", "warn"],
+  ["معتمد للصرف", "info"],
+  ["مصروف", "ok"],
+  ["متأخر", "bad"],
+];
+
 // لون مميز لكل نوع برنامج في معرض البطاقات — يرمز للنوع بدل صورة حقيقية
 export const TYPE_COLORS: Record<string, string> = {
   "ورشة عمل": "#1F6F78",

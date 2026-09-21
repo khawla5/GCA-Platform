@@ -1,5 +1,5 @@
 import { supabase } from "./supabaseClient";
-import type { Program, ProgramImport, ProgramInput, Trainer, TrainerImport, TrainerInput } from "./types";
+import type { Program, ProgramImport, ProgramInput, ProjectPayment, ProjectPaymentInput, Trainer, TrainerImport, TrainerInput } from "./types";
 
 export async function fetchTrainers(): Promise<Trainer[]> {
   const { data, error } = await supabase.from("trainers").select("*").order("name", { ascending: true });
@@ -56,4 +56,23 @@ export async function resetAllData(): Promise<void> {
   if (delP) throw delP;
   const { error: delT } = await supabase.from("trainers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   if (delT) throw delT;
+}
+
+export async function fetchProjectPayments(): Promise<ProjectPayment[]> {
+  const { data, error } = await supabase.from("project_payments").select("*").order("program_name", { ascending: true });
+  if (error) throw error;
+  return (data as ProjectPayment[]) ?? [];
+}
+
+export async function upsertProjectPayment(id: string | null, input: ProjectPaymentInput): Promise<void> {
+  const payload = { ...input, updated_at: new Date().toISOString() };
+  const { error } = id
+    ? await supabase.from("project_payments").update(payload).eq("id", id)
+    : await supabase.from("project_payments").insert(payload);
+  if (error) throw error;
+}
+
+export async function deleteProjectPayment(id: string): Promise<void> {
+  const { error } = await supabase.from("project_payments").delete().eq("id", id);
+  if (error) throw error;
 }

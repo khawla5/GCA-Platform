@@ -82,11 +82,19 @@
       <select id="fTr"><option value="">كل حالات المدربين</option></select>
       <select id="fTrainer"><option value="">كل المدربين</option></select>
     </div>
+    <h3 class="table-split-head">الحالة مع ديوان المحاسبة العامة</h3>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>الحالة مع الديوان</th><th>الحالة مع المدرب</th><th class="admin-only"></th></tr></thead>
-      <tbody id="programsBody"></tbody>
+      <thead><tr><th class="admin-only"></th><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>الحالة مع الديوان</th></tr></thead>
+      <tbody id="programsBodyGca"></tbody>
     </table></div>
-    <p class="hint" style="margin-top:8px" id="programsCount"></p>
+    <p class="hint" style="margin-top:8px" id="programsCountGca"></p>
+
+    <h3 class="table-split-head">مدفوعات البرامج</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th class="admin-only"></th><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>مدفوعات البرامج</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الدفع</th><th>حالة الدفع</th><th>رقم الشهادة</th><th>رقم الفاتورة</th></tr></thead>
+      <tbody id="programsBodyTr"></tbody>
+    </table></div>
+    <p class="hint" style="margin-top:8px" id="programsCountTr"></p>
   </section>
 
   <!-- ===== TRAINERS ===== -->
@@ -112,28 +120,24 @@
     </div>
     <div class="report" id="report"></div>
   </section>
-</main>
 
-<!-- program card modal -->
-<div class="modal-bg" id="cardModal">
-  <div class="modal">
-    <div class="modal-h"><h3>بطاقة البرنامج</h3><button class="x" data-close="cardModal" aria-label="إغلاق">×</button></div>
-    <div class="modal-b" id="cardBody"></div>
-    <div class="modal-f">
-      <button class="btn primary" id="btnPrintCard">🖨 طباعة / حفظ PDF</button>
-      <button class="btn" id="btnDlCard">⬇ تنزيل البطاقة</button>
+  <!-- ===== PROGRAM FORM (صفحة كاملة) ===== -->
+  <section class="panel" id="panel-programForm">
+    <div class="section-head">
+      <button class="btn" id="btnBackFromProgram" type="button">‹ رجوع</button>
+      <h2 id="programFormTitle">إضافة برنامج</h2>
       <span class="spacer"></span>
-      <button class="btn admin-only" id="btnEditFromCard">✎ تعديل</button>
-      <button class="btn" data-close="cardModal">إغلاق</button>
+      <button class="btn danger" id="btnDeleteProgram" type="button">حذف البرنامج</button>
     </div>
-  </div>
-</div>
-
-<!-- program form modal -->
-<div class="modal-bg" id="programModal">
-  <div class="modal">
-    <div class="modal-h"><h3 id="programFormTitle">إضافة برنامج</h3><button class="x" data-close="programModal" aria-label="إغلاق">×</button></div>
-    <form class="modal-b" id="programForm">
+    <div class="stage-hero card">
+      <div class="stage-ring-lg" id="stageRingLg"><span id="stageRingLgText">1/5</span></div>
+      <div class="stage-hero-info">
+        <small>مرحلة الاعتماد</small>
+        <h3 id="stageHeroTitle">برنامج جديد</h3>
+        <p id="stageHeroMeta">حدّد المدرب والتواريخ لعرض التفاصيل</p>
+      </div>
+    </div>
+    <form class="card" id="programForm">
       <div class="form">
         <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><input id="p_title" required></div>
         <div class="field"><label>الرقم المرجعي</label><input id="p_ref" placeholder="يُولَّد تلقائيًا إن تُرك فارغًا"></div>
@@ -152,15 +156,39 @@
           <div class="field"><label>الحالة مع ديوان المحاسبة العامة</label><select id="p_statusGca"></select></div>
           <div class="field"><label>الحالة مع المدرب</label><select id="p_statusTrainer"></select></div>
         </fieldset>
+        <fieldset><legend>بيانات العقد والصرف</legend>
+          <div class="field"><label>قيمة العقد</label><input type="number" id="p_contractValue" min="0" step="0.01"></div>
+          <div class="field"><label>قيمة الاستحقاق</label><input type="number" id="p_entitlementValue" min="0" step="0.01"></div>
+          <div class="field"><label>الجزء المستحق</label><input id="p_duePortion" placeholder="مثال: الدفعة الأولى"></div>
+          <div class="field"><label>تاريخ الاستحقاق</label><input type="date" id="p_dueDate"></div>
+          <div class="field"><label>حالة الصرف</label><select id="p_paymentStatus"></select></div>
+          <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input id="p_coc"></div>
+          <div class="field"><label>رقم الفاتورة</label><input id="p_invoice"></div>
+        </fieldset>
         <div class="field full"><label>ملاحظات</label><textarea id="p_notes"></textarea></div>
       </div>
       <input type="hidden" id="p_id">
     </form>
-    <div class="modal-f">
-      <button class="btn danger" id="btnDeleteProgram" type="button">حذف البرنامج</button>
+    <div class="page-actions">
       <span class="spacer"></span>
-      <button class="btn" data-close="programModal" type="button">إلغاء</button>
+      <button class="btn" id="btnCancelProgram" type="button">إلغاء</button>
       <button class="btn primary" id="btnSaveProgram" type="button">حفظ</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- program card modal -->
+<div class="modal-bg" id="cardModal">
+  <div class="modal">
+    <div class="modal-h"><h3>بطاقة البرنامج</h3><button class="x" data-close="cardModal" aria-label="إغلاق">×</button></div>
+    <div class="modal-b" id="cardBody"></div>
+    <div class="modal-f">
+      <button class="btn primary" id="btnPrintCard">🖨 طباعة / حفظ PDF</button>
+      <button class="btn" id="btnDlCard">⬇ تنزيل البطاقة</button>
+      <span class="spacer"></span>
+      <button class="btn admin-only" id="btnEditFromCard">✎ تعديل</button>
+      <button class="btn" data-close="cardModal">إغلاق</button>
     </div>
   </div>
 </div>
