@@ -325,7 +325,7 @@ export function renderReport(): void {
   const el = $("#report");
   if (!el) return;
   el.innerHTML = `
-    <div class="rh"><div class="bars"><i></i><i></i><i></i><i></i></div><h2>تقرير متابعة توريد المدربين — ديوان المحاسبة العامة</h2><div class="meta">أُعدّ بواسطة: يسير لإدارة المشاريع<br>تاريخ الإصدار: ${fmtLong(today())}<br>الفترة: ${period}${g ? `<br>الحالة: ${esc(g)}` : ""}</div></div>
+    <div class="rh"><div class="bars"><i></i><i></i><i></i><i></i></div><h2>تقرير متابعة توريد المدربين — الديوان العام للمحاسبة</h2><div class="meta">أُعدّ بواسطة: يسير لإدارة المشاريع<br>تاريخ الإصدار: ${fmtLong(today())}<br>الفترة: ${period}${g ? `<br>الحالة: ${esc(g)}` : ""}</div></div>
     <div class="rsum"><div><b>${P.length}</b><span>برنامج</span></div><div><b>${byTrainer.length}</b><span>مدرب</span></div><div><b>${hours}</b><span>ساعة تدريبية</span></div><div><b>${trainees}</b><span>متدرب</span></div><div><b>${P.filter((p) => p.status_gca === "منفَّذ").length}</b><span>برنامج منفَّذ</span></div></div>
     <h3>١. ملخص الحالة مع الديوان</h3>
     <div class="tbl-wrap"><table><thead><tr><th>الحالة</th><th>عدد البرامج</th><th>النسبة</th></tr></thead><tbody>${byStatus.map(([s, n]) => `<tr><td>${pill(GCA_STATUS, s)}</td><td>${n}</td><td>${Math.round((n / P.length) * 100)}%</td></tr>`).join("") || `<tr><td colspan="3" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
@@ -339,9 +339,9 @@ export function renderReport(): void {
 export function cardHtml(p: Program): string {
   const t = state.trainers.find((x) => x.id === p.trainer_id);
   return `<div class="pcard">
-    <div class="pcard-h"><div class="bars"><i></i><i></i><i></i><i></i></div><div class="who"><b>يسير لإدارة المشاريع</b><span>بطاقة برنامج تدريبي — ديوان المحاسبة العامة</span></div><div class="ref">الرقم المرجعي<b>${esc(p.ref || "—")}</b></div></div>
+    <div class="pcard-h"><div class="bars"><i></i><i></i><i></i><i></i></div><div class="who"><b>يسير لإدارة المشاريع</b><span>بطاقة برنامج تدريبي — الديوان العام للمحاسبة</span></div><div class="ref">الرقم المرجعي<b>${esc(p.ref || "—")}</b></div></div>
     <div class="pcard-title"><h2>${esc(p.title)}</h2><div class="type">${esc(p.type || "")}${p.mode ? ` · ${esc(p.mode)}` : ""}</div></div>
-    <div class="pcard-status"><div class="st"><small>الحالة مع ديوان المحاسبة العامة</small>${pill(GCA_STATUS, p.status_gca)}</div><div class="st"><small>الحالة مع المدرب</small>${pill(TR_STATUS, p.status_trainer)}</div></div>
+    <div class="pcard-status"><div class="st"><small>الحالة مع الديوان العام للمحاسبة</small>${pill(GCA_STATUS, p.status_gca)}</div><div class="st"><small>الحالة مع المدرب</small>${pill(TR_STATUS, p.status_trainer)}</div></div>
     <div class="kv">
       <div><small>المدرب</small><b>${esc(t?.name || "—")}</b>${t?.specialty ? `<span class="sub" style="display:block;font-size:12px;color:var(--muted)">${esc(t.specialty)}${t.qualification ? " · " + esc(t.qualification) : ""}</span>` : ""}</div>
       <div><small>تاريخ البداية</small><b>${fmtLong(p.start_date)}</b></div>

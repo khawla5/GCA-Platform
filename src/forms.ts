@@ -3,7 +3,7 @@ import { deleteProgram, deleteTrainer, replaceAllData, resetAllData, upsertProgr
 import { state } from "./state";
 import type { Program, ProgramImport, ProgramInput, Trainer, TrainerImport, TrainerInput } from "./types";
 import { $, $$, closeModal, csv, daysBetween, fill, openModal, save, toast, today, trainerName } from "./utils";
-import { cardHtml, stageInfoForStatus } from "./render";
+import { buildStageWheel, cardHtml } from "./render";
 import { refreshData } from "./boot";
 
 const v = (id: string): string => (($(`#${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)?.value || "").trim();
@@ -48,16 +48,12 @@ function closeProgramPage(): void {
 }
 
 function updateStageHero(): void {
-  const ring = $("#stageRingLg") as HTMLElement | null;
-  const ringText = $("#stageRingLgText");
+  const wheel = $("#stageWheel");
   const heroTitle = $("#stageHeroTitle");
   const heroMeta = $("#stageHeroMeta");
-  if (!ring || !ringText || !heroTitle || !heroMeta) return;
+  if (!wheel || !heroTitle || !heroMeta) return;
 
-  const { pct, ringColor, frac } = stageInfoForStatus(v("p_statusGca") || "مقترح");
-  ring.style.setProperty("--pct", String(pct));
-  ring.style.setProperty("--ring-color", ringColor);
-  ringText.textContent = frac;
+  wheel.innerHTML = buildStageWheel(v("p_statusGca") || "مقترح");
 
   heroTitle.textContent = v("p_title") || "برنامج جديد";
 

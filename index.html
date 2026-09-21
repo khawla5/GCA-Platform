@@ -15,12 +15,12 @@
 <header class="topbar">
   <div class="topbar-in">
     <div class="brand">
-      <div class="bars"><i></i><i></i><i></i><i></i></div>
-      <div><b>يسير لإدارة المشاريع</b><small>YAASEER PROJECT MANAGEMENT</small></div>
+      <img src="/images/gca-emblem.png" alt="" class="brand-emblem">
+      <div><b>الديوان العام للمحاسبة</b><small>GENERAL COURT OF AUDIT</small></div>
     </div>
     <div class="title">
       <h1>منصة متابعة توريد المدربين</h1>
-      <p>ديوان المحاسبة العامة × يسير لإدارة المشاريع</p>
+      <p>الديوان العام للمحاسبة × يسير لإدارة المشاريع</p>
     </div>
     <button type="button" class="theme-toggle" id="themeToggle" aria-label="تبديل المظهر"></button>
     <div class="identity" id="identity"><span class="dot"></span><div><b id="idName">لم يتم الدخول</b></div><button class="x" id="btnLogout" title="تسجيل الخروج" style="color:#fff;font-size:16px;margin-inline-start:6px">⎋</button></div>
@@ -43,7 +43,7 @@
 
     <div class="section-head"><h2>حالة البرامج</h2><span class="hint">مسار الاعتماد مع الديوان، ومسار التعاقد مع المدربين</span></div>
     <div class="grid2">
-      <div class="card"><h3>الحالة مع ديوان المحاسبة العامة <span class="cnt" id="cntGca"></span></h3><div class="bars-chart" id="chartGca"></div></div>
+      <div class="card"><h3>الحالة مع الديوان العام للمحاسبة <span class="cnt" id="cntGca"></span></h3><div class="bars-chart" id="chartGca"></div></div>
       <div class="card"><h3>الحالة مع المدربين <span class="cnt" id="cntTr"></span></h3><div class="bars-chart" id="chartTr"></div></div>
     </div>
 
@@ -82,7 +82,7 @@
       <select id="fTr"><option value="">كل حالات المدربين</option></select>
       <select id="fTrainer"><option value="">كل المدربين</option></select>
     </div>
-    <h3 class="table-split-head">الحالة مع ديوان المحاسبة العامة</h3>
+    <h3 class="table-split-head">الحالة مع الديوان العام للمحاسبة</h3>
     <div class="tbl-wrap"><table>
       <thead><tr><th class="admin-only"></th><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>الحالة مع الديوان</th></tr></thead>
       <tbody id="programsBodyGca"></tbody>
@@ -130,7 +130,7 @@
       <button class="btn danger" id="btnDeleteProgram" type="button">حذف البرنامج</button>
     </div>
     <div class="stage-hero card">
-      <div class="stage-ring-lg" id="stageRingLg"><span id="stageRingLgText">1/5</span></div>
+      <div class="stage-wheel" id="stageWheel"></div>
       <div class="stage-hero-info">
         <small>مرحلة الاعتماد</small>
         <h3 id="stageHeroTitle">برنامج جديد</h3>
@@ -153,7 +153,7 @@
         <div class="field"><label>عدد المتدربين</label><input type="number" id="p_participants" min="0"></div>
         <div class="field"><label>المسؤول من جهة الديوان</label><input id="p_gcaContact"></div>
         <fieldset><legend>حالة المشروع</legend>
-          <div class="field"><label>الحالة مع ديوان المحاسبة العامة</label><select id="p_statusGca"></select></div>
+          <div class="field"><label>الحالة مع الديوان العام للمحاسبة</label><select id="p_statusGca"></select></div>
           <div class="field"><label>الحالة مع المدرب</label><select id="p_statusTrainer"></select></div>
         </fieldset>
         <fieldset><legend>بيانات العقد والصرف</legend>
@@ -220,31 +220,35 @@
 </div>
 
 <div class="login" id="login">
-  <div class="gca-id">
-    <img class="gca-wordmark" src="/images/gca-wordmark.png" alt="الديوان العام للمحاسبة — General Court of Audit">
-    <img class="gca-emblem" src="/images/gca-emblem.png" alt="">
-  </div>
-  <div class="login-box">
-    <button type="button" class="theme-toggle on-surface" id="themeToggleLogin" aria-label="تبديل المظهر" style="float:inline-end"></button>
-    <div class="brand"><div class="bars"><i></i><i></i><i></i><i></i></div><div><b>يسير لإدارة المشاريع</b><small>YAASEER PROJECT MANAGEMENT</small></div></div>
-    <p>منصة متابعة توريد المدربين — اختر هوية الدخول</p>
-    <div class="roles">
-      <button type="button" class="role" id="roleAdmin"><span class="ic">ي</span><b>يسير لإدارة المشاريع</b><span>صلاحية الإدارة: إضافة البرامج والمدربين وتحديث الحالات</span></button>
-      <button type="button" class="role gov" id="roleViewer"><span class="ic">د</span><b>ديوان المحاسبة العامة</b><span>صلاحية الاطلاع: عرض البيانات والتقارير والبطاقات فقط</span></button>
+  <div class="login-card">
+    <button type="button" class="theme-toggle on-surface" id="themeToggleLogin" aria-label="تبديل المظهر"></button>
+    <div class="login-right">
+      <div class="login-right-inner">
+        <img class="login-avatar" src="/images/gca-emblem.png" alt="">
+        <h2>أهلًا بعودتك</h2>
+        <p>منصة متابعة توريد المدربين — GCA</p>
 
-      <div class="pw" id="pwRowAdmin">
-        <div class="field full"><label>اسم المستخدم</label><input type="text" id="userAdmin" value="admin@gca.local" readonly dir="ltr"></div>
-        <div class="field full"><label>كلمة المرور</label><input type="password" id="pwAdmin" placeholder="كلمة المرور" autocomplete="current-password" dir="ltr"></div>
-        <button type="button" class="btn primary block" id="pwGoAdmin">دخول</button>
-      </div>
-      <div class="pw" id="pwRowViewer">
-        <div class="field full"><label>اسم المستخدم</label><input type="text" id="userViewer" value="viewer@gca.local" readonly dir="ltr"></div>
-        <div class="field full"><label>كلمة المرور</label><input type="password" id="pwViewer" placeholder="كلمة المرور" autocomplete="current-password" dir="ltr"></div>
-        <button type="button" class="btn primary block" id="pwGoViewer">دخول</button>
+        <div class="role-tabs" role="tablist">
+          <button type="button" class="role-tab active" id="roleAdmin" data-role="admin">يسير لإدارة المشاريع</button>
+          <button type="button" class="role-tab" id="roleViewer" data-role="viewer">الديوان العام للمحاسبة</button>
+        </div>
+
+        <form class="login-form" id="loginForm">
+          <div class="field full"><label>اسم المستخدم</label><input type="text" id="activeUser" value="admin@gca.local" readonly dir="ltr"></div>
+          <div class="field full"><label>كلمة المرور</label><input type="password" id="activePw" placeholder="كلمة المرور" autocomplete="current-password" dir="ltr"></div>
+          <button type="button" class="btn primary block pill" id="btnLoginGo">دخول</button>
+        </form>
+
+        <div class="auth-error" id="authError" hidden></div>
       </div>
     </div>
-    <div class="auth-error" id="authError" hidden></div>
-    <div class="login-note">حسابا الدخول ثابتان ويُنشآن من لوحة Supabase — راجع README.</div>
+    <div class="login-left">
+      <div class="login-left-photo"></div>
+      <div class="login-left-brand">
+        <img src="/images/gca-emblem.png" alt="">
+        <span>GCA</span>
+      </div>
+    </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>

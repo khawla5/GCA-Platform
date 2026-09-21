@@ -26,7 +26,7 @@ function setIdentity(): void {
   if (state.role === "admin") {
     nameEl.innerHTML = `يسير لإدارة المشاريع <span>· صلاحية الإدارة</span>`;
   } else if (state.role === "viewer") {
-    nameEl.innerHTML = `ديوان المحاسبة العامة <span>· صلاحية الاطلاع</span>`;
+    nameEl.innerHTML = `الديوان العام للمحاسبة <span>· صلاحية الاطلاع</span>`;
   } else {
     nameEl.innerHTML = "لم يتم الدخول";
   }
@@ -66,24 +66,23 @@ function clearAuthError(): void {
   if (el) el.hidden = true;
 }
 
-function wireRoleLogin(roleBtnId: string, pwRowId: string, pwInputId: string, goBtnId: string, email: string): void {
-  const roleBtn = $(`#${roleBtnId}`) as HTMLButtonElement | null;
-  const pwRow = $(`#${pwRowId}`) as HTMLElement | null;
-  const pwInput = $(`#${pwInputId}`) as HTMLInputElement | null;
-  const goBtn = $(`#${goBtnId}`) as HTMLButtonElement | null;
+function wireRoleTabs(): void {
+  const tabs = $$<HTMLButtonElement>(".role-tab");
+  const userInput = $("#activeUser") as HTMLInputElement | null;
+  const pwInput = $("#activePw") as HTMLInputElement | null;
+  const goBtn = $("#btnLoginGo") as HTMLButtonElement | null;
 
-  roleBtn?.addEventListener("click", () => {
+  let selectedEmail = ADMIN_EMAIL;
+
+  const selectTab = (btn: HTMLButtonElement) => {
+    selectedEmail = btn.dataset.role === "viewer" ? VIEWER_EMAIL : ADMIN_EMAIL;
+    tabs.forEach((t) => t.classList.toggle("active", t === btn));
+    if (userInput) userInput.value = selectedEmail;
+    if (pwInput) pwInput.value = "";
     clearAuthError();
-    $$<HTMLElement>(".pw").forEach((row) => {
-      if (row !== pwRow) {
-        row.classList.remove("show");
-        const input = row.querySelector<HTMLInputElement>("input[type=password]");
-        if (input) input.value = "";
-      }
-    });
-    pwRow?.classList.add("show");
-    pwInput?.focus();
-  });
+  };
+
+  tabs.forEach((btn) => btn.addEventListener("click", () => selectTab(btn)));
 
   const attempt = async () => {
     const password = pwInput?.value || "";
@@ -91,7 +90,7 @@ function wireRoleLogin(roleBtnId: string, pwRowId: string, pwInputId: string, go
     clearAuthError();
     if (goBtn) goBtn.disabled = true;
     try {
-      await signIn(email, password);
+      await signIn(selectedEmail, password);
       if (pwInput) pwInput.value = "";
     } catch (err) {
       showAuthError((err as Error)?.message || "تعذّر تسجيل الدخول — تحقق من كلمة المرور");
@@ -107,8 +106,7 @@ function wireRoleLogin(roleBtnId: string, pwRowId: string, pwInputId: string, go
 }
 
 export function wireAuth(): void {
-  wireRoleLogin("roleAdmin", "pwRowAdmin", "pwAdmin", "pwGoAdmin", ADMIN_EMAIL);
-  wireRoleLogin("roleViewer", "pwRowViewer", "pwViewer", "pwGoViewer", VIEWER_EMAIL);
+  wireRoleTabs();
 
   $("#btnLogout")?.addEventListener("click", async () => {
     await signOut();
