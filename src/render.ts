@@ -263,7 +263,11 @@ function filteredPrograms(): Program[] {
 }
 
 function programRowStart(p: Program): string {
-  return `<tr data-open="${esc(p.id)}"><td class="admin-only"><div class="icons"><button class="btn sm" data-edit="${esc(p.id)}">✎</button></div></td><td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td><td><span class="t">${esc(p.title)}</span>${p.target_group ? `<span class="sub">${esc(p.target_group)}</span>` : ""}</td><td>${esc(p.type || "—")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}${p.end_date && p.end_date !== p.start_date ? `<span class="sub">إلى ${fmtDate(p.end_date)}</span>` : ""}</td><td>${durationText(p)}</td>`;
+  return `<tr data-open="${esc(p.id)}"><td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td><td><span class="t">${esc(p.title)}</span>${p.target_group ? `<span class="sub">${esc(p.target_group)}</span>` : ""}</td><td>${esc(p.type || "—")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}${p.end_date && p.end_date !== p.start_date ? `<span class="sub">إلى ${fmtDate(p.end_date)}</span>` : ""}</td><td>${durationText(p)}</td>`;
+}
+
+function programRowEdit(p: Program): string {
+  return `<td class="admin-only"><div class="icons"><button class="btn sm" data-edit="${esc(p.id)}">✎</button></div></td>`;
 }
 
 const programRowEnd = "</tr>";
@@ -283,7 +287,7 @@ export function renderPrograms(): void {
   const gcaBody = $("#programsBodyGca");
   if (gcaBody) {
     gcaBody.innerHTML = rows.length
-      ? rows.map((p) => `${programRowStart(p)}<td>${pill(GCA_STATUS, p.status_gca)}</td>${programRowEnd}`).join("")
+      ? rows.map((p) => `${programRowStart(p)}<td>${pill(GCA_STATUS, p.status_gca)}</td>${programRowEdit(p)}${programRowEnd}`).join("")
       : emptyMsg("لا توجد برامج مطابقة", 8);
   }
   const cntGca = $("#programsCountGca");
@@ -292,7 +296,7 @@ export function renderPrograms(): void {
   const trBody = $("#programsBodyTr");
   if (trBody) {
     trBody.innerHTML = rows.length
-      ? rows.map((p) => `${programRowStart(p)}<td>${pill(TR_STATUS, p.status_trainer)}</td>${paymentCells(p)}${programRowEnd}`).join("")
+      ? rows.map((p) => `${programRowStart(p)}<td>${pill(TR_STATUS, p.status_trainer)}</td>${paymentCells(p)}${programRowEdit(p)}${programRowEnd}`).join("")
       : emptyMsg("لا توجد برامج مطابقة", 14);
   }
   const cntTr = $("#programsCountTr");
@@ -325,7 +329,7 @@ export function renderReport(): void {
   const el = $("#report");
   if (!el) return;
   el.innerHTML = `
-    <div class="rh"><div class="bars"><i></i><i></i><i></i><i></i></div><h2>تقرير متابعة توريد المدربين — ديوان المحاسبة العامة</h2><div class="meta">أُعدّ بواسطة: يسير لإدارة المشاريع<br>تاريخ الإصدار: ${fmtLong(today())}<br>الفترة: ${period}${g ? `<br>الحالة: ${esc(g)}` : ""}</div></div>
+    <div class="rh"><div class="bars"><i></i><i></i><i></i><i></i></div><h2>تقرير متابعة توريد المدربين — الديوان العام للمحاسبة</h2><div class="meta">أُعدّ بواسطة: يسير لإدارة المشاريع<br>تاريخ الإصدار: ${fmtLong(today())}<br>الفترة: ${period}${g ? `<br>الحالة: ${esc(g)}` : ""}</div></div>
     <div class="rsum"><div><b>${P.length}</b><span>برنامج</span></div><div><b>${byTrainer.length}</b><span>مدرب</span></div><div><b>${hours}</b><span>ساعة تدريبية</span></div><div><b>${trainees}</b><span>متدرب</span></div><div><b>${P.filter((p) => p.status_gca === "منفَّذ").length}</b><span>برنامج منفَّذ</span></div></div>
     <h3>١. ملخص الحالة مع الديوان</h3>
     <div class="tbl-wrap"><table><thead><tr><th>الحالة</th><th>عدد البرامج</th><th>النسبة</th></tr></thead><tbody>${byStatus.map(([s, n]) => `<tr><td>${pill(GCA_STATUS, s)}</td><td>${n}</td><td>${Math.round((n / P.length) * 100)}%</td></tr>`).join("") || `<tr><td colspan="3" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
@@ -339,9 +343,9 @@ export function renderReport(): void {
 export function cardHtml(p: Program): string {
   const t = state.trainers.find((x) => x.id === p.trainer_id);
   return `<div class="pcard">
-    <div class="pcard-h"><div class="bars"><i></i><i></i><i></i><i></i></div><div class="who"><b>يسير لإدارة المشاريع</b><span>بطاقة برنامج تدريبي — ديوان المحاسبة العامة</span></div><div class="ref">الرقم المرجعي<b>${esc(p.ref || "—")}</b></div></div>
+    <div class="pcard-h"><div class="bars"><i></i><i></i><i></i><i></i></div><div class="who"><b>يسير لإدارة المشاريع</b><span>بطاقة برنامج تدريبي — الديوان العام للمحاسبة</span></div><div class="ref">الرقم المرجعي<b>${esc(p.ref || "—")}</b></div></div>
     <div class="pcard-title"><h2>${esc(p.title)}</h2><div class="type">${esc(p.type || "")}${p.mode ? ` · ${esc(p.mode)}` : ""}</div></div>
-    <div class="pcard-status"><div class="st"><small>الحالة مع ديوان المحاسبة العامة</small>${pill(GCA_STATUS, p.status_gca)}</div><div class="st"><small>الحالة مع المدرب</small>${pill(TR_STATUS, p.status_trainer)}</div></div>
+    <div class="pcard-status"><div class="st"><small>الحالة مع الديوان العام للمحاسبة</small>${pill(GCA_STATUS, p.status_gca)}</div><div class="st"><small>الحالة مع المدرب</small>${pill(TR_STATUS, p.status_trainer)}</div></div>
     <div class="kv">
       <div><small>المدرب</small><b>${esc(t?.name || "—")}</b>${t?.specialty ? `<span class="sub" style="display:block;font-size:12px;color:var(--muted)">${esc(t.specialty)}${t.qualification ? " · " + esc(t.qualification) : ""}</span>` : ""}</div>
       <div><small>تاريخ البداية</small><b>${fmtLong(p.start_date)}</b></div>
