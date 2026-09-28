@@ -1,5 +1,5 @@
 import { supabase } from "./supabaseClient";
-import type { Program, ProgramImport, ProgramInput, ProjectPayment, ProjectPaymentInput, Trainer, TrainerImport, TrainerInput } from "./types";
+import type { Program, ProgramInput, ProjectPayment, ProjectPaymentInput, Trainer, TrainerInput } from "./types";
 
 export async function fetchTrainers(): Promise<Trainer[]> {
   const { data, error } = await supabase.from("trainers").select("*").order("name", { ascending: true });
@@ -33,29 +33,6 @@ export async function upsertProgram(id: string | null, input: ProgramInput): Pro
 export async function deleteProgram(id: string): Promise<void> {
   const { error } = await supabase.from("programs").delete().eq("id", id);
   if (error) throw error;
-}
-
-export async function replaceAllData(trainers: TrainerImport[], programs: ProgramImport[]): Promise<void> {
-  const { error: delP } = await supabase.from("programs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  if (delP) throw delP;
-  const { error: delT } = await supabase.from("trainers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  if (delT) throw delT;
-
-  if (trainers.length) {
-    const { error } = await supabase.from("trainers").insert(trainers);
-    if (error) throw error;
-  }
-  if (programs.length) {
-    const { error } = await supabase.from("programs").insert(programs);
-    if (error) throw error;
-  }
-}
-
-export async function resetAllData(): Promise<void> {
-  const { error: delP } = await supabase.from("programs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  if (delP) throw delP;
-  const { error: delT } = await supabase.from("trainers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  if (delT) throw delT;
 }
 
 export async function fetchProjectPayments(): Promise<ProjectPayment[]> {

@@ -263,7 +263,11 @@ function filteredPrograms(): Program[] {
 }
 
 function programRowStart(p: Program): string {
-  return `<tr data-open="${esc(p.id)}"><td class="admin-only"><div class="icons"><button class="btn sm" data-edit="${esc(p.id)}">✎</button></div></td><td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td><td><span class="t">${esc(p.title)}</span>${p.target_group ? `<span class="sub">${esc(p.target_group)}</span>` : ""}</td><td>${esc(p.type || "—")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}${p.end_date && p.end_date !== p.start_date ? `<span class="sub">إلى ${fmtDate(p.end_date)}</span>` : ""}</td><td>${durationText(p)}</td>`;
+  return `<tr data-open="${esc(p.id)}"><td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td><td><span class="t">${esc(p.title)}</span>${p.target_group ? `<span class="sub">${esc(p.target_group)}</span>` : ""}</td><td>${esc(p.type || "—")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}${p.end_date && p.end_date !== p.start_date ? `<span class="sub">إلى ${fmtDate(p.end_date)}</span>` : ""}</td><td>${durationText(p)}</td>`;
+}
+
+function programRowEdit(p: Program): string {
+  return `<td class="admin-only"><div class="icons"><button class="btn sm" data-edit="${esc(p.id)}">✎</button></div></td>`;
 }
 
 const programRowEnd = "</tr>";
@@ -283,7 +287,7 @@ export function renderPrograms(): void {
   const gcaBody = $("#programsBodyGca");
   if (gcaBody) {
     gcaBody.innerHTML = rows.length
-      ? rows.map((p) => `${programRowStart(p)}<td>${pill(GCA_STATUS, p.status_gca)}</td>${programRowEnd}`).join("")
+      ? rows.map((p) => `${programRowStart(p)}<td>${pill(GCA_STATUS, p.status_gca)}</td>${programRowEdit(p)}${programRowEnd}`).join("")
       : emptyMsg("لا توجد برامج مطابقة", 8);
   }
   const cntGca = $("#programsCountGca");
@@ -292,7 +296,7 @@ export function renderPrograms(): void {
   const trBody = $("#programsBodyTr");
   if (trBody) {
     trBody.innerHTML = rows.length
-      ? rows.map((p) => `${programRowStart(p)}<td>${pill(TR_STATUS, p.status_trainer)}</td>${paymentCells(p)}${programRowEnd}`).join("")
+      ? rows.map((p) => `${programRowStart(p)}<td>${pill(TR_STATUS, p.status_trainer)}</td>${paymentCells(p)}${programRowEdit(p)}${programRowEnd}`).join("")
       : emptyMsg("لا توجد برامج مطابقة", 14);
   }
   const cntTr = $("#programsCountTr");

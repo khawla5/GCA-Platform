@@ -16,9 +16,10 @@ const effectiveTheme = (): Theme => storedTheme() ?? (systemPrefersDark() ? "dar
 
 function updateButtons(): void {
   const isDark = effectiveTheme() === "dark";
+  const icon = isDark ? "☀️" : "🌙";
   const label = isDark ? "التبديل إلى الوضع الفاتح" : "التبديل إلى الوضع الداكن";
   document.querySelectorAll<HTMLButtonElement>(".theme-toggle").forEach((btn) => {
-    btn.textContent = isDark ? "☀️" : "🌙";
+    btn.textContent = btn.classList.contains("theme-toggle-wide") ? `${icon} ${isDark ? "الوضع الفاتح" : "الوضع الداكن"}` : icon;
     btn.setAttribute("aria-label", label);
     btn.setAttribute("title", label);
   });

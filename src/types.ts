@@ -53,9 +53,6 @@ export interface Program {
 
 export type ProgramInput = Omit<Program, "id" | "created_at" | "updated_at">;
 
-export type TrainerImport = Omit<Trainer, "created_at" | "updated_at">;
-export type ProgramImport = Omit<Program, "created_at" | "updated_at">;
-
 export interface ProjectPayment {
   id: string;
   program_name: string;

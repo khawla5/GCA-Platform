@@ -1,7 +1,7 @@
 import { TYPES } from "./constants";
-import { deleteProgram, deleteTrainer, replaceAllData, resetAllData, upsertProgram, upsertTrainer } from "./data";
+import { deleteProgram, deleteTrainer, upsertProgram, upsertTrainer } from "./data";
 import { state } from "./state";
-import type { Program, ProgramImport, ProgramInput, Trainer, TrainerImport, TrainerInput } from "./types";
+import type { ProgramInput, TrainerInput } from "./types";
 import { $, $$, closeModal, csv, daysBetween, fill, openModal, save, toast, today, trainerName } from "./utils";
 import { buildStageWheel, cardHtml } from "./render";
 import { refreshData } from "./boot";
@@ -261,47 +261,6 @@ function exportTrainersCsv(): void {
   );
 }
 
-function exportJsonBackup(): void {
-  save(`نسخة-احتياطية-${today()}.json`, JSON.stringify({ exportedAt: new Date().toISOString(), trainers: state.trainers, programs: state.programs }, null, 2));
-}
-
-async function importJsonBackup(file: File): Promise<void> {
-  if (!requireAdmin()) return;
-  try {
-    const j = JSON.parse(await file.text()) as { trainers?: Trainer[]; programs?: Program[] };
-    if (!Array.isArray(j.programs) || !Array.isArray(j.trainers)) throw new Error("bad shape");
-    const trainers: TrainerImport[] = j.trainers.map((t) => ({
-      id: t.id, name: t.name, specialty: t.specialty, qualification: t.qualification, phone: t.phone,
-      email: t.email, status: t.status, city: t.city, notes: t.notes,
-    }));
-    const programs: ProgramImport[] = j.programs.map((p) => ({
-      id: p.id, ref: p.ref, title: p.title, type: p.type, trainer_id: p.trainer_id, mode: p.mode,
-      start_date: p.start_date, end_date: p.end_date, days: p.days, hours: p.hours, location: p.location,
-      target_group: p.target_group, participants: p.participants, gca_contact: p.gca_contact,
-      status_gca: p.status_gca, status_trainer: p.status_trainer, notes: p.notes,
-      contract_value: p.contract_value, due_portion: p.due_portion, entitlement_value: p.entitlement_value,
-      due_date: p.due_date, payment_status: p.payment_status, coc_number: p.coc_number, invoice_number: p.invoice_number,
-    }));
-    await replaceAllData(trainers, programs);
-    toast("تمت استعادة النسخة");
-    await refreshData();
-  } catch {
-    toast("ملف غير صالح");
-  }
-}
-
-async function resetData(): Promise<void> {
-  if (!requireAdmin()) return;
-  if (!confirm("حذف جميع البرامج والمدربين والبدء بقاعدة فارغة؟")) return;
-  try {
-    await resetAllData();
-    toast("تم تصفير البيانات");
-    await refreshData();
-  } catch (e) {
-    toast("تعذّر الحذف: " + ((e as Error)?.message || ""));
-  }
-}
-
 /* ---------- wiring ---------- */
 export function wireForms(): void {
   document.addEventListener("click", (e) => {
@@ -377,15 +336,6 @@ export function wireForms(): void {
 
   $("#btnCsvPrograms")?.addEventListener("click", exportProgramsCsv);
   $("#btnCsvTrainers")?.addEventListener("click", exportTrainersCsv);
-  $("#btnJson")?.addEventListener("click", exportJsonBackup);
-  $("#btnReset")?.addEventListener("click", resetData);
-  ($("#fileJson") as HTMLInputElement | null)?.addEventListener("change", async (e) => {
-    const input = e.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    await importJsonBackup(file);
-    input.value = "";
-  });
 
   $$(".modal-bg").forEach((m) =>
     m.addEventListener("click", (e) => {

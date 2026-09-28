@@ -12,30 +12,32 @@
 </script>
 </head>
 <body>
-<header class="topbar">
-  <div class="topbar-in">
-    <div class="brand">
-      <img src="/images/gca-emblem.png" alt="" class="brand-emblem">
-      <div><b>الديوان العام للمحاسبة</b><small>GENERAL COURT OF AUDIT</small></div>
-    </div>
-    <div class="title">
-      <h1>منصة متابعة توريد المدربين</h1>
-      <p>الديوان العام للمحاسبة × يسير لإدارة المشاريع</p>
-    </div>
-    <button type="button" class="theme-toggle" id="themeToggle" aria-label="تبديل المظهر"></button>
-    <div class="identity" id="identity"><span class="dot"></span><div><b id="idName">لم يتم الدخول</b></div><button class="x" id="btnLogout" title="تسجيل الخروج" style="color:#fff;font-size:16px;margin-inline-start:6px">⎋</button></div>
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="brand">
+    <img src="/images/gca-emblem.png" alt="" class="brand-emblem">
+    <div><b>الديوان العام للمحاسبة</b><small>GENERAL COURT OF AUDIT</small></div>
   </div>
-</header>
+  <button type="button" class="theme-toggle theme-toggle-wide" id="themeToggle" aria-label="تبديل المظهر"></button>
+  <div class="sidebar-title">
+    <h1>منصة متابعة توريد المدربين</h1>
+    <p>الديوان العام للمحاسبة × يسير لإدارة المشاريع</p>
+  </div>
 
-<main class="wrap">
-  <div class="banner" id="banner"></div>
-
-  <div class="tabs" role="tablist">
+  <nav class="tabs" role="tablist">
     <button class="tab" role="tab" aria-selected="true" data-tab="dash">لوحة المتابعة</button>
     <button class="tab" role="tab" aria-selected="false" data-tab="programs">البرامج التدريبية</button>
     <button class="tab" role="tab" aria-selected="false" data-tab="trainers">المدربون</button>
     <button class="tab" role="tab" aria-selected="false" data-tab="reports">التقارير والتصدير</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="identity" id="identity"><span class="dot"></span><div><b id="idName">لم يتم الدخول</b></div><button class="x" id="btnLogout" title="تسجيل الخروج" style="color:#fff;font-size:16px;margin-inline-start:6px">⎋</button></div>
   </div>
+</aside>
+
+<main class="wrap">
+  <div class="banner" id="banner"></div>
 
   <!-- ===== DASHBOARD ===== -->
   <section class="panel active" id="panel-dash">
@@ -84,14 +86,14 @@
     </div>
     <h3 class="table-split-head">الحالة مع الديوان العام للمحاسبة</h3>
     <div class="tbl-wrap"><table>
-      <thead><tr><th class="admin-only"></th><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>الحالة مع الديوان</th></tr></thead>
+      <thead><tr><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>الحالة مع الديوان</th><th class="admin-only"></th></tr></thead>
       <tbody id="programsBodyGca"></tbody>
     </table></div>
     <p class="hint" style="margin-top:8px" id="programsCountGca"></p>
 
     <h3 class="table-split-head">مدفوعات البرامج</h3>
     <div class="tbl-wrap"><table>
-      <thead><tr><th class="admin-only"></th><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>مدفوعات البرامج</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الدفع</th><th>حالة الدفع</th><th>رقم الشهادة</th><th>رقم الفاتورة</th></tr></thead>
+      <thead><tr><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>مدفوعات البرامج</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الدفع</th><th>حالة الدفع</th><th>رقم الشهادة</th><th>رقم الفاتورة</th><th class="admin-only"></th></tr></thead>
       <tbody id="programsBodyTr"></tbody>
     </table></div>
     <p class="hint" style="margin-top:8px" id="programsCountTr"></p>
@@ -115,7 +117,6 @@
         <button class="btn" id="btnPrintReport">🖨 طباعة / PDF</button>
         <button class="btn" id="btnCsvPrograms">⬇ البرامج CSV</button>
         <button class="btn" id="btnCsvTrainers">⬇ المدربون CSV</button>
-        <button class="btn admin-only" id="btnJson">⬇ نسخة احتياطية JSON</button><label class="btn admin-only" for="fileJson">⬆ استعادة JSON</label><input type="file" id="fileJson" accept=".json" hidden><button class="btn admin-only danger" id="btnReset">حذف جميع البيانات</button>
       </div>
     </div>
     <div class="report" id="report"></div>
@@ -177,6 +178,7 @@
   </section>
 
 </main>
+</div>
 
 <!-- program card modal -->
 <div class="modal-bg" id="cardModal">
