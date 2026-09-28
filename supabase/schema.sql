@@ -101,26 +101,53 @@ create table if not exists public.programs (
 create index if not exists programs_trainer_id_idx on public.programs (trainer_id);
 create index if not exists programs_start_date_idx on public.programs (start_date);
 
--- ---------- جدول مدفوعات المشاريع (زمالات/شهادات الاعتماد) ----------
-create table if not exists public.project_payments (
+-- ---------- جدول المدفوعات (أوامر الشراء ودفعاتها) ----------
+-- كان اسمه project_payments سابقًا — يُعاد تسميته تلقائيًا مع الاحتفاظ ببياناته
+do $$
+begin
+  if to_regclass('public.project_payments') is not null and to_regclass('public.payments') is null then
+    alter table public.project_payments rename to payments;
+  end if;
+end $$;
+
+create table if not exists public.payments (
   id uuid primary key default gen_random_uuid(),
+  purchase_order text,
+  installments_total integer not null default 1 check (installments_total >= 1),
+  installments_paid integer not null default 0 check (installments_paid >= 0),
   program_name text not null,
   contract_value numeric,
   due_portion text,
   entitlement_value numeric,
   due_date date,
-  status text not null default 'لم يُستحق بعد',
+  status text not null default 'تم الطلب',
   coc_number text,
   invoice_number text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
+-- لقواعد بيانات فيها جدول payments بأعمدة مختلفة: نضيف كل ما ينقصه (آمن للتكرار)
+alter table public.payments
+  add column if not exists purchase_order text,
+  add column if not exists installments_total integer not null default 1 check (installments_total >= 1),
+  add column if not exists installments_paid integer not null default 0 check (installments_paid >= 0),
+  add column if not exists program_name text not null default '',
+  add column if not exists contract_value numeric,
+  add column if not exists due_portion text,
+  add column if not exists entitlement_value numeric,
+  add column if not exists due_date date,
+  add column if not exists status text not null default 'تم الطلب',
+  add column if not exists coc_number text,
+  add column if not exists invoice_number text,
+  add column if not exists created_at timestamptz not null default now(),
+  add column if not exists updated_at timestamptz not null default now();
+
 -- ---------- تفعيل أمان مستوى الصف (RLS) ----------
 alter table public.profiles enable row level security;
 alter table public.trainers enable row level security;
 alter table public.programs enable row level security;
-alter table public.project_payments enable row level security;
+alter table public.payments enable row level security;
 
 -- profiles: كل مستخدم يقرأ ملفه الشخصي فقط
 drop policy if exists "read own profile" on public.profiles;
@@ -147,14 +174,36 @@ drop policy if exists "admin write programs" on public.programs;
 create policy "admin write programs" on public.programs
   for all using (public.is_admin()) with check (public.is_admin());
 
--- project_payments: أي مستخدم مسجّل دخول يمكنه القراءة
-drop policy if exists "authenticated read project_payments" on public.project_payments;
-create policy "authenticated read project_payments" on public.project_payments
+-- payments: أي مستخدم مسجّل دخول يمكنه القراءة
+drop policy if exists "authenticated read project_payments" on public.payments;
+drop policy if exists "authenticated read payments" on public.payments;
+create policy "authenticated read payments" on public.payments
   for select using (auth.role() = 'authenticated');
 
--- project_payments: التعديل والإضافة والحذف لصلاحية admin فقط
-drop policy if exists "admin write project_payments" on public.project_payments;
-create policy "admin write project_payments" on public.project_payments
+-- payments: التعديل والإضافة والحذف لصلاحية admin فقط
+drop policy if exists "admin write project_payments" on public.payments;
+drop policy if exists "admin write payments" on public.payments;
+create policy "admin write payments" on public.payments
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- ---------- جدول مدفوعات المدربين ----------
+create table if not exists public.trainer_payments (
+  id uuid primary key default gen_random_uuid(),
+  program_name text not null,
+  track text,
+  trainer_id uuid references public.trainers (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.trainer_payments enable row level security;
+
+drop policy if exists "authenticated read trainer_payments" on public.trainer_payments;
+create policy "authenticated read trainer_payments" on public.trainer_payments
+  for select using (auth.role() = 'authenticated');
+
+drop policy if exists "admin write trainer_payments" on public.trainer_payments;
+create policy "admin write trainer_payments" on public.trainer_payments
   for all using (public.is_admin()) with check (public.is_admin());
 
 -- ---------- إجبار PostgREST على تحديث ذاكرة السكيما فورًا ----------

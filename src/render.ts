@@ -1,4 +1,5 @@
-import { AR_MONTHS, DEFAULT_CARD_COLOR, GCA_STATUS, PAYMENT_STATUS, TR_STATUS, TRAINER_STATUS, TYPES, TYPE_COLORS } from "./constants";
+import { AR_MONTHS, DEFAULT_CARD_COLOR, GCA_STATUS, PAYMENT_STATUS, PO_PAYMENT_STATUS, TR_STATUS, TRAINER_STATUS, TYPES, TYPE_COLORS } from "./constants";
+import { renderPayments } from "./payments";
 import { state } from "./state";
 import type { Program } from "./types";
 import {
@@ -371,6 +372,7 @@ export function renderAll(): void {
   renderTrainerLoad();
   renderPrograms();
   renderTrainers();
+  renderPayments();
   renderReport();
 }
 
@@ -384,6 +386,8 @@ export function fillStaticSelects(): void {
   fill("#rGca", GCA_STATUS.map((s) => s[0]), "كل الحالات");
   fill("#t_status", TRAINER_STATUS.map((s) => s[0]));
   fill("#p_paymentStatus", PAYMENT_STATUS.map((s) => s[0]));
+  fill("#pay_status", PO_PAYMENT_STATUS.map((s) => s[0]));
+  fill("#fPayStatus", PO_PAYMENT_STATUS.map((s) => s[0]), "كل حالات الدفع");
 }
 
 export function wireFilterInputs(): void {

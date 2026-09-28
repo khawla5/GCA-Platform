@@ -1,4 +1,5 @@
 import { AR_MONTHS } from "./constants";
+import { state } from "./state";
 import type { Program, Trainer } from "./types";
 
 export const $ = <T extends Element = Element>(sel: string, root: ParentNode = document): T | null =>
@@ -111,3 +112,18 @@ export const save = async (filename: string, data: string | Blob): Promise<void>
     toast("تعذّر التنزيل");
   }
 };
+
+export const v = (id: string): string => (($(`#${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)?.value || "").trim();
+
+export const setv = (id: string, val: string | number | null | undefined): void => {
+  const el = $(`#${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+  if (el) el.value = (val ?? "") as string;
+};
+
+// دفاع إضافي على مستوى الواجهة — الحماية الحقيقية هي سياسات RLS في قاعدة البيانات (is_admin())،
+// لكن هذا يمنع أي محاولة تعديل واجهة من الوصول لدوال الحفظ/الحذف حتى قبل إرسال الطلب.
+export function requireAdmin(): boolean {
+  if (state.role === "admin") return true;
+  toast("هذا الإجراء متاح لصلاحية الإدارة فقط");
+  return false;
+}

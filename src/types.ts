@@ -53,8 +53,11 @@ export interface Program {
 
 export type ProgramInput = Omit<Program, "id" | "created_at" | "updated_at">;
 
-export interface ProjectPayment {
+export interface Payment {
   id: string;
+  purchase_order: string | null;
+  installments_total: number;
+  installments_paid: number;
   program_name: string;
   contract_value: number | null;
   due_portion: string | null;
@@ -67,12 +70,25 @@ export interface ProjectPayment {
   updated_at: string;
 }
 
-export type ProjectPaymentInput = Omit<ProjectPayment, "id" | "created_at" | "updated_at">;
+export type PaymentInput = Omit<Payment, "id" | "created_at" | "updated_at">;
+
+export interface TrainerPayment {
+  id: string;
+  program_name: string;
+  track: string | null;
+  trainer_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type TrainerPaymentInput = Omit<TrainerPayment, "id" | "created_at" | "updated_at">;
 
 export interface AppState {
   role: Role | null;
   profile: Profile | null;
   trainers: Trainer[];
   programs: Program[];
+  payments: Payment[];
+  trainerPayments: TrainerPayment[];
   current: Program | null;
 }

@@ -1,15 +1,28 @@
 import { getCurrentProfile, signIn, signOut } from "./auth";
 import { ADMIN_EMAIL, VIEWER_EMAIL } from "./constants";
-import { fetchPrograms, fetchTrainers } from "./data";
+import { fetchPayments, fetchPrograms, fetchTrainerPayments, fetchTrainers } from "./data";
 import { renderAll } from "./render";
 import { state } from "./state";
 import { $, $$, toast } from "./utils";
 
 export async function refreshData(): Promise<void> {
   try {
-    const [trainers, programs] = await Promise.all([fetchTrainers(), fetchPrograms()]);
+    const [trainers, programs, payments, trainerPayments] = await Promise.all([
+      fetchTrainers(),
+      fetchPrograms(),
+      fetchPayments().catch((e: Error) => {
+        toast("تعذّر تحميل المدفوعات: " + (e?.message || ""));
+        return [];
+      }),
+      fetchTrainerPayments().catch((e: Error) => {
+        toast("تعذّر تحميل مدفوعات المدربين: " + (e?.message || ""));
+        return [];
+      }),
+    ]);
     state.trainers = trainers;
     state.programs = programs;
+    state.payments = payments;
+    state.trainerPayments = trainerPayments;
   } catch (e) {
     toast("تعذّر تحميل البيانات: " + ((e as Error)?.message || ""));
     return;
@@ -51,6 +64,8 @@ function leaveApp(): void {
   if (login) login.style.display = "";
   state.trainers = [];
   state.programs = [];
+  state.payments = [];
+  state.trainerPayments = [];
   renderAll();
 }
 

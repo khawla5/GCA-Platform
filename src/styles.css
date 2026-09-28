@@ -354,3 +354,17 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
   body.print-report .modal-bg{display:none!important}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- المدفوعات: دائرة الاكتمال داخل بطاقة المعرض (نفس مقاس حلقة البرامج) ---------- */
+.pay-prog.is-done{border-top-color:var(--ok)}
+.pay-prog .stats-row{margin-top:auto;padding-top:18px}
+.pay-status{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.pay-status small{font-size:11px;color:rgba(255,255,255,.6);font-weight:600}
+.pay-status .pill{font-size:13px;padding:4px 12px}
+.po-donut{position:relative;width:74px;height:74px;flex-shrink:0}
+.po-donut svg{width:100%;height:100%;display:block}
+.po-arc{fill:none;stroke:rgba(255,255,255,.2);stroke-width:16}
+.po-arc.paid{stroke:var(--gold)}
+.po-donut.done .po-arc.paid{stroke:var(--ok)}
+.po-donut-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center}
+.po-donut-center b{font-family:Tajawal,sans-serif;font-size:13px;font-weight:800;color:#fff;direction:ltr}
