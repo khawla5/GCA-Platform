@@ -5,5 +5,7 @@ export const state: AppState = {
   profile: null,
   trainers: [],
   programs: [],
+  payments: [],
+  trainerPayments: [],
   current: null,
 };

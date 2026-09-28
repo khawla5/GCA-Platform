@@ -41,6 +41,13 @@ export const PAYMENT_STATUS: [string, string][] = [
   ["متأخر", "bad"],
 ];
 
+// حالات الدفع الخاصة بأوامر الشراء في تبويب المدفوعات
+export const PO_PAYMENT_STATUS: [string, string][] = [
+  ["تم الطلب", "info"],
+  ["معلق", "warn"],
+  ["تم الدفع", "ok"],
+];
+
 // لون مميز لكل نوع برنامج في معرض البطاقات — يرمز للنوع بدل صورة حقيقية
 export const TYPE_COLORS: Record<string, string> = {
   "ورشة عمل": "#1F6F78",

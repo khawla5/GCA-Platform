@@ -2,28 +2,14 @@ import { TYPES } from "./constants";
 import { deleteProgram, deleteTrainer, upsertProgram, upsertTrainer } from "./data";
 import { state } from "./state";
 import type { ProgramInput, TrainerInput } from "./types";
-import { $, $$, closeModal, csv, daysBetween, fill, openModal, save, toast, today, trainerName } from "./utils";
+import { $, $$, closeModal, csv, daysBetween, fill, openModal, requireAdmin, save, setv, toast, today, trainerName, v } from "./utils";
 import { buildStageWheel, cardHtml } from "./render";
 import { refreshData } from "./boot";
-
-const v = (id: string): string => (($(`#${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)?.value || "").trim();
-const setv = (id: string, val: string | number | null | undefined): void => {
-  const el = $(`#${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-  if (el) el.value = (val ?? "") as string;
-};
 
 function nextRef(): string {
   const y = new Date().getFullYear();
   const n = state.programs.filter((p) => (p.ref || "").startsWith(`GCA-${y}-`)).length + 1;
   return `GCA-${y}-${String(n).padStart(3, "0")}`;
-}
-
-// دفاع إضافي على مستوى الواجهة — الحماية الحقيقية هي سياسات RLS في قاعدة البيانات (is_admin())،
-// لكن هذا يمنع أي محاولة تعديل واجهة من الوصول لدوال الحفظ/الحذف حتى قبل إرسال الطلب.
-function requireAdmin(): boolean {
-  if (state.role === "admin") return true;
-  toast("هذا الإجراء متاح لصلاحية الإدارة فقط");
-  return false;
 }
 
 /* ---------- program card ---------- */
