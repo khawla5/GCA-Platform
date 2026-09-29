@@ -50,14 +50,14 @@ export const PO_PAYMENT_STATUS: [string, string][] = [
 
 // لون مميز لكل نوع برنامج في معرض البطاقات — يرمز للنوع بدل صورة حقيقية
 export const TYPE_COLORS: Record<string, string> = {
-  "ورشة عمل": "#1F6F78",
-  "برنامج تدريبي": "#313E53",
-  "دورة تدريبية قصيرة": "#7A2E3B",
-  "محاضرة": "#3B3568",
-  "ملتقى / لقاء": "#2F6B4F",
-  "برنامج تنفيذي": "#8A5A20",
+  "ورشة عمل": "#0F5A30",
+  "برنامج تدريبي": "#003C1A",
+  "دورة تدريبية قصيرة": "#7A6238",
+  "محاضرة": "#4A5E3F",
+  "ملتقى / لقاء": "#8A6F44",
+  "برنامج تنفيذي": "#5C4A2A",
 };
-export const DEFAULT_CARD_COLOR = "#243044";
+export const DEFAULT_CARD_COLOR = "#003218";
 
 // حسابان ثابتان فقط: مشاهدة وإدارة (لا يوجد تسجيل عام). أنشئهما في Supabase كما هو موضح في README.
 export const VIEWER_EMAIL = "viewer@gca.local";
