@@ -20,12 +20,12 @@ const GALLERY_STATUS_PRIORITY: Record<string, number> = {
 const GCA_STAGES = ["مقترح", "بانتظار اعتماد الديوان", "معتمد", "قيد التنفيذ", "منفَّذ"];
 
 export function stageInfoForStatus(status: string): { pct: number; ringColor: string; frac: string; label: string } {
-  if (status === "ملغى") return { pct: 100, ringColor: "var(--bad)", frac: "✕", label: "ملغى" };
-  if (status === "مؤجَّل") return { pct: 100, ringColor: "var(--warn)", frac: "⏸", label: "مؤجَّل" };
+  if (status === "ملغى") return { pct: 100, ringColor: "var(--bad-hi)", frac: "✕", label: "ملغى" };
+  if (status === "مؤجَّل") return { pct: 100, ringColor: "var(--warn-hi)", frac: "⏸", label: "مؤجَّل" };
   const idx = GCA_STAGES.indexOf(status);
   const step = idx === -1 ? 0 : idx + 1;
   const pct = Math.round((step / GCA_STAGES.length) * 100);
-  const ringColor = step === GCA_STAGES.length ? "var(--ok)" : "var(--gold)";
+  const ringColor = step === GCA_STAGES.length ? "var(--ok-hi)" : "var(--gold)";
   return { pct, ringColor, frac: `${step}/${GCA_STAGES.length}`, label: status };
 }
 
