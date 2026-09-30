@@ -1,7 +1,7 @@
 import { DEFAULT_CARD_COLOR, PO_PAYMENT_STATUS, TYPE_COLORS } from "./constants";
 import { state } from "./state";
 import type { Payment } from "./types";
-import { $, esc, fmtDate, pill } from "./utils";
+import { $, esc, pill } from "./utils";
 
 const CX = 60;
 const CY = 60;
@@ -9,7 +9,6 @@ const R = 46;
 const GAP_DEG = 6;
 
 const fmtPct = (n: number): string => (Number.isInteger(n) ? String(n) : n.toFixed(1));
-const fmtMoney = (n: number | null): string => (n == null ? "—" : n.toLocaleString("ar-SA"));
 
 // عدد الدفعات الكلي والمدفوع بعد ضبطهما (الكلي ≥ ١، والمدفوع بين ٠ والكلي)
 function counts(p: Payment): { total: number; paid: number; done: boolean } {
@@ -42,12 +41,6 @@ function completionCircle(total: number, paid: number, done: boolean): string {
     <svg viewBox="0 0 120 120" aria-hidden="true">${arcs}</svg>
     <div class="po-donut-center"><b>${fmtPct((paid / total) * 100)}%</b></div>
   </div>`;
-}
-
-function filteredPayments(): Payment[] {
-  const q = (($("#fPaySearch") as HTMLInputElement | null)?.value || "").trim();
-  const st = ($("#fPayStatus") as HTMLSelectElement | null)?.value || "";
-  return state.payments.filter((p) => (!st || p.status === st) && (!q || [p.purchase_order, p.program_name].join(" ").includes(q)));
 }
 
 function paymentCard(p: Payment): string {
@@ -85,37 +78,6 @@ function renderGallery(): void {
   rail.innerHTML = P.map(paymentCard).join("");
 }
 
-function rowStart(p: Payment): string {
-  const editAttr = state.role === "admin" ? ` data-edit-payment="${esc(p.id)}"` : "";
-  return `<tr${editAttr}><td><span class="sub" style="font-size:12.5px">${esc(p.purchase_order || "—")}</span></td><td><span class="t">${esc(p.program_name)}</span></td>`;
-}
-
-function rowEdit(p: Payment): string {
-  return `<td class="admin-only"><div class="icons"><button class="btn sm" data-edit-payment="${esc(p.id)}">✎</button></div></td>`;
-}
-
-function renderTables(): void {
-  const rows = filteredPayments();
-  const empty = (cols: number) =>
-    `<tr><td colspan="${cols}"><div class="empty"><b>لا توجد أوامر شراء مطابقة</b>${state.role === "admin" ? "أضف أمر شراء جديدًا من الزر أعلاه" : ""}</div></td></tr>`;
-
-  const money = $("#paymentsBodyMoney");
-  if (money) {
-    money.innerHTML = rows.length
-      ? rows
-          .map(
-            (p) =>
-              `${rowStart(p)}<td>${fmtMoney(p.contract_value)}</td><td>${esc(p.due_portion || "—")}</td><td>${fmtMoney(p.entitlement_value)}</td><td>${fmtDate(p.due_date)}</td><td>${esc(p.coc_number || "—")}</td><td>${esc(p.invoice_number || "—")}</td>${rowEdit(p)}</tr>`
-          )
-          .join("")
-      : empty(9);
-  }
-
-  const count = `${rows.length} من ${state.payments.length} أمر شراء`;
-  const c = $("#paymentsCountMoney");
-  if (c) c.textContent = count;
-}
-
 function renderTrainerPayments(): void {
   const body = $("#trainerPaymentsBody");
   if (!body) return;
@@ -141,13 +103,11 @@ function fillProgramSuggestions(): void {
 
 export function renderPayments(): void {
   renderGallery();
-  renderTables();
   renderTrainerPayments();
   fillProgramSuggestions();
 }
 
 export function wirePaymentFilters(): void {
-  ["fPaySearch", "fPayStatus"].forEach((id) => $(`#${id}`)?.addEventListener("input", renderTables));
   $("#payShowAll")?.addEventListener("click", () => {
     $("#paymentsTableHead")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
