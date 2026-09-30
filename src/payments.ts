@@ -1,61 +1,29 @@
-import { DEFAULT_CARD_COLOR, PO_PAYMENT_STATUS, TYPE_COLORS } from "./constants";
+import { PAYMENT_CARD_COLOR, PAYMENT_CARD_DONE_COLOR, PAYMENT_CARD_PARTIAL_COLOR, PAYMENT_STATUS } from "./constants";
 import { state } from "./state";
 import type { Payment } from "./types";
 import { $, esc, pill } from "./utils";
 
-const CX = 60;
-const CY = 60;
-const R = 46;
-const GAP_DEG = 6;
-
-const fmtPct = (n: number): string => (Number.isInteger(n) ? String(n) : n.toFixed(1));
-
-// عدد الدفعات الكلي والمدفوع بعد ضبطهما (الكلي ≥ ١، والمدفوع بين ٠ والكلي)
+// عدد الدفعات الكلي والمدفوع بعد ضبطهما (الكلي ≥ ١، والمدفوع بين ٠ والكلي) — يحدد لون البطاقة فقط
 function counts(p: Payment): { total: number; paid: number; done: boolean } {
   const total = Math.max(1, Math.floor(p.installments_total ?? 1));
   const paid = Math.min(total, Math.max(0, Math.floor(p.installments_paid ?? 0)));
   return { total, paid, done: paid === total };
 }
 
-function pointOnCircle(angleDeg: number): [number, number] {
-  const rad = (angleDeg * Math.PI) / 180;
-  return [CX + R * Math.sin(rad), CY - R * Math.cos(rad)];
-}
-
-// كل دفعة تأخذ نصيبًا متساويًا من ١٠٠٪ (٣ دفعات = ٣٣٫٣٪ لكل واحدة)، والمدفوع منها يُلوَّن
-function completionCircle(total: number, paid: number, done: boolean): string {
-  const cls = (i: number) => `po-arc${i < paid ? " paid" : ""}`;
-  const share = fmtPct(100 / total);
-
-  const arcs =
-    total === 1
-      ? `<circle class="${cls(0)}" cx="${CX}" cy="${CY}" r="${R}"><title>الدفعة ١ — ${share}%</title></circle>`
-      : Array.from({ length: total }, (_, i) => {
-          const seg = 360 / total;
-          const [x1, y1] = pointOnCircle(i * seg + GAP_DEG / 2);
-          const [x2, y2] = pointOnCircle((i + 1) * seg - GAP_DEG / 2);
-          return `<path class="${cls(i)}" d="M${x1},${y1} A${R},${R} 0 0 1 ${x2},${y2}"><title>الدفعة ${i + 1} — ${share}%</title></path>`;
-        }).join("");
-
-  return `<div class="po-donut${done ? " done" : ""}">
-    <svg viewBox="0 0 120 120" aria-hidden="true">${arcs}</svg>
-    <div class="po-donut-center"><b>${fmtPct((paid / total) * 100)}%</b></div>
-  </div>`;
-}
-
+// البطاقة مربوطة ببيانات البرنامج نفسها (نفس مصدر جدول "مدفوعات المشاريع مع المركز") بدل حقول Payment المنفصلة
 function paymentCard(p: Payment): string {
-  const { total, paid, done } = counts(p);
+  const { done, paid } = counts(p);
   const editAttr = state.role === "admin" ? ` data-edit-payment="${esc(p.id)}"` : "";
-  // نربط أمر الشراء بالبرنامج بالاسم ليأخذ نوعه ولونه من بطاقة البرامج
   const prog = state.programs.find((x) => x.title === p.program_name);
-  const color = TYPE_COLORS[prog?.type || ""] || DEFAULT_CARD_COLOR;
-  return `<article class="prog-card pay-prog${done ? " is-done" : ""}" style="--card-color:${color}"${editAttr}>
+  const partial = !done && paid > 0;
+  const color = done ? PAYMENT_CARD_DONE_COLOR : partial ? PAYMENT_CARD_PARTIAL_COLOR : PAYMENT_CARD_COLOR;
+  const stateCls = done ? " is-done" : partial ? " is-partial" : "";
+  return `<article class="prog-card pay-prog${stateCls}" style="--card-color:${color}"${editAttr}>
     <div class="bars-wm"><i></i><i></i><i></i><i></i></div>
-    <div class="row1"><span class="eyebrow">${esc(prog?.type || "أمر شراء")}</span><span class="ref">أمر الشراء <bdi dir="ltr">${esc(p.purchase_order || "—")}</bdi></span></div>
+    <div class="row1"><span class="eyebrow">${esc(prog?.type || "أمر شراء")}</span><span class="ref">رقم أمر الشراء <bdi dir="ltr">${esc(prog?.ref || "—")}</bdi></span></div>
     <h4>${esc(p.program_name)}</h4>
     <div class="stats-row">
-      <div class="pay-status"><small>حالة الدفع</small>${pill(PO_PAYMENT_STATUS, p.status)}</div>
-      ${completionCircle(total, paid, done)}
+      <div class="pay-status"><small>حالة الدفع</small>${pill(PAYMENT_STATUS, prog?.payment_status)}</div>
     </div>
   </article>`;
 }

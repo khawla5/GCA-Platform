@@ -26,11 +26,9 @@ export const TRAINER_STATUS: [string, string][] = [
 ];
 
 export const PAYMENT_STATUS: [string, string][] = [
-  ["لم يُستحق بعد", "neutral"],
-  ["قيد المراجعة", "warn"],
-  ["معتمد للصرف", "info"],
-  ["مصروف", "ok"],
-  ["متأخر", "bad"],
+  ["تم الطلب", "info"],
+  ["معلقة", "warn"],
+  ["تم الدفع", "ok"],
 ];
 
 // حالات الدفع الخاصة بأوامر الشراء في تبويب المدفوعات
@@ -57,6 +55,11 @@ export const STATUS_CARD_COLORS: Record<string, string> = {
   "قيد التنفيذ": "#324A31",
   "منجز": "#7A6238",
 };
+
+// ألوان بطاقات أوامر الشراء في قسم المدفوعات حسب حالة السداد
+export const PAYMENT_CARD_COLOR = "#324A31"; // لم يُدفع منها شيء بعد
+export const PAYMENT_CARD_PARTIAL_COLOR = "#C9B58A"; // دُفع جزء وباقي دفعات
+export const PAYMENT_CARD_DONE_COLOR = "#7A6238"; // اكتمل سداد كل الدفعات
 
 // حسابان ثابتان فقط: مشاهدة وإدارة (لا يوجد تسجيل عام). أنشئهما في Supabase كما هو موضح في README.
 export const VIEWER_EMAIL = "viewer@gca.local";
