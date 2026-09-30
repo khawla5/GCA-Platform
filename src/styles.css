@@ -172,26 +172,23 @@ body.is-admin .pay-card:hover{border-color:var(--gold)}
 .prog-card .stage-text b{font-size:11px;color:rgba(255,255,255,.6);font-weight:600}
 .prog-card .stage-text small{font-size:12.5px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* program page hero (دائرة المراحل الكبيرة) */
-.stage-hero{display:flex;align-items:center;gap:24px;margin-bottom:16px;flex-wrap:wrap;justify-content:center}
-.stage-wheel{position:relative;width:320px;height:320px;flex-shrink:0}
-.stage-wheel-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.seg-arc{fill:none;stroke-width:28;transition:filter .15s;stroke-linecap:butt}
-.seg-arc.seg-done{stroke:var(--ok)}
-.seg-arc.seg-current{stroke:var(--gold)}
-.seg-arc.seg-future{stroke:var(--line)}
-.stage-seg .seg-leader,.stage-seg .seg-label{opacity:0;transition:opacity .15s;pointer-events:none}
-.stage-seg .seg-leader{stroke:var(--muted);stroke-width:1.5}
-.stage-seg .seg-label{fill:var(--ink);font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;font-size:13px;font-weight:600}
-.stage-seg:hover .seg-leader,.stage-seg:hover .seg-label{opacity:1}
-.stage-seg:hover .seg-arc{filter:brightness(1.2);cursor:pointer}
-.stage-wheel-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;padding:0 78px}
-.stage-wheel-center small{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
-.stage-wheel-center b{font-family:Tajawal,sans-serif;font-weight:800;font-size:19px;line-height:1.3}
+/* program page hero (عجلة مراحل الاعتماد الكبيرة) */
+.stage-hero{display:flex;flex-direction:column;gap:18px;margin-bottom:16px;padding:24px}
 .stage-hero-info{min-width:0;text-align:center}
 .stage-hero-info small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
 .stage-hero-info h3{font-size:19px;font-weight:800;margin-bottom:4px}
 .stage-hero-info p{margin:0;color:var(--muted);font-size:13px}
+
+/* شريط تقدّم البرنامج (بدل عجلة المراحل) */
+.stage-progress{display:flex;align-items:center;gap:16px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:10px 20px;flex-wrap:wrap}
+.stage-progress .sp-item{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap}
+.stage-progress .sp-deadline{color:var(--muted);font-weight:600}
+.stage-progress .sp-deadline b{color:var(--ink);font-weight:800;margin-inline-start:2px}
+.stage-progress .sp-ic{font-size:13px;line-height:1}
+.stage-progress .sp-bar{flex:1;min-width:120px;height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+.stage-progress .sp-fill{height:100%;border-radius:999px;background:#013B1B;transition:width .3s}
+.stage-progress .sp-pct{font-weight:800;color:var(--ink);font-size:13px;min-width:38px;text-align:end}
+.stage-progress .sp-empty{color:var(--muted);font-size:13px;text-align:center;width:100%}
 
 /* toolbar + table */
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
@@ -250,6 +247,7 @@ body.is-admin .admin-only.block{display:block}
 @media (max-width:640px){.form{grid-template-columns:1fr}}
 .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px;font-weight:500}
 .field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 11px}
+.field input[readonly]{background:var(--surface-2);color:var(--muted);cursor:default}
 .field textarea{min-height:70px;resize:vertical}
 .field .req{color:var(--bad)}
 fieldset{border:1px solid var(--line);border-radius:8px;padding:10px 14px 14px;grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;margin:0}

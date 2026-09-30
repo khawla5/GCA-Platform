@@ -16,6 +16,7 @@ export interface Trainer {
   status: string;
   city: string | null;
   notes: string | null;
+  cv_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +42,7 @@ export interface Program {
   status_trainer: string;
   notes: string | null;
   contract_value: number | null;
+  installments_total: number | null;
   due_portion: string | null;
   entitlement_value: number | null;
   due_date: string | null;
