@@ -1,5 +1,5 @@
 import { supabase } from "./supabaseClient";
-import type { Program, ProgramInput, Payment, PaymentInput, Trainer, TrainerInput, TrainerPayment, TrainerPaymentInput } from "./types";
+import type { Program, ProgramInput, ProgramPayment, ProgramPaymentInput, Payment, PaymentInput, Trainer, TrainerInput, TrainerPayment, TrainerPaymentInput } from "./types";
 
 export async function fetchTrainers(): Promise<Trainer[]> {
   const { data, error } = await supabase.from("trainers").select("*").order("name", { ascending: true });
@@ -32,14 +32,40 @@ export async function uploadTrainerCv(file: File): Promise<string> {
   return supabase.storage.from("trainer-cvs").getPublicUrl(path).data.publicUrl;
 }
 
-export async function upsertProgram(id: string | null, input: ProgramInput): Promise<void> {
+// يرجّع id البرنامج (نفسه عند التعديل، أو الـ id الجديد عند الإضافة) — يلزم لربط دفعات program_payments به
+export async function upsertProgram(id: string | null, input: ProgramInput): Promise<string> {
   const payload = { ...input, updated_at: new Date().toISOString() };
-  const { error } = id ? await supabase.from("programs").update(payload).eq("id", id) : await supabase.from("programs").insert(payload);
+  if (id) {
+    const { error } = await supabase.from("programs").update(payload).eq("id", id);
+    if (error) throw error;
+    return id;
+  }
+  const { data, error } = await supabase.from("programs").insert(payload).select("id").single();
   if (error) throw error;
+  return (data as { id: string }).id;
 }
 
 export async function deleteProgram(id: string): Promise<void> {
   const { error } = await supabase.from("programs").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function fetchProgramPayments(): Promise<ProgramPayment[]> {
+  const { data, error } = await supabase.from("program_payments").select("*").order("due_date", { ascending: true });
+  if (error) throw error;
+  return (data as ProgramPayment[]) ?? [];
+}
+
+export async function upsertProgramPayment(id: string | null, input: ProgramPaymentInput): Promise<void> {
+  const payload = { ...input, updated_at: new Date().toISOString() };
+  const { error } = id
+    ? await supabase.from("program_payments").update(payload).eq("id", id)
+    : await supabase.from("program_payments").insert(payload);
+  if (error) throw error;
+}
+
+export async function deleteProgramPayment(id: string): Promise<void> {
+  const { error } = await supabase.from("program_payments").delete().eq("id", id);
   if (error) throw error;
 }
 

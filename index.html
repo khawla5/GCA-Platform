@@ -127,7 +127,7 @@
 
     <div class="section-head"><h3 class="table-split-head" style="margin:0">مدفوعات المدربين</h3><span class="spacer"></span><button class="btn primary admin-only" id="btnNewTrainerPayment">＋ إضافة</button></div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>اسم البرنامج</th><th>المسار</th><th>اسم المدرب</th><th class="admin-only"></th></tr></thead>
+      <thead><tr><th>اسم البرنامج</th><th>المسار</th><th>اسم المدرب</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
       <tbody id="trainerPaymentsBody"></tbody>
     </table></div>
     <p class="hint" style="margin-top:8px" id="trainerPaymentsCount"></p>
@@ -239,14 +239,11 @@
         </fieldset>
         <fieldset id="contractFieldset"><legend id="contractFieldsetLegend">بيانات العقد والصرف</legend>
           <div class="field"><label>قيمة العقد</label><input type="number" id="p_contractValue" min="0" step="0.01"></div>
-          <div class="field"><label>عدد الدفعات</label><select id="p_installmentsTotal"><option value="">— بدون —</option><option value="1">دفعة واحدة</option><option value="2">دفعتان</option><option value="3">3 دفعات</option><option value="4">4 دفعات</option></select></div>
-          <div class="field"><label>الجزء المستحق</label><select id="p_duePortion"><option value="">— اختر عدد الدفعات أولًا —</option></select></div>
-          <div class="field"><label>نسبة الاستحقاق</label><input id="p_entitlementPercent" readonly placeholder="—"></div>
-          <div class="field"><label>قيمة الاستحقاق</label><input type="number" id="p_entitlementValue" readonly placeholder="—"></div>
-          <div class="field"><label>تاريخ الاستحقاق</label><input type="date" id="p_dueDate"></div>
-          <div class="field"><label>حالة الصرف</label><select id="p_paymentStatus"></select></div>
-          <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input id="p_coc"></div>
-          <div class="field"><label>رقم الفاتورة</label><input id="p_invoice"></div>
+          <div class="field full">
+            <label>الدفعات</label>
+            <div id="programPaymentsList" class="pp-list"></div>
+            <button type="button" class="btn sm" id="btnAddProgramPayment">＋ إضافة دفعة</button>
+          </div>
         </fieldset>
         <div class="field full"><label>ملاحظات</label><textarea id="p_notes"></textarea></div>
       </div>

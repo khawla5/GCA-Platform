@@ -103,6 +103,24 @@ create table if not exists public.programs (
 create index if not exists programs_trainer_id_idx on public.programs (trainer_id);
 create index if not exists programs_start_date_idx on public.programs (start_date);
 
+-- ---------- جدول دفعات المشاريع (دفعة واحدة أو أكثر لكل برنامج) ----------
+-- يحل محل حقول due_portion/entitlement_value/due_date/payment_status/coc_number/invoice_number
+-- المفردة على جدول programs — كل صف هنا يمثّل دفعة واحدة من دفعات عقد البرنامج
+create table if not exists public.program_payments (
+  id uuid primary key default gen_random_uuid(),
+  program_id uuid not null references public.programs (id) on delete cascade,
+  due_portion text,
+  entitlement_percent numeric,
+  entitlement_value numeric,
+  due_date date,
+  payment_status text not null default 'تم الطلب',
+  coc_number text,
+  invoice_number text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists program_payments_program_id_idx on public.program_payments (program_id);
+
 -- ---------- جدول المدفوعات (أوامر الشراء ودفعاتها) ----------
 -- كان اسمه project_payments سابقًا — يُعاد تسميته تلقائيًا مع الاحتفاظ ببياناته
 do $$
@@ -197,16 +215,29 @@ create policy "admin write payments" on public.payments
   for all using (public.is_admin()) with check (public.is_admin());
 
 -- ---------- جدول مدفوعات المدربين ----------
+-- كل صف يمثّل دفعة واحدة من دفعات المدرب (يمكن تكرار نفس المدرب/البرنامج بعدة صفوف لعدة دفعات)
 create table if not exists public.trainer_payments (
   id uuid primary key default gen_random_uuid(),
   program_name text not null,
   track text,
   trainer_id uuid references public.trainers (id) on delete set null,
+  due_portion text,
+  entitlement_percent numeric,
+  due_date date,
+  payment_status text not null default 'تم الطلب',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
+-- لقواعد بيانات فيها جدول trainer_payments بدون أعمدة الدفعات (آمن للتكرار)
+alter table public.trainer_payments
+  add column if not exists due_portion text,
+  add column if not exists entitlement_percent numeric,
+  add column if not exists due_date date,
+  add column if not exists payment_status text not null default 'تم الطلب';
+
 alter table public.trainer_payments enable row level security;
+alter table public.program_payments enable row level security;
 
 drop policy if exists "authenticated read trainer_payments" on public.trainer_payments;
 create policy "authenticated read trainer_payments" on public.trainer_payments
@@ -214,6 +245,14 @@ create policy "authenticated read trainer_payments" on public.trainer_payments
 
 drop policy if exists "admin write trainer_payments" on public.trainer_payments;
 create policy "admin write trainer_payments" on public.trainer_payments
+  for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "authenticated read program_payments" on public.program_payments;
+create policy "authenticated read program_payments" on public.program_payments
+  for select using (auth.role() = 'authenticated');
+
+drop policy if exists "admin write program_payments" on public.program_payments;
+create policy "admin write program_payments" on public.program_payments
   for all using (public.is_admin()) with check (public.is_admin());
 
 -- ---------- تخزين ملفات السيرة الذاتية للمدربين (Storage) ----------

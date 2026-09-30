@@ -1,12 +1,10 @@
-import { TYPES } from "./constants";
-import { deleteProgram, deleteTrainer, upsertProgram, upsertTrainer, uploadTrainerCv } from "./data";
+import { PAYMENT_STATUS, TYPES } from "./constants";
+import { deleteProgram, deleteProgramPayment, deleteTrainer, upsertProgram, upsertProgramPayment, upsertTrainer, uploadTrainerCv } from "./data";
 import { state } from "./state";
-import type { ProgramInput, TrainerInput } from "./types";
-import { $, $$, closeModal, csv, daysBetween, fill, openModal, requireAdmin, save, setv, toast, today, trainerName, v } from "./utils";
+import type { ProgramInput, ProgramPayment, ProgramPaymentInput, TrainerInput } from "./types";
+import { $, $$, closeModal, csv, daysBetween, esc, fill, openModal, requireAdmin, save, setv, toast, today, trainerName, v } from "./utils";
 import { buildProgressLine, cardHtml } from "./render";
 import { refreshData } from "./boot";
-
-const DUE_PORTION_LABELS = ["الدفعة الأولى", "الدفعة الثانية", "الدفعة الثالثة", "الدفعة الرابعة"];
 
 // خيارات "مكان التنفيذ" تابعة لـ"أسلوب التنفيذ" — كل أسلوب له خيارات مكان ثابتة
 const LOCATION_OPTIONS: Record<string, string[]> = {
@@ -23,30 +21,51 @@ function updateLocationOptions(preferred?: string | null): void {
   sel.value = preferred && options.includes(preferred) ? preferred : options[0];
 }
 
-// يعيد بناء قائمة "الجزء المستحق" بعدد الدفعات المختار، ويحسب نسبة وقيمة الاستحقاق
-// (كل دفعة تأخذ نصيبًا متساويًا من قيمة العقد وعدد الدفعات)
-function updateInstallmentCalc(): void {
-  const total = +v("p_installmentsTotal") || 0;
-  const duePortionSelect = $("#p_duePortion") as HTMLSelectElement | null;
-  if (duePortionSelect) {
-    const current = duePortionSelect.value;
-    duePortionSelect.innerHTML = total
-      ? DUE_PORTION_LABELS.slice(0, total).map((label) => `<option value="${label}">${label}</option>`).join("")
-      : `<option value="">— اختر عدد الدفعات أولًا —</option>`;
-    duePortionSelect.value = DUE_PORTION_LABELS.slice(0, total).includes(current) ? current : duePortionSelect.options[0]?.value || "";
-  }
+/* ---------- دفعات عقد البرنامج (قائمة ديناميكية — برنامج واحد ممكن ياخذ أكثر من دفعة) ---------- */
+function programPaymentRowHtml(pp?: ProgramPayment): string {
+  const statusOptions = PAYMENT_STATUS.map(
+    ([s]) => `<option value="${esc(s)}"${pp?.payment_status === s ? " selected" : ""}>${esc(s)}</option>`
+  ).join("");
+  return `<div class="pp-row" data-pp-id="${esc(pp?.id || "")}">
+    <div class="pp-row-head"><b>دفعة</b><button type="button" class="pp-remove" title="حذف الدفعة">✕</button></div>
+    <div class="pp-grid">
+      <div class="field"><label>الجزء المستحق</label><input class="pp-portion" value="${esc(pp?.due_portion || "")}"></div>
+      <div class="field"><label>نسبة الاستحقاق %</label><input type="number" class="pp-percent" min="0" max="100" step="0.1" value="${pp?.entitlement_percent ?? ""}"></div>
+      <div class="field"><label>قيمة الاستحقاق</label><input type="number" class="pp-value" min="0" step="0.01" value="${pp?.entitlement_value ?? ""}"></div>
+      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pp-date" value="${esc(pp?.due_date || "")}"></div>
+      <div class="field"><label>حالة الدفع</label><select class="pp-status">${statusOptions}</select></div>
+      <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input class="pp-coc" value="${esc(pp?.coc_number || "")}"></div>
+      <div class="field"><label>رقم الفاتورة</label><input class="pp-invoice" value="${esc(pp?.invoice_number || "")}"></div>
+    </div>
+  </div>`;
+}
 
-  const percentEl = $("#p_entitlementPercent") as HTMLInputElement | null;
-  const valueEl = $("#p_entitlementValue") as HTMLInputElement | null;
-  const contractValue = +v("p_contractValue") || 0;
-  if (!total) {
-    if (percentEl) percentEl.value = "";
-    if (valueEl) valueEl.value = "";
-    return;
+function renderProgramPaymentsList(programId: string | null): void {
+  const list = $("#programPaymentsList");
+  if (!list) return;
+  const rows = programId ? state.programPayments.filter((pp) => pp.program_id === programId) : [];
+  list.innerHTML = rows.map((pp) => programPaymentRowHtml(pp)).join("");
+}
+
+// يحفظ كل صفوف الدفعات المعروضة حاليًا بالقائمة (إضافة/تعديل) لبرنامج معيّن
+async function saveProgramPaymentsList(programId: string): Promise<void> {
+  const list = $("#programPaymentsList");
+  const rows = list ? $$(".pp-row", list) : [];
+  for (const row of rows) {
+    const id = (row as HTMLElement).dataset.ppId || null;
+    const g = (cls: string) => (row.querySelector(cls) as HTMLInputElement | HTMLSelectElement | null)?.value || "";
+    const input: ProgramPaymentInput = {
+      program_id: programId,
+      due_portion: g(".pp-portion") || null,
+      entitlement_percent: g(".pp-percent") ? +g(".pp-percent") : null,
+      entitlement_value: g(".pp-value") ? +g(".pp-value") : null,
+      due_date: g(".pp-date") || null,
+      payment_status: g(".pp-status") || "تم الطلب",
+      coc_number: g(".pp-coc") || null,
+      invoice_number: g(".pp-invoice") || null,
+    };
+    await upsertProgramPayment(id, input);
   }
-  const percent = 100 / total;
-  if (percentEl) percentEl.value = `${Number.isInteger(percent) ? percent : percent.toFixed(1)}%`;
-  if (valueEl) valueEl.value = contractValue ? (contractValue / total).toFixed(2) : "";
 }
 
 function nextRef(): string {
@@ -127,13 +146,7 @@ export function openProgramForm(id?: string, focusPayment = false): void {
   setv("p_statusGca", p?.status_gca || "بانتظار صدور أمر الشراء");
   setv("p_statusTrainer", p?.status_trainer || "مرحلة الفرز والترشيح");
   setv("p_contractValue", p?.contract_value ?? "");
-  setv("p_installmentsTotal", p?.installments_total ?? "");
-  updateInstallmentCalc();
-  setv("p_duePortion", p?.due_portion || "");
-  setv("p_dueDate", p?.due_date);
-  setv("p_paymentStatus", p?.payment_status || "تم الطلب");
-  setv("p_coc", p?.coc_number);
-  setv("p_invoice", p?.invoice_number);
+  renderProgramPaymentsList(p?.id || null);
   setv("p_notes", p?.notes);
 
   if (!state.trainers.length) toast("أضف مدربًا أولًا من تبويب المدربين");
@@ -168,17 +181,11 @@ async function saveProgram(): Promise<void> {
     status_gca: v("p_statusGca"),
     status_trainer: v("p_statusTrainer"),
     contract_value: v("p_contractValue") ? +v("p_contractValue") : null,
-    installments_total: v("p_installmentsTotal") ? +v("p_installmentsTotal") : null,
-    entitlement_value: v("p_entitlementValue") ? +v("p_entitlementValue") : null,
-    due_portion: v("p_duePortion") || null,
-    due_date: v("p_dueDate") || null,
-    payment_status: v("p_paymentStatus"),
-    coc_number: v("p_coc"),
-    invoice_number: v("p_invoice"),
     notes: v("p_notes"),
   };
   try {
-    await upsertProgram(id, input);
+    const programId = await upsertProgram(id, input);
+    await saveProgramPaymentsList(programId);
     toast(id ? "تم تحديث البرنامج" : "تمت إضافة البرنامج");
     await refreshData();
     closeProgramPage();
@@ -380,8 +387,6 @@ export function wireForms(): void {
   $("#p_end")?.addEventListener("change", updateStageHero);
   $("#p_title")?.addEventListener("input", updateStageHero);
   $("#p_mode")?.addEventListener("change", () => updateLocationOptions());
-  $("#p_installmentsTotal")?.addEventListener("change", updateInstallmentCalc);
-  $("#p_contractValue")?.addEventListener("input", updateInstallmentCalc);
   $("#p_statusGca")?.addEventListener("change", updateStageHero);
   $("#p_trainer")?.addEventListener("change", updateStageHero);
   $("#btnNewProgram")?.addEventListener("click", () => openProgramForm());
@@ -389,6 +394,31 @@ export function wireForms(): void {
   $("#btnDeleteProgram")?.addEventListener("click", removeProgram);
   $("#btnBackFromProgram")?.addEventListener("click", closeProgramPage);
   $("#btnCancelProgram")?.addEventListener("click", closeProgramPage);
+
+  $("#btnAddProgramPayment")?.addEventListener("click", () => {
+    $("#programPaymentsList")?.insertAdjacentHTML("beforeend", programPaymentRowHtml());
+  });
+  $("#programPaymentsList")?.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest(".pp-remove") as HTMLElement | null;
+    if (!btn) return;
+    const row = btn.closest(".pp-row") as HTMLElement | null;
+    if (!row) return;
+    const ppId = row.dataset.ppId;
+    if (ppId) {
+      if (!confirm("حذف هذه الدفعة نهائيًا؟")) return;
+      deleteProgramPayment(ppId).catch((err) => toast("تعذّر حذف الدفعة: " + ((err as Error)?.message || "")));
+    }
+    row.remove();
+  });
+  $("#programPaymentsList")?.addEventListener("input", (e) => {
+    const target = e.target as HTMLElement;
+    if (!target.classList.contains("pp-percent")) return;
+    const row = target.closest(".pp-row") as HTMLElement | null;
+    const valueInput = row?.querySelector(".pp-value") as HTMLInputElement | null;
+    const percent = +(target as HTMLInputElement).value || 0;
+    const contractValue = +v("p_contractValue") || 0;
+    if (valueInput && percent && contractValue) valueInput.value = ((contractValue * percent) / 100).toFixed(2);
+  });
 
   $("#btnNewTrainer")?.addEventListener("click", () => openTrainerForm());
   $("#btnSaveTrainer")?.addEventListener("click", saveTrainer);
