@@ -219,10 +219,6 @@ function programRowIdentity(p: Program): string {
   return `<tr data-open="${esc(p.id)}"><td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td><td><span class="t">${esc(p.title)}</span>${p.target_group ? `<span class="sub">${esc(p.target_group)}</span>` : ""}</td><td>${esc(p.type || "—")}</td><td>${esc(trainerName(p, state.trainers))}</td>`;
 }
 
-function programRowStart(p: Program): string {
-  return `${programRowIdentity(p)}<td>${fmtDate(p.start_date)}${p.end_date && p.end_date !== p.start_date ? `<span class="sub">إلى ${fmtDate(p.end_date)}</span>` : ""}</td><td>${durationText(p)}</td>`;
-}
-
 // نسخة بتاريخي بداية ونهاية منفصلين — لجدول "الحالة مع الديوان العام للمحاسبة"
 function programRowStartSplitDates(p: Program): string {
   return `${programRowIdentity(p)}<td>${fmtDate(p.start_date)}</td><td>${fmtDate(p.end_date)}</td><td>${durationText(p)}</td>`;
@@ -236,8 +232,32 @@ const programRowEnd = "</tr>";
 
 const fmtMoney = (n: number | null): string => (n == null ? "—" : n.toLocaleString("ar-SA"));
 
-function paymentCells(p: Program): string {
-  return `<td>${esc(p.due_portion || "—")}</td><td>${fmtMoney(p.entitlement_value)}</td><td>${fmtDate(p.due_date)}</td><td>${pill(PAYMENT_STATUS, p.payment_status)}</td><td>${esc(p.coc_number || "—")}</td><td>${esc(p.invoice_number || "—")}</td>`;
+// نسبة الاستحقاق محسوبة من عدد الدفعات (كل دفعة تأخذ نصيبًا متساويًا) — نفس حساب فورم البرنامج
+function entitlementPercentText(p: Program): string {
+  const total = p.installments_total || 0;
+  if (!total) return "—";
+  const percent = 100 / total;
+  return `${Number.isInteger(percent) ? percent : percent.toFixed(1)}%`;
+}
+
+// صف جدول "مدفوعات المشاريع مع المركز" — ترتيب أعمدة محدد: شهادة الإنجاز، الفاتورة، أمر الشراء، البرنامج،
+// المسار، النوع، قيمة العقد، الدفعة المستحقة، نسبة الاستحقاق، قيمة الاستحقاق، تاريخ الاستحقاق، حالة الدفع
+function centerPaymentRow(p: Program): string {
+  return `<tr data-open="${esc(p.id)}">
+    <td>${esc(p.coc_number || "—")}</td>
+    <td>${esc(p.invoice_number || "—")}</td>
+    <td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td>
+    <td><span class="t">${esc(p.title)}</span></td>
+    <td>${esc(p.target_group || "—")}</td>
+    <td>${esc(p.type || "—")}</td>
+    <td>${fmtMoney(p.contract_value)}</td>
+    <td>${esc(p.due_portion || "—")}</td>
+    <td>${entitlementPercentText(p)}</td>
+    <td>${fmtMoney(p.entitlement_value)}</td>
+    <td>${fmtDate(p.due_date)}</td>
+    <td>${pill(PAYMENT_STATUS, p.payment_status)}</td>
+    ${programRowEdit(p)}
+  </tr>`;
 }
 
 export function renderPrograms(): void {
@@ -257,9 +277,7 @@ export function renderPrograms(): void {
 
   const trBody = $("#programsBodyTr");
   if (trBody) {
-    trBody.innerHTML = rows.length
-      ? rows.map((p) => `${programRowStart(p)}<td>${pill(TR_STATUS, p.status_trainer)}</td>${paymentCells(p)}${programRowEdit(p)}${programRowEnd}`).join("")
-      : emptyMsg("لا توجد برامج مطابقة", 14);
+    trBody.innerHTML = rows.length ? rows.map(centerPaymentRow).join("") : emptyMsg("لا توجد برامج مطابقة", 13);
   }
   const cntTr = $("#programsCountTr");
   if (cntTr) cntTr.textContent = `${rows.length} من ${state.programs.length} برنامج`;

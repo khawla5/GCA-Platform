@@ -1,5 +1,6 @@
 import { refreshData } from "./boot";
 import { deletePayment, deleteTrainerPayment, upsertPayment, upsertTrainerPayment } from "./data";
+import { openProgramForm } from "./forms";
 import { state } from "./state";
 import type { PaymentInput, TrainerPaymentInput } from "./types";
 import { $, $$, fill, requireAdmin, setv, toast, v } from "./utils";
@@ -20,7 +21,7 @@ function closePaymentPage(): void {
 
 function openPaymentForm(id?: string): void {
   if (state.role !== "admin") return;
-  const p = id ? state.payments.find((x) => x.id === id) : null;
+  const p = id ? state.payments.find((x) => String(x.id) === id) : null;
   const title = $("#paymentFormTitle");
   if (title) title.textContent = p ? "تعديل أمر الشراء" : "إضافة أمر شراء";
   const delBtn = $("#btnDeletePayment") as HTMLButtonElement | null;
@@ -144,7 +145,13 @@ export function wirePaymentForms(): void {
   document.addEventListener("click", (e) => {
     const ep = (e.target as HTMLElement).closest("[data-edit-payment]") as HTMLElement | null;
     if (ep) {
-      openPaymentForm(ep.dataset.editPayment as string);
+      const payment = state.payments.find((x) => String(x.id) === ep.dataset.editPayment);
+      const program = payment ? state.programs.find((x) => x.title === payment.program_name) : null;
+      if (program) {
+        openProgramForm(program.id, true);
+      } else {
+        toast("لم يتم العثور على برنامج مرتبط بهذا الأمر");
+      }
       return;
     }
     const et = (e.target as HTMLElement).closest("[data-edit-tpay]") as HTMLElement | null;

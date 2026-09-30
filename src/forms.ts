@@ -92,7 +92,7 @@ function updateStageHero(): void {
   heroMeta.textContent = metaParts.length ? metaParts.join(" · ") : "حدّد المدرب والتواريخ لعرض التفاصيل";
 }
 
-export function openProgramForm(id?: string): void {
+export function openProgramForm(id?: string, focusPayment = false): void {
   if (state.role !== "admin") return;
   fill(
     "#p_trainer",
@@ -106,6 +106,11 @@ export function openProgramForm(id?: string): void {
   if (delBtn) delBtn.style.display = p ? "" : "none";
   const heroEl = $(".stage-hero") as HTMLElement | null;
   if (heroEl) heroEl.style.display = p ? "" : "none";
+
+  const formEl = $("#programForm") as HTMLElement | null;
+  if (formEl) formEl.classList.toggle("payment-focus", focusPayment);
+  const legend = $("#contractFieldsetLegend");
+  if (legend) legend.textContent = focusPayment ? "مدفوعات المشاريع مع المركز" : "بيانات العقد والصرف";
 
   setv("p_id", p?.id);
   setv("p_title", p?.title);
@@ -126,7 +131,7 @@ export function openProgramForm(id?: string): void {
   updateInstallmentCalc();
   setv("p_duePortion", p?.due_portion || "");
   setv("p_dueDate", p?.due_date);
-  setv("p_paymentStatus", p?.payment_status || "لم يُستحق بعد");
+  setv("p_paymentStatus", p?.payment_status || "تم الطلب");
   setv("p_coc", p?.coc_number);
   setv("p_invoice", p?.invoice_number);
   setv("p_notes", p?.notes);
