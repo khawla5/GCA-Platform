@@ -1,7 +1,7 @@
 import { AR_MONTHS, DEFAULT_CARD_COLOR, GCA_STATUS, PAYMENT_STATUS, PO_PAYMENT_STATUS, STATUS_CARD_COLORS, TR_STATUS, TRAINER_STATUS, TYPES } from "./constants";
 import { renderPayments } from "./payments";
 import { state } from "./state";
-import type { Program } from "./types";
+import type { Program, ProgramPayment } from "./types";
 import {
   $, $$, daysBetween, durationText, esc, fill, fmtDate, fmtLong, fmtMonth, inRange, pill, today, trainerName,
 } from "./utils";
@@ -232,30 +232,23 @@ const programRowEnd = "</tr>";
 
 const fmtMoney = (n: number | null): string => (n == null ? "—" : n.toLocaleString("ar-SA"));
 
-// نسبة الاستحقاق محسوبة من عدد الدفعات (كل دفعة تأخذ نصيبًا متساويًا) — نفس حساب فورم البرنامج
-function entitlementPercentText(p: Program): string {
-  const total = p.installments_total || 0;
-  if (!total) return "—";
-  const percent = 100 / total;
-  return `${Number.isInteger(percent) ? percent : percent.toFixed(1)}%`;
-}
-
-// صف جدول "مدفوعات المشاريع مع المركز" — ترتيب أعمدة محدد: شهادة الإنجاز، الفاتورة، أمر الشراء، البرنامج،
-// المسار، النوع، قيمة العقد، الدفعة المستحقة، نسبة الاستحقاق، قيمة الاستحقاق، تاريخ الاستحقاق، حالة الدفع
-function centerPaymentRow(p: Program): string {
+// صف جدول "مدفوعات المشاريع مع المركز" — دفعة واحدة (من program_payments) مع بيانات برنامجها
+// ترتيب أعمدة محدد: شهادة الإنجاز، الفاتورة، أمر الشراء، البرنامج، المسار، النوع، قيمة العقد،
+// الدفعة المستحقة، نسبة الاستحقاق، قيمة الاستحقاق، تاريخ الاستحقاق، حالة الدفع
+function programPaymentRow(pp: ProgramPayment, p: Program): string {
   return `<tr data-open="${esc(p.id)}">
-    <td>${esc(p.coc_number || "—")}</td>
-    <td>${esc(p.invoice_number || "—")}</td>
+    <td>${esc(pp.coc_number || "—")}</td>
+    <td>${esc(pp.invoice_number || "—")}</td>
     <td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td>
     <td><span class="t">${esc(p.title)}</span></td>
     <td>${esc(p.target_group || "—")}</td>
     <td>${esc(p.type || "—")}</td>
     <td>${fmtMoney(p.contract_value)}</td>
-    <td>${esc(p.due_portion || "—")}</td>
-    <td>${entitlementPercentText(p)}</td>
-    <td>${fmtMoney(p.entitlement_value)}</td>
-    <td>${fmtDate(p.due_date)}</td>
-    <td>${pill(PAYMENT_STATUS, p.payment_status)}</td>
+    <td>${esc(pp.due_portion || "—")}</td>
+    <td>${pp.entitlement_percent != null ? `${pp.entitlement_percent}%` : "—"}</td>
+    <td>${fmtMoney(pp.entitlement_value)}</td>
+    <td>${fmtDate(pp.due_date)}</td>
+    <td>${pill(PAYMENT_STATUS, pp.payment_status)}</td>
     ${programRowEdit(p)}
   </tr>`;
 }
@@ -276,11 +269,19 @@ export function renderPrograms(): void {
   if (cntGca) cntGca.textContent = `${rows.length} من ${state.programs.length} برنامج`;
 
   const trBody = $("#programsBodyTr");
+  const allowedIds = new Set(rows.map((p) => p.id));
+  const ppRows = state.programPayments
+    .filter((pp) => allowedIds.has(pp.program_id))
+    .map((pp) => ({ pp, p: state.programs.find((x) => x.id === pp.program_id) }))
+    .filter((x): x is { pp: ProgramPayment; p: Program } => !!x.p)
+    .sort((a, b) => (a.pp.due_date || "").localeCompare(b.pp.due_date || ""));
   if (trBody) {
-    trBody.innerHTML = rows.length ? rows.map(centerPaymentRow).join("") : emptyMsg("لا توجد برامج مطابقة", 13);
+    trBody.innerHTML = ppRows.length
+      ? ppRows.map(({ pp, p }) => programPaymentRow(pp, p)).join("")
+      : emptyMsg("لا توجد دفعات مطابقة", 13);
   }
   const cntTr = $("#programsCountTr");
-  if (cntTr) cntTr.textContent = `${rows.length} من ${state.programs.length} برنامج`;
+  if (cntTr) cntTr.textContent = `${ppRows.length} من ${state.programPayments.length} دفعة`;
 }
 
 export function renderTrainers(): void {

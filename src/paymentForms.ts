@@ -112,10 +112,15 @@ async function saveTrainerPayment(): Promise<void> {
   const f = $("#trainerPaymentForm") as HTMLFormElement | null;
   if (!f || !f.reportValidity()) return;
   const id = v("tpay_id") || null;
+  const existing = id ? state.trainerPayments.find((x) => x.id === id) : null;
   const input: TrainerPaymentInput = {
     program_name: v("tpay_program"),
     track: v("tpay_track") || null,
     trainer_id: v("tpay_trainer") || null,
+    due_portion: existing?.due_portion ?? null,
+    entitlement_percent: existing?.entitlement_percent ?? null,
+    due_date: existing?.due_date ?? null,
+    payment_status: existing?.payment_status || "تم الطلب",
   };
   try {
     await upsertTrainerPayment(id, input);

@@ -42,8 +42,18 @@ export interface Program {
   status_trainer: string;
   notes: string | null;
   contract_value: number | null;
-  installments_total: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ProgramInput = Omit<Program, "id" | "created_at" | "updated_at">;
+
+// دفعة واحدة من دفعات عقد البرنامج — برنامج واحد يقدر ياخذ أكثر من دفعة
+export interface ProgramPayment {
+  id: string;
+  program_id: string;
   due_portion: string | null;
+  entitlement_percent: number | null;
   entitlement_value: number | null;
   due_date: string | null;
   payment_status: string;
@@ -53,7 +63,7 @@ export interface Program {
   updated_at: string;
 }
 
-export type ProgramInput = Omit<Program, "id" | "created_at" | "updated_at">;
+export type ProgramPaymentInput = Omit<ProgramPayment, "id" | "created_at" | "updated_at">;
 
 export interface Payment {
   id: string;
@@ -79,6 +89,10 @@ export interface TrainerPayment {
   program_name: string;
   track: string | null;
   trainer_id: string | null;
+  due_portion: string | null;
+  entitlement_percent: number | null;
+  due_date: string | null;
+  payment_status: string;
   created_at: string;
   updated_at: string;
 }
@@ -90,6 +104,7 @@ export interface AppState {
   profile: Profile | null;
   trainers: Trainer[];
   programs: Program[];
+  programPayments: ProgramPayment[];
   payments: Payment[];
   trainerPayments: TrainerPayment[];
   current: Program | null;
