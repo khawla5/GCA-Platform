@@ -24,6 +24,14 @@ export async function deleteTrainer(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function uploadTrainerCv(file: File): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
+  const path = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("trainer-cvs").upload(path, file, { upsert: true });
+  if (error) throw error;
+  return supabase.storage.from("trainer-cvs").getPublicUrl(path).data.publicUrl;
+}
+
 export async function upsertProgram(id: string | null, input: ProgramInput): Promise<void> {
   const payload = { ...input, updated_at: new Date().toISOString() };
   const { error } = id ? await supabase.from("programs").update(payload).eq("id", id) : await supabase.from("programs").insert(payload);

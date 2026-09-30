@@ -3,25 +3,19 @@ import { renderPayments } from "./payments";
 import { state } from "./state";
 import type { Program } from "./types";
 import {
-  $, $$, durationText, esc, fill, fmtDate, fmtLong, fmtMonth, inRange, pill, today, trainerName,
+  $, $$, daysBetween, durationText, esc, fill, fmtDate, fmtLong, fmtMonth, inRange, pill, today, trainerName,
 } from "./utils";
 
 const GALLERY_STATUS_PRIORITY: Record<string, number> = {
   "قيد التنفيذ": 0,
-  "معتمد": 1,
-  "بانتظار اعتماد الديوان": 2,
-  "مقترح": 3,
-  "مؤجَّل": 4,
-  "منفَّذ": 5,
-  "ملغى": 6,
+  "بانتظار صدور أمر الشراء": 1,
+  "منجز": 2,
 };
 
 // مسار اعتماد البرنامج — كل برنامج يمر بهذه المراحل بالترتيب
-const GCA_STAGES = ["مقترح", "بانتظار اعتماد الديوان", "معتمد", "قيد التنفيذ", "منفَّذ"];
+const GCA_STAGES = ["بانتظار صدور أمر الشراء", "قيد التنفيذ", "منجز"];
 
 export function stageInfoForStatus(status: string): { pct: number; ringColor: string; frac: string; label: string } {
-  if (status === "ملغى") return { pct: 100, ringColor: "var(--bad-hi)", frac: "✕", label: "ملغى" };
-  if (status === "مؤجَّل") return { pct: 100, ringColor: "var(--warn-hi)", frac: "⏸", label: "مؤجَّل" };
   const idx = GCA_STAGES.indexOf(status);
   const step = idx === -1 ? 0 : idx + 1;
   const pct = Math.round((step / GCA_STAGES.length) * 100);
@@ -29,62 +23,33 @@ export function stageInfoForStatus(status: string): { pct: number; ringColor: st
   return { pct, ringColor, frac: `${step}/${GCA_STAGES.length}`, label: status };
 }
 
-// نقطة على محيط الدائرة بزاوية بالدرجات (٠° = الأعلى، تزيد باتجاه عقارب الساعة)
-function pointOnCircle(cx: number, cy: number, r: number, angleDeg: number): [number, number] {
-  const rad = (angleDeg * Math.PI) / 180;
-  return [cx + r * Math.sin(rad), cy - r * Math.cos(rad)];
-}
-
-// يقسّم نصًا عربيًا طويلًا إلى سطرين عند أقرب فراغ للمنتصف
-function wrapTwoLines(text: string): string[] {
-  if (text.length <= 12) return [text];
-  const mid = Math.floor(text.length / 2);
-  let splitAt = text.lastIndexOf(" ", mid);
-  if (splitAt < 1) splitAt = text.indexOf(" ", mid);
-  if (splitAt < 1) return [text];
-  return [text.slice(0, splitAt), text.slice(splitAt + 1)];
-}
-
-export function buildStageWheel(status: string): string {
-  const cx = 150, cy = 150, R = 95, strokeW = 28, gapDeg = 6;
-  const isCancelled = status === "ملغى";
-  const isDeferred = status === "مؤجَّل";
-  const currentIdx = isCancelled || isDeferred ? -1 : GCA_STAGES.indexOf(status);
-
-  const segs = GCA_STAGES.map((stageName, i) => {
-    const startAngle = i * 72 + gapDeg / 2;
-    const endAngle = (i + 1) * 72 - gapDeg / 2;
-    const [x1, y1] = pointOnCircle(cx, cy, R, startAngle);
-    const [x2, y2] = pointOnCircle(cx, cy, R, endAngle);
-    const cls = currentIdx === -1 ? "seg-future" : i < currentIdx ? "seg-done" : i === currentIdx ? "seg-current" : "seg-future";
-
-    const midAngle = i * 72 + 36;
-    const [lx1, ly1] = pointOnCircle(cx, cy, R + strokeW / 2 + 6, midAngle);
-    const [lx2, ly2] = pointOnCircle(cx, cy, R + strokeW / 2 + 34, midAngle);
-    const isRightHalf = Math.sin((midAngle * Math.PI) / 180) >= 0;
-    const anchor = isRightHalf ? "start" : "end";
-    const labelX = lx2 + (isRightHalf ? 4 : -4);
-    const lines = wrapTwoLines(stageName);
-    const tspans = lines.map((line, li) => `<tspan x="${labelX}" dy="${li === 0 ? 0 : 14}">${esc(line)}</tspan>`).join("");
-
-    return `<g class="stage-seg">
-      <path class="seg-arc ${cls}" d="M${x1},${y1} A${R},${R} 0 0 1 ${x2},${y2}" pointer-events="stroke"></path>
-      <line class="seg-leader" x1="${lx1}" y1="${ly1}" x2="${lx2}" y2="${ly2}"></line>
-      <text class="seg-label" x="${labelX}" y="${ly2}" text-anchor="${anchor}" dominant-baseline="middle">${tspans}</text>
-    </g>`;
-  }).join("");
-
-  const centerColor = isCancelled ? "var(--bad)" : isDeferred ? "var(--warn)" : "var(--ink)";
-  const centerLabel = isCancelled ? "ملغى" : isDeferred ? "مؤجَّل" : status || "مقترح";
-
-  return `<svg viewBox="0 0 300 300" class="stage-wheel-svg">${segs}</svg>
-    <div class="stage-wheel-center">
-      <small>المرحلة الحالية</small>
-      <b style="color:${centerColor}">${esc(centerLabel)}</b>
-    </div>`;
-}
-
 const stageInfo = (p: Program) => stageInfoForStatus(p.status_gca);
+
+// شريط تقدّم البرنامج (بدل عجلة المراحل) — نسبة مبنية على مرور الأيام بين تاريخ البداية والنهاية
+export function buildProgressLine(
+  startDate: string | null | undefined,
+  endDate: string | null | undefined,
+  statusGca?: string,
+  daysOverride?: number | null
+): string {
+  if (!startDate || !endDate) {
+    return `<div class="stage-progress"><span class="sp-empty">حدّد تاريخ البداية والنهاية لعرض نسبة الإنجاز</span></div>`;
+  }
+  const t = today();
+  let pct: number;
+  if (statusGca === "منجز" || t > endDate) pct = 100;
+  else if (t < startDate) pct = 0;
+  else pct = Math.round((daysBetween(startDate, t) / daysBetween(startDate, endDate)) * 100);
+
+  const daysTotal = daysOverride || daysBetween(startDate, endDate);
+
+  return `<div class="stage-progress">
+    <span class="sp-item"><i class="sp-ic sp-ic-list"></i>${esc(String(daysTotal))}</span>
+    <div class="sp-bar"><div class="sp-fill" style="width:${pct}%"></div></div>
+    <span class="sp-pct">${pct}%</span>
+    <span class="sp-item sp-deadline"><i class="sp-ic sp-ic-cal"></i>الموعد النهائي <b>${esc(fmtDate(endDate))}</b></span>
+  </div>`;
+}
 
 export function renderGallery(): void {
   const rail = $("#galleryRail");
@@ -94,9 +59,9 @@ export function renderGallery(): void {
   const countEl = $("#galleryCount");
   if (countEl) countEl.textContent = P.length ? `(${P.length})` : "";
 
-  const done = P.filter((p) => p.status_gca === "منفَّذ").length;
+  const done = P.filter((p) => p.status_gca === "منجز").length;
   const progressLabel = $("#galleryProgressLabel");
-  if (progressLabel) progressLabel.textContent = P.length ? `${done} من ${P.length} برنامج منفَّذ` : "";
+  if (progressLabel) progressLabel.textContent = P.length ? `${done} من ${P.length} برنامج منجز` : "";
   const trackFill = $("#galleryTrackFill") as HTMLElement | null;
   if (trackFill) trackFill.style.width = P.length ? `${Math.round((done / P.length) * 100)}%` : "0%";
 
@@ -123,13 +88,13 @@ export function renderGallery(): void {
       const clickAttr = state.role === "admin" ? `data-edit="${esc(p.id)}"` : `data-open="${esc(p.id)}"`;
       const isCurrent = current && p.id === current.id;
       const color = TYPE_COLORS[p.type || ""] || DEFAULT_CARD_COLOR;
+      const purchaseOrder = state.payments.find((pay) => pay.program_name === p.title)?.purchase_order;
       return `<article class="prog-card${isCurrent ? " is-current" : ""}" style="--card-color:${color}" ${clickAttr}>
         <div class="bars-wm"><i></i><i></i><i></i><i></i></div>
-        <div class="row1"><span class="eyebrow">${esc(p.type || "—")}</span><span class="ref">${esc(p.ref || "—")}</span></div>
+        <div class="row1"><span class="eyebrow">${esc(p.type || "—")}</span><span class="ref">${esc(purchaseOrder || "—")}</span></div>
         <h4>${esc(p.title)}</h4>
         <div class="meta"><span class="avatar">${esc(initial)}</span>${esc(trainerName)}${t?.specialty ? ` · ${esc(t.specialty)}` : ""}</div>
         <div class="stats-row">
-          <div class="badge-count"><span class="n">${p.participants ?? 0}</span> متدرب</div>
           ${pill(GCA_STATUS, p.status_gca)}
         </div>
         <div class="stage-row">
@@ -150,20 +115,20 @@ export function wireGalleryShowAll(): void {
 export function renderKpis(): void {
   const P = state.programs, T = state.trainers, tm = today().slice(0, 7);
   const running = P.filter((p) => p.status_gca === "قيد التنفيذ").length;
-  const done = P.filter((p) => p.status_gca === "منفَّذ").length;
-  const pending = P.filter((p) => ["مقترح", "بانتظار اعتماد الديوان"].includes(p.status_gca)).length;
-  const hours = P.filter((p) => p.status_gca !== "ملغى").reduce((s, p) => s + (+(p.hours || 0)), 0);
-  const trainees = P.filter((p) => p.status_gca === "منفَّذ").reduce((s, p) => s + (+(p.participants || 0)), 0);
+  const done = P.filter((p) => p.status_gca === "منجز").length;
+  const pending = P.filter((p) => p.status_gca === "بانتظار صدور أمر الشراء").length;
+  const hours = P.reduce((s, p) => s + (+(p.hours || 0)), 0);
+  const trainees = P.filter((p) => p.status_gca === "منجز").reduce((s, p) => s + (+(p.participants || 0)), 0);
   const thisMonth = P.filter((p) => (p.start_date || "").slice(0, 7) === tm).length;
   const active = T.filter((t) => t.status === "نشط").length;
 
   const k: [string, number, string, string][] = [
     ["إجمالي البرامج", P.length, `${thisMonth} هذا الشهر`, ""],
     ["قيد التنفيذ", running, "برامج جارية الآن", "gold"],
-    ["منفَّذة", done, `${trainees} متدرب`, "ok"],
-    ["بانتظار اعتماد الديوان", pending, "تحتاج متابعة", pending ? "warn" : ""],
+    ["منجزة", done, `${trainees} متدرب`, "ok"],
+    ["بانتظار صدور أمر الشراء", pending, "تحتاج متابعة", pending ? "warn" : ""],
     ["مدربون نشطون", active, `من أصل ${T.length}`, ""],
-    ["ساعات تدريبية", hours, "إجمالي المعتمد والمنفَّذ", ""],
+    ["ساعات تدريبية", hours, "إجمالي البرامج", ""],
   ];
   const el = $("#kpis");
   if (el) el.innerHTML = k.map(([l, n, s, c]) => `<div class="kpi ${c}"><div class="n">${n}</div><div class="l">${l}</div><div class="s">${s}</div></div>`).join("");
@@ -210,7 +175,7 @@ function renderUpcoming(): void {
   const t = today();
   const lim = new Date(Date.now() + 60 * 864e5).toISOString().slice(0, 10);
   const up = state.programs
-    .filter((p) => p.start_date && p.start_date >= t && p.start_date <= lim && p.status_gca !== "ملغى")
+    .filter((p) => p.start_date && p.start_date >= t && p.start_date <= lim)
     .sort((a, b) => (a.start_date || "").localeCompare(b.start_date || ""))
     .slice(0, 8);
   const el = $("#upcoming");
@@ -311,9 +276,9 @@ export function renderTrainers(): void {
   el.innerHTML = T.length
     ? T.map((t) => {
         const ps = state.programs.filter((p) => p.trainer_id === t.id);
-        return `<tr data-trainer="${esc(t.id)}"><td class="t">${esc(t.name)}${t.city ? `<span class="sub">${esc(t.city)}</span>` : ""}</td><td>${esc(t.specialty || "—")}</td><td>${esc(t.qualification || "—")}</td><td dir="ltr" style="text-align:end">${esc(t.phone || "")}${t.email ? `<span class="sub">${esc(t.email)}</span>` : ""}</td><td>${pill(TRAINER_STATUS, t.status)}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td class="admin-only"><button class="btn sm" data-edit-trainer="${esc(t.id)}">✎</button></td></tr>`;
+        return `<tr data-trainer="${esc(t.id)}"><td class="t">${esc(t.name)}${t.city ? `<span class="sub">${esc(t.city)}</span>` : ""}${t.cv_url ? `<a href="${esc(t.cv_url)}" target="_blank" rel="noopener" class="sub" onclick="event.stopPropagation()">📄 CV</a>` : ""}</td><td dir="ltr" style="text-align:end">${esc(t.phone || "")}${t.email ? `<span class="sub">${esc(t.email)}</span>` : ""}</td><td>${pill(TRAINER_STATUS, t.status)}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td class="admin-only"><button class="btn sm" data-edit-trainer="${esc(t.id)}">✎</button></td></tr>`;
       }).join("")
-    : `<tr><td colspan="8"><div class="empty"><b>لا يوجد مدربون بعد</b>${state.role === "admin" ? "أضف أول مدرب من الزر أعلاه" : ""}</div></td></tr>`;
+    : `<tr><td colspan="6"><div class="empty"><b>لا يوجد مدربون بعد</b>${state.role === "admin" ? "أضف أول مدرب من الزر أعلاه" : ""}</div></td></tr>`;
 }
 
 export function renderReport(): void {
@@ -331,20 +296,20 @@ export function renderReport(): void {
   if (!el) return;
   el.innerHTML = `
     <div class="rh"><div class="bars"><i></i><i></i><i></i><i></i></div><h2>تقرير متابعة توريد المدربين — الديوان العام للمحاسبة</h2><div class="meta">أُعدّ بواسطة: يسير لإدارة المشاريع<br>تاريخ الإصدار: ${fmtLong(today())}<br>الفترة: ${period}${g ? `<br>الحالة: ${esc(g)}` : ""}</div></div>
-    <div class="rsum"><div><b>${P.length}</b><span>برنامج</span></div><div><b>${byTrainer.length}</b><span>مدرب</span></div><div><b>${hours}</b><span>ساعة تدريبية</span></div><div><b>${trainees}</b><span>متدرب</span></div><div><b>${P.filter((p) => p.status_gca === "منفَّذ").length}</b><span>برنامج منفَّذ</span></div></div>
+    <div class="rsum"><div><b>${P.length}</b><span>برنامج</span></div><div><b>${byTrainer.length}</b><span>مدرب</span></div><div><b>${hours}</b><span>ساعة تدريبية</span></div><div><b>${trainees}</b><span>متدرب</span></div><div><b>${P.filter((p) => p.status_gca === "منجز").length}</b><span>برنامج منجز</span></div></div>
     <h3>١. ملخص الحالة مع الديوان</h3>
     <div class="tbl-wrap"><table><thead><tr><th>الحالة</th><th>عدد البرامج</th><th>النسبة</th></tr></thead><tbody>${byStatus.map(([s, n]) => `<tr><td>${pill(GCA_STATUS, s)}</td><td>${n}</td><td>${Math.round((n / P.length) * 100)}%</td></tr>`).join("") || `<tr><td colspan="3" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
     <h3>٢. سجل البرامج</h3>
-    <div class="tbl-wrap"><table><thead><tr><th>#</th><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>المتدربون</th><th>مع الديوان</th><th>مع المدرب</th></tr></thead><tbody>${P.map((p, i) => `<tr data-open="${esc(p.id)}"><td>${i + 1}</td><td>${esc(p.ref || "")}</td><td class="t">${esc(p.title)}</td><td>${esc(p.type || "")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}${p.end_date !== p.start_date ? " – " + fmtDate(p.end_date) : ""}</td><td>${durationText(p)}</td><td>${p.participants || "—"}</td><td>${pill(GCA_STATUS, p.status_gca)}</td><td>${pill(TR_STATUS, p.status_trainer)}</td></tr>`).join("") || `<tr><td colspan="10" class="empty">لا برامج في هذه الفترة</td></tr>`}</tbody></table></div>
+    <div class="tbl-wrap"><table><thead><tr><th>#</th><th>رقم الأمر</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>المتدربون</th><th>مع الديوان</th><th>مع المدرب</th></tr></thead><tbody>${P.map((p, i) => `<tr data-open="${esc(p.id)}"><td>${i + 1}</td><td>${esc(p.ref || "")}</td><td class="t">${esc(p.title)}</td><td>${esc(p.type || "")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}${p.end_date !== p.start_date ? " – " + fmtDate(p.end_date) : ""}</td><td>${durationText(p)}</td><td>${p.participants || "—"}</td><td>${pill(GCA_STATUS, p.status_gca)}</td><td>${pill(TR_STATUS, p.status_trainer)}</td></tr>`).join("") || `<tr><td colspan="10" class="empty">لا برامج في هذه الفترة</td></tr>`}</tbody></table></div>
     <h3>٣. توزيع البرامج على المدربين</h3>
-    <div class="tbl-wrap"><table><thead><tr><th>المدرب</th><th>التخصص</th><th>البرامج</th><th>الساعات</th><th>منفَّذ</th><th>تم الصرف</th></tr></thead><tbody>${byTrainer.map(({ t, ps }) => `<tr><td class="t">${esc(t.name)}</td><td>${esc(t.specialty || "")}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td>${ps.filter((p) => p.status_gca === "منفَّذ").length}</td><td>${ps.filter((p) => p.status_trainer === "تم الصرف").length}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
+    <div class="tbl-wrap"><table><thead><tr><th>المدرب</th><th>التخصص</th><th>البرامج</th><th>الساعات</th><th>منجز</th><th>تم التعاقد</th></tr></thead><tbody>${byTrainer.map(({ t, ps }) => `<tr><td class="t">${esc(t.name)}</td><td>${esc(t.specialty || "")}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td>${ps.filter((p) => p.status_gca === "منجز").length}</td><td>${ps.filter((p) => p.status_trainer === "تم التعاقد").length}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
     <div class="pcard-f" style="margin-top:18px;border-radius:8px"><span>يسير لإدارة المشاريع · info@yaaseer.com · +966 50 168 3310 · الرياض</span><span>وثيقة متابعة مشتركة — للاستخدام بين الطرفين</span></div>`;
 }
 
 export function cardHtml(p: Program): string {
   const t = state.trainers.find((x) => x.id === p.trainer_id);
   return `<div class="pcard">
-    <div class="pcard-h"><div class="bars"><i></i><i></i><i></i><i></i></div><div class="who"><b>يسير لإدارة المشاريع</b><span>بطاقة برنامج تدريبي — الديوان العام للمحاسبة</span></div><div class="ref">الرقم المرجعي<b>${esc(p.ref || "—")}</b></div></div>
+    <div class="pcard-h"><div class="bars"><i></i><i></i><i></i><i></i></div><div class="who"><b>يسير لإدارة المشاريع</b><span>بطاقة برنامج تدريبي — الديوان العام للمحاسبة</span></div><div class="ref">رقم أمر الشراء<b>${esc(p.ref || "—")}</b></div></div>
     <div class="pcard-title"><h2>${esc(p.title)}</h2><div class="type">${esc(p.type || "")}${p.mode ? ` · ${esc(p.mode)}` : ""}</div></div>
     <div class="pcard-status"><div class="st"><small>الحالة مع الديوان العام للمحاسبة</small>${pill(GCA_STATUS, p.status_gca)}</div><div class="st"><small>الحالة مع المدرب</small>${pill(TR_STATUS, p.status_trainer)}</div></div>
     <div class="kv">

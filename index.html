@@ -20,8 +20,7 @@
   </div>
   <button type="button" class="theme-toggle theme-toggle-wide" id="themeToggle" aria-label="تبديل المظهر"></button>
   <div class="sidebar-title">
-    <h1>منصة متابعة توريد المدربين</h1>
-    <p>الديوان العام للمحاسبة × يسير لإدارة المشاريع</p>
+    <h1>منصة متابعة الأعمال - شركة يسير GCA</h1>
   </div>
 
   <nav class="tabs" role="tablist">
@@ -79,7 +78,7 @@
 
     <div class="section-head" id="programsTableHead"><h2>سجل البرامج التدريبية</h2><span class="spacer"></span><button class="btn primary admin-only" id="btnNewProgram">＋ إضافة برنامج</button></div>
     <div class="toolbar">
-      <input type="search" id="fSearch" placeholder="بحث باسم البرنامج أو المدرب أو الرقم المرجعي…">
+      <input type="search" id="fSearch" placeholder="بحث باسم البرنامج أو المدرب أو رقم أمر الشراء…">
       <select id="fType"><option value="">كل الأنواع</option></select>
       <select id="fGca"><option value="">كل حالات الديوان</option></select>
       <select id="fTr"><option value="">كل حالات المدربين</option></select>
@@ -87,14 +86,14 @@
     </div>
     <h3 class="table-split-head">الحالة مع الديوان العام للمحاسبة</h3>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>الحالة مع الديوان</th><th class="admin-only"></th></tr></thead>
+      <thead><tr><th>رقم الأمر</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>الحالة مع الديوان</th><th class="admin-only"></th></tr></thead>
       <tbody id="programsBodyGca"></tbody>
     </table></div>
     <p class="hint" style="margin-top:8px" id="programsCountGca"></p>
 
     <h3 class="table-split-head">مدفوعات البرامج</h3>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>الرقم</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>مدفوعات البرامج</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الدفع</th><th>حالة الدفع</th><th>رقم الشهادة</th><th>رقم الفاتورة</th><th class="admin-only"></th></tr></thead>
+      <thead><tr><th>رقم الأمر</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>مدفوعات البرامج</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الدفع</th><th>حالة الدفع</th><th>رقم الشهادة</th><th>رقم الفاتورة</th><th class="admin-only"></th></tr></thead>
       <tbody id="programsBodyTr"></tbody>
     </table></div>
     <p class="hint" style="margin-top:8px" id="programsCountTr"></p>
@@ -104,7 +103,7 @@
   <section class="panel" id="panel-trainers">
     <div class="section-head"><h2>قاعدة المدربين</h2><span class="spacer"></span><button class="btn primary admin-only" id="btnNewTrainer">＋ إضافة مدرب</button></div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>الاسم</th><th>التخصص</th><th>المؤهل</th><th>التواصل</th><th>الحالة</th><th>البرامج</th><th>الساعات</th><th class="admin-only"></th></tr></thead>
+      <thead><tr><th>الاسم</th><th>التواصل</th><th>الحالة</th><th>البرامج</th><th>الساعات</th><th class="admin-only"></th></tr></thead>
       <tbody id="trainersBody"></tbody>
     </table></div>
   </section>
@@ -225,36 +224,36 @@
       <button class="btn danger" id="btnDeleteProgram" type="button">حذف البرنامج</button>
     </div>
     <div class="stage-hero card">
-      <div class="stage-wheel" id="stageWheel"></div>
       <div class="stage-hero-info">
         <small>مرحلة الاعتماد</small>
         <h3 id="stageHeroTitle">برنامج جديد</h3>
         <p id="stageHeroMeta">حدّد المدرب والتواريخ لعرض التفاصيل</p>
       </div>
+      <div id="stageWheel"></div>
     </div>
     <form class="card" id="programForm">
       <div class="form">
         <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><input id="p_title" required></div>
-        <div class="field"><label>الرقم المرجعي</label><input id="p_ref" placeholder="يُولَّد تلقائيًا إن تُرك فارغًا"></div>
+        <div class="field"><label>رقم أمر الشراء</label><input id="p_ref" placeholder="يُولَّد تلقائيًا إن تُرك فارغًا"></div>
         <div class="field"><label>نوع البرنامج <span class="req">*</span></label><select id="p_type" required></select></div>
         <div class="field"><label>المدرب <span class="req">*</span></label><select id="p_trainer" required></select></div>
-        <div class="field"><label>أسلوب التنفيذ</label><select id="p_mode"><option>حضوري</option><option>عن بُعد</option><option>مدمج</option></select></div>
+        <div class="field"><label>أسلوب التنفيذ</label><select id="p_mode"><option>حضوري</option><option>افتراضي</option><option>هجين</option></select></div>
         <div class="field"><label>تاريخ البداية <span class="req">*</span></label><input type="date" id="p_start" required></div>
         <div class="field"><label>تاريخ النهاية <span class="req">*</span></label><input type="date" id="p_end" required></div>
         <div class="field"><label>عدد الأيام</label><input type="number" id="p_days" min="1" placeholder="يُحسب من التواريخ"></div>
         <div class="field"><label>عدد الساعات التدريبية</label><input type="number" id="p_hours" min="0" step="0.5"></div>
-        <div class="field"><label>مكان التنفيذ</label><input id="p_location" placeholder="مثال: مقر الديوان – الرياض"></div>
-        <div class="field"><label>الفئة المستهدفة</label><input id="p_target" placeholder="مثال: المراجعون الماليون"></div>
+        <div class="field"><label>مكان التنفيذ</label><select id="p_location"></select></div>
         <div class="field"><label>عدد المتدربين</label><input type="number" id="p_participants" min="0"></div>
-        <div class="field"><label>المسؤول من جهة الديوان</label><input id="p_gcaContact"></div>
         <fieldset><legend>حالة المشروع</legend>
-          <div class="field"><label>الحالة مع الديوان العام للمحاسبة</label><select id="p_statusGca"></select></div>
+          <div class="field"><label></label><select id="p_statusGca"></select></div>
           <div class="field"><label>الحالة مع المدرب</label><select id="p_statusTrainer"></select></div>
         </fieldset>
         <fieldset><legend>بيانات العقد والصرف</legend>
           <div class="field"><label>قيمة العقد</label><input type="number" id="p_contractValue" min="0" step="0.01"></div>
-          <div class="field"><label>قيمة الاستحقاق</label><input type="number" id="p_entitlementValue" min="0" step="0.01"></div>
-          <div class="field"><label>الجزء المستحق</label><input id="p_duePortion" placeholder="مثال: الدفعة الأولى"></div>
+          <div class="field"><label>عدد الدفعات</label><select id="p_installmentsTotal"><option value="">— بدون —</option><option value="1">دفعة واحدة</option><option value="2">دفعتان</option><option value="3">3 دفعات</option><option value="4">4 دفعات</option></select></div>
+          <div class="field"><label>الجزء المستحق</label><select id="p_duePortion"><option value="">— اختر عدد الدفعات أولًا —</option></select></div>
+          <div class="field"><label>نسبة الاستحقاق</label><input id="p_entitlementPercent" readonly placeholder="—"></div>
+          <div class="field"><label>قيمة الاستحقاق</label><input type="number" id="p_entitlementValue" readonly placeholder="—"></div>
           <div class="field"><label>تاريخ الاستحقاق</label><input type="date" id="p_dueDate"></div>
           <div class="field"><label>حالة الصرف</label><select id="p_paymentStatus"></select></div>
           <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input id="p_coc"></div>
@@ -296,12 +295,15 @@
     <form class="modal-b" id="trainerForm">
       <div class="form">
         <div class="field full"><label>اسم المدرب <span class="req">*</span></label><input id="t_name" required></div>
-        <div class="field"><label>التخصص</label><input id="t_specialty" placeholder="مثال: المراجعة الداخلية"></div>
-        <div class="field"><label>المؤهل / الشهادات</label><input id="t_qual" placeholder="مثال: CIA، CPA"></div>
         <div class="field"><label>الجوال</label><input id="t_phone" dir="ltr"></div>
         <div class="field"><label>البريد الإلكتروني</label><input id="t_email" dir="ltr" type="email"></div>
         <div class="field"><label>الحالة</label><select id="t_status"></select></div>
         <div class="field"><label>الجهة / المدينة</label><input id="t_city"></div>
+        <div class="field full">
+          <label>رابط الـ CV</label>
+          <input type="file" id="t_cv" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg">
+          <a id="t_cvCurrent" href="#" target="_blank" rel="noopener" class="hint" style="display:none">📄 عرض الملف الحالي</a>
+        </div>
         <div class="field full"><label>ملاحظات</label><textarea id="t_notes"></textarea></div>
       </div>
       <input type="hidden" id="t_id">

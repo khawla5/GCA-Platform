@@ -8,23 +8,15 @@ export const TYPES = [
 ];
 
 export const GCA_STATUS: [string, string][] = [
-  ["مقترح", "neutral"],
-  ["بانتظار اعتماد الديوان", "warn"],
-  ["معتمد", "info"],
+  ["بانتظار صدور أمر الشراء", "neutral"],
   ["قيد التنفيذ", "gold"],
-  ["منفَّذ", "ok"],
-  ["مؤجَّل", "warn"],
-  ["ملغى", "bad"],
+  ["منجز", "ok"],
 ];
 
 export const TR_STATUS: [string, string][] = [
-  ["تم الترشيح", "neutral"],
+  ["مرحلة الفرز والترشيح", "neutral"],
   ["بانتظار موافقة المدرب", "warn"],
   ["تم التعاقد", "info"],
-  ["قيد التنفيذ", "gold"],
-  ["تم التنفيذ", "ok"],
-  ["تم الصرف", "ok"],
-  ["معتذر", "bad"],
 ];
 
 export const TRAINER_STATUS: [string, string][] = [

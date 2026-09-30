@@ -64,6 +64,7 @@ create table if not exists public.trainers (
   status text not null default 'نشط',
   city text,
   notes text,
+  cv_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -88,6 +89,7 @@ create table if not exists public.programs (
   status_trainer text not null default 'تم الترشيح',
   notes text,
   contract_value numeric,
+  installments_total integer check (installments_total between 1 and 4),
   due_portion text,
   entitlement_value numeric,
   due_date date,
@@ -146,6 +148,14 @@ alter table public.payments
 -- ---------- تفعيل أمان مستوى الصف (RLS) ----------
 alter table public.profiles enable row level security;
 alter table public.trainers enable row level security;
+-- لقواعد بيانات فيها جدول programs بدون عمود عدد الدفعات (آمن للتكرار)
+alter table public.programs
+  add column if not exists installments_total integer check (installments_total between 1 and 4);
+
+-- لقواعد بيانات فيها جدول trainers بدون عمود رابط الـ CV (آمن للتكرار)
+alter table public.trainers
+  add column if not exists cv_url text;
+
 alter table public.programs enable row level security;
 alter table public.payments enable row level security;
 
@@ -205,6 +215,21 @@ create policy "authenticated read trainer_payments" on public.trainer_payments
 drop policy if exists "admin write trainer_payments" on public.trainer_payments;
 create policy "admin write trainer_payments" on public.trainer_payments
   for all using (public.is_admin()) with check (public.is_admin());
+
+-- ---------- تخزين ملفات السيرة الذاتية للمدربين (Storage) ----------
+-- bucket عام للقراءة (روابط CV تُفتح مباشرة)، والرفع/التعديل/الحذف لصلاحية admin فقط
+insert into storage.buckets (id, name, public)
+values ('trainer-cvs', 'trainer-cvs', true)
+on conflict (id) do nothing;
+
+drop policy if exists "public read trainer cvs" on storage.objects;
+create policy "public read trainer cvs" on storage.objects
+  for select using (bucket_id = 'trainer-cvs');
+
+drop policy if exists "admin write trainer cvs" on storage.objects;
+create policy "admin write trainer cvs" on storage.objects
+  for all using (bucket_id = 'trainer-cvs' and public.is_admin())
+  with check (bucket_id = 'trainer-cvs' and public.is_admin());
 
 -- ---------- إجبار PostgREST على تحديث ذاكرة السكيما فورًا ----------
 -- بدون هذا السطر قد تظهر أخطاء "Could not find the table" لبضع دقائق بعد إنشاء الجداول.

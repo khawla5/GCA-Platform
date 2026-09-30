@@ -1,10 +1,53 @@
 import { TYPES } from "./constants";
-import { deleteProgram, deleteTrainer, upsertProgram, upsertTrainer } from "./data";
+import { deleteProgram, deleteTrainer, upsertProgram, upsertTrainer, uploadTrainerCv } from "./data";
 import { state } from "./state";
 import type { ProgramInput, TrainerInput } from "./types";
 import { $, $$, closeModal, csv, daysBetween, fill, openModal, requireAdmin, save, setv, toast, today, trainerName, v } from "./utils";
-import { buildStageWheel, cardHtml } from "./render";
+import { buildProgressLine, cardHtml } from "./render";
 import { refreshData } from "./boot";
+
+const DUE_PORTION_LABELS = ["الدفعة الأولى", "الدفعة الثانية", "الدفعة الثالثة", "الدفعة الرابعة"];
+
+// خيارات "مكان التنفيذ" تابعة لـ"أسلوب التنفيذ" — كل أسلوب له خيارات مكان ثابتة
+const LOCATION_OPTIONS: Record<string, string[]> = {
+  "حضوري": ["مقر المركز - الرياض", "خارج المركز"],
+  "افتراضي": ["Microsoft"],
+  "هجين": ["مقر الديوان - الرياض / Microsoft"],
+};
+
+function updateLocationOptions(preferred?: string | null): void {
+  const sel = $("#p_location") as HTMLSelectElement | null;
+  if (!sel) return;
+  const options = LOCATION_OPTIONS[v("p_mode")] || LOCATION_OPTIONS["حضوري"];
+  sel.innerHTML = options.map((o) => `<option value="${o}">${o}</option>`).join("");
+  sel.value = preferred && options.includes(preferred) ? preferred : options[0];
+}
+
+// يعيد بناء قائمة "الجزء المستحق" بعدد الدفعات المختار، ويحسب نسبة وقيمة الاستحقاق
+// (كل دفعة تأخذ نصيبًا متساويًا من قيمة العقد وعدد الدفعات)
+function updateInstallmentCalc(): void {
+  const total = +v("p_installmentsTotal") || 0;
+  const duePortionSelect = $("#p_duePortion") as HTMLSelectElement | null;
+  if (duePortionSelect) {
+    const current = duePortionSelect.value;
+    duePortionSelect.innerHTML = total
+      ? DUE_PORTION_LABELS.slice(0, total).map((label) => `<option value="${label}">${label}</option>`).join("")
+      : `<option value="">— اختر عدد الدفعات أولًا —</option>`;
+    duePortionSelect.value = DUE_PORTION_LABELS.slice(0, total).includes(current) ? current : duePortionSelect.options[0]?.value || "";
+  }
+
+  const percentEl = $("#p_entitlementPercent") as HTMLInputElement | null;
+  const valueEl = $("#p_entitlementValue") as HTMLInputElement | null;
+  const contractValue = +v("p_contractValue") || 0;
+  if (!total) {
+    if (percentEl) percentEl.value = "";
+    if (valueEl) valueEl.value = "";
+    return;
+  }
+  const percent = 100 / total;
+  if (percentEl) percentEl.value = `${Number.isInteger(percent) ? percent : percent.toFixed(1)}%`;
+  if (valueEl) valueEl.value = contractValue ? (contractValue / total).toFixed(2) : "";
+}
 
 function nextRef(): string {
   const y = new Date().getFullYear();
@@ -39,7 +82,7 @@ function updateStageHero(): void {
   const heroMeta = $("#stageHeroMeta");
   if (!wheel || !heroTitle || !heroMeta) return;
 
-  wheel.innerHTML = buildStageWheel(v("p_statusGca") || "مقترح");
+  wheel.innerHTML = buildProgressLine(v("p_start") || null, v("p_end") || null, v("p_statusGca"), +v("p_days") || null);
 
   heroTitle.textContent = v("p_title") || "برنامج جديد";
 
@@ -74,15 +117,14 @@ export function openProgramForm(id?: string): void {
   setv("p_end", p?.end_date);
   setv("p_days", p?.days ?? "");
   setv("p_hours", p?.hours ?? "");
-  setv("p_location", p?.location);
-  setv("p_target", p?.target_group);
+  updateLocationOptions(p?.location);
   setv("p_participants", p?.participants ?? "");
-  setv("p_gcaContact", p?.gca_contact);
-  setv("p_statusGca", p?.status_gca || "مقترح");
-  setv("p_statusTrainer", p?.status_trainer || "تم الترشيح");
+  setv("p_statusGca", p?.status_gca || "بانتظار صدور أمر الشراء");
+  setv("p_statusTrainer", p?.status_trainer || "مرحلة الفرز والترشيح");
   setv("p_contractValue", p?.contract_value ?? "");
-  setv("p_entitlementValue", p?.entitlement_value ?? "");
-  setv("p_duePortion", p?.due_portion);
+  setv("p_installmentsTotal", p?.installments_total ?? "");
+  updateInstallmentCalc();
+  setv("p_duePortion", p?.due_portion || "");
   setv("p_dueDate", p?.due_date);
   setv("p_paymentStatus", p?.payment_status || "لم يُستحق بعد");
   setv("p_coc", p?.coc_number);
@@ -103,6 +145,7 @@ async function saveProgram(): Promise<void> {
     return;
   }
   const id = v("p_id") || null;
+  const existing = id ? state.programs.find((x) => x.id === id) : null;
   const input: ProgramInput = {
     title: v("p_title"),
     ref: v("p_ref") || nextRef(),
@@ -114,14 +157,15 @@ async function saveProgram(): Promise<void> {
     days: +v("p_days") || daysBetween(v("p_start"), v("p_end")),
     hours: +v("p_hours") || 0,
     location: v("p_location"),
-    target_group: v("p_target"),
+    target_group: existing?.target_group ?? null,
     participants: +v("p_participants") || 0,
-    gca_contact: v("p_gcaContact"),
+    gca_contact: existing?.gca_contact ?? null,
     status_gca: v("p_statusGca"),
     status_trainer: v("p_statusTrainer"),
     contract_value: v("p_contractValue") ? +v("p_contractValue") : null,
+    installments_total: v("p_installmentsTotal") ? +v("p_installmentsTotal") : null,
     entitlement_value: v("p_entitlementValue") ? +v("p_entitlementValue") : null,
-    due_portion: v("p_duePortion"),
+    due_portion: v("p_duePortion") || null,
     due_date: v("p_dueDate") || null,
     payment_status: v("p_paymentStatus"),
     coc_number: v("p_coc"),
@@ -163,13 +207,22 @@ export function openTrainerForm(id?: string): void {
 
   setv("t_id", t?.id);
   setv("t_name", t?.name);
-  setv("t_specialty", t?.specialty);
-  setv("t_qual", t?.qualification);
   setv("t_phone", t?.phone);
   setv("t_email", t?.email);
   setv("t_status", t?.status || "نشط");
   setv("t_city", t?.city);
   setv("t_notes", t?.notes);
+  const cvInput = $("#t_cv") as HTMLInputElement | null;
+  if (cvInput) cvInput.value = "";
+  const cvLink = $("#t_cvCurrent") as HTMLAnchorElement | null;
+  if (cvLink) {
+    if (t?.cv_url) {
+      cvLink.href = t.cv_url;
+      cvLink.style.display = "";
+    } else {
+      cvLink.style.display = "none";
+    }
+  }
   openModal("trainerModal");
 }
 
@@ -178,15 +231,27 @@ async function saveTrainer(): Promise<void> {
   const f = $("#trainerForm") as HTMLFormElement | null;
   if (!f || !f.reportValidity()) return;
   const id = v("t_id") || null;
+  const existing = id ? state.trainers.find((x) => x.id === id) : null;
+  const cvFile = ($("#t_cv") as HTMLInputElement | null)?.files?.[0] || null;
+  let cvUrl = existing?.cv_url ?? null;
+  if (cvFile) {
+    try {
+      cvUrl = await uploadTrainerCv(cvFile);
+    } catch (e) {
+      toast("تعذّر رفع ملف الـ CV: " + ((e as Error)?.message || ""));
+      return;
+    }
+  }
   const input: TrainerInput = {
     name: v("t_name"),
-    specialty: v("t_specialty"),
-    qualification: v("t_qual"),
+    specialty: existing?.specialty ?? null,
+    qualification: existing?.qualification ?? null,
     phone: v("t_phone"),
     email: v("t_email"),
     status: v("t_status"),
     city: v("t_city"),
     notes: v("t_notes"),
+    cv_url: cvUrl,
   };
   try {
     await upsertTrainer(id, input);
@@ -224,7 +289,7 @@ function exportProgramsCsv(): void {
   save(
     "البرامج-التدريبية.csv",
     csv([
-      ["الرقم المرجعي", "البرنامج", "النوع", "المدرب", "أسلوب التنفيذ", "تاريخ البداية", "تاريخ النهاية", "الأيام", "الساعات", "المكان", "الفئة المستهدفة", "المتدربون", "المسؤول بالديوان", "الحالة مع الديوان", "الحالة مع المدرب", "ملاحظات"],
+      ["رقم أمر الشراء", "البرنامج", "النوع", "المدرب", "أسلوب التنفيذ", "تاريخ البداية", "تاريخ النهاية", "الأيام", "الساعات", "المكان", "الفئة المستهدفة", "المتدربون", "المسؤول بالديوان", "الحالة مع الديوان", "الحالة مع المدرب", "ملاحظات"],
       ...state.programs.map((p) => [
         p.ref, p.title, p.type, trainerName(p, state.trainers), p.mode, p.start_date, p.end_date,
         p.days || daysBetween(p.start_date || today(), p.end_date || today()), p.hours, p.location,
@@ -307,7 +372,11 @@ export function wireForms(): void {
     if (endEl && (!v("p_end") || v("p_end") < v("p_start"))) endEl.value = v("p_start");
     updateStageHero();
   });
+  $("#p_end")?.addEventListener("change", updateStageHero);
   $("#p_title")?.addEventListener("input", updateStageHero);
+  $("#p_mode")?.addEventListener("change", () => updateLocationOptions());
+  $("#p_installmentsTotal")?.addEventListener("change", updateInstallmentCalc);
+  $("#p_contractValue")?.addEventListener("input", updateInstallmentCalc);
   $("#p_statusGca")?.addEventListener("change", updateStageHero);
   $("#p_trainer")?.addEventListener("change", updateStageHero);
   $("#btnNewProgram")?.addEventListener("click", () => openProgramForm());
