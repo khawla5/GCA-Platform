@@ -8,9 +8,9 @@ export const TYPES = [
 ];
 
 export const GCA_STATUS: [string, string][] = [
-  ["بانتظار صدور أمر الشراء", "neutral"],
-  ["قيد التنفيذ", "gold"],
-  ["منجز", "ok"],
+  ["بانتظار صدور أمر الشراء", "gca-pending"],
+  ["قيد التنفيذ", "gca-progress"],
+  ["منجز", "gca-done"],
 ];
 
 export const TR_STATUS: [string, string][] = [
@@ -50,6 +50,13 @@ export const TYPE_COLORS: Record<string, string> = {
   "برنامج تنفيذي": "#5C4A2A",
 };
 export const DEFAULT_CARD_COLOR = "#003218";
+
+// لون بطاقة البرنامج في معرض البرامج التدريبية — مبني على الحالة مع الديوان بدل النوع
+export const STATUS_CARD_COLORS: Record<string, string> = {
+  "بانتظار صدور أمر الشراء": "#0B2B09",
+  "قيد التنفيذ": "#324A31",
+  "منجز": "#7A6238",
+};
 
 // حسابان ثابتان فقط: مشاهدة وإدارة (لا يوجد تسجيل عام). أنشئهما في Supabase كما هو موضح في README.
 export const VIEWER_EMAIL = "viewer@gca.local";

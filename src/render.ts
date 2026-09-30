@@ -1,4 +1,4 @@
-import { AR_MONTHS, DEFAULT_CARD_COLOR, GCA_STATUS, PAYMENT_STATUS, PO_PAYMENT_STATUS, TR_STATUS, TRAINER_STATUS, TYPES, TYPE_COLORS } from "./constants";
+import { AR_MONTHS, DEFAULT_CARD_COLOR, GCA_STATUS, PAYMENT_STATUS, PO_PAYMENT_STATUS, STATUS_CARD_COLORS, TR_STATUS, TRAINER_STATUS, TYPES } from "./constants";
 import { renderPayments } from "./payments";
 import { state } from "./state";
 import type { Program } from "./types";
@@ -12,28 +12,16 @@ const GALLERY_STATUS_PRIORITY: Record<string, number> = {
   "منجز": 2,
 };
 
-// مسار اعتماد البرنامج — كل برنامج يمر بهذه المراحل بالترتيب
-const GCA_STAGES = ["بانتظار صدور أمر الشراء", "قيد التنفيذ", "منجز"];
-
-export function stageInfoForStatus(status: string): { pct: number; ringColor: string; frac: string; label: string } {
-  const idx = GCA_STAGES.indexOf(status);
-  const step = idx === -1 ? 0 : idx + 1;
-  const pct = Math.round((step / GCA_STAGES.length) * 100);
-  const ringColor = step === GCA_STAGES.length ? "var(--ok-hi)" : "var(--gold)";
-  return { pct, ringColor, frac: `${step}/${GCA_STAGES.length}`, label: status };
-}
-
-const stageInfo = (p: Program) => stageInfoForStatus(p.status_gca);
-
 // شريط تقدّم البرنامج (بدل عجلة المراحل) — نسبة مبنية على مرور الأيام بين تاريخ البداية والنهاية
 export function buildProgressLine(
   startDate: string | null | undefined,
   endDate: string | null | undefined,
   statusGca?: string,
-  daysOverride?: number | null
+  daysOverride?: number | null,
+  compact = false
 ): string {
   if (!startDate || !endDate) {
-    return `<div class="stage-progress"><span class="sp-empty">حدّد تاريخ البداية والنهاية لعرض نسبة الإنجاز</span></div>`;
+    return `<div class="stage-progress${compact ? " sp-compact" : ""}"><span class="sp-empty">حدّد تاريخ البداية والنهاية لعرض نسبة الإنجاز</span></div>`;
   }
   const t = today();
   let pct: number;
@@ -42,12 +30,15 @@ export function buildProgressLine(
   else pct = Math.round((daysBetween(startDate, t) / daysBetween(startDate, endDate)) * 100);
 
   const daysTotal = daysOverride || daysBetween(startDate, endDate);
+  const deadline = compact
+    ? ""
+    : `<span class="sp-item sp-deadline"><i class="sp-ic sp-ic-cal"></i>الموعد النهائي <b>${esc(fmtDate(endDate))}</b></span>`;
 
-  return `<div class="stage-progress">
+  return `<div class="stage-progress${compact ? " sp-compact" : ""}">
     <span class="sp-item"><i class="sp-ic sp-ic-list"></i>${esc(String(daysTotal))}</span>
     <div class="sp-bar"><div class="sp-fill" style="width:${pct}%"></div></div>
     <span class="sp-pct">${pct}%</span>
-    <span class="sp-item sp-deadline"><i class="sp-ic sp-ic-cal"></i>الموعد النهائي <b>${esc(fmtDate(endDate))}</b></span>
+    ${deadline}
   </div>`;
 }
 
@@ -84,10 +75,9 @@ export function renderGallery(): void {
       const t = state.trainers.find((x) => x.id === p.trainer_id);
       const trainerName = t?.name || "—";
       const initial = t?.name?.trim()?.[0] || "؟";
-      const { pct, ringColor, frac, label } = stageInfo(p);
       const clickAttr = state.role === "admin" ? `data-edit="${esc(p.id)}"` : `data-open="${esc(p.id)}"`;
       const isCurrent = current && p.id === current.id;
-      const color = TYPE_COLORS[p.type || ""] || DEFAULT_CARD_COLOR;
+      const color = STATUS_CARD_COLORS[p.status_gca] || DEFAULT_CARD_COLOR;
       const purchaseOrder = state.payments.find((pay) => pay.program_name === p.title)?.purchase_order;
       return `<article class="prog-card${isCurrent ? " is-current" : ""}" style="--card-color:${color}" ${clickAttr}>
         <div class="bars-wm"><i></i><i></i><i></i><i></i></div>
@@ -97,10 +87,7 @@ export function renderGallery(): void {
         <div class="stats-row">
           ${pill(GCA_STATUS, p.status_gca)}
         </div>
-        <div class="stage-row">
-          <div class="stage-ring" style="--pct:${pct};--ring-color:${ringColor}"><span>${esc(frac)}</span></div>
-          <div class="stage-text"><b>مرحلة الاعتماد</b><small>${esc(label)}</small></div>
-        </div>
+        ${buildProgressLine(p.start_date, p.end_date, p.status_gca, p.days, true)}
       </article>`;
     })
     .join("");
@@ -142,8 +129,8 @@ function renderBars(elSel: string, list: [string, string][], key: "status_gca" |
     el.innerHTML = list
       .map(([s, t]) => {
         const n = P.filter((p) => p[key] === s).length;
-        const colorVar = t === "gold" ? "gold" : t === "neutral" ? "faint" : t;
-        return `<div class="brow"><span class="lbl">${esc(s)}</span><div class="trk"><div class="fil" style="width:${(n / max) * 100}%;background:var(--${colorVar})"></div></div><span class="val">${n}</span></div>`;
+        const color = STATUS_CARD_COLORS[s] || `var(--${t === "gold" ? "gold" : t === "neutral" ? "faint" : t})`;
+        return `<div class="brow"><span class="lbl">${esc(s)}</span><div class="trk"><div class="fil" style="width:${(n / max) * 100}%;background:${color}"></div></div><span class="val">${n}</span></div>`;
       })
       .join("");
   }
@@ -228,8 +215,17 @@ function filteredPrograms(): Program[] {
     .sort((a, b) => (b.start_date || "").localeCompare(a.start_date || ""));
 }
 
+function programRowIdentity(p: Program): string {
+  return `<tr data-open="${esc(p.id)}"><td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td><td><span class="t">${esc(p.title)}</span>${p.target_group ? `<span class="sub">${esc(p.target_group)}</span>` : ""}</td><td>${esc(p.type || "—")}</td><td>${esc(trainerName(p, state.trainers))}</td>`;
+}
+
 function programRowStart(p: Program): string {
-  return `<tr data-open="${esc(p.id)}"><td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td><td><span class="t">${esc(p.title)}</span>${p.target_group ? `<span class="sub">${esc(p.target_group)}</span>` : ""}</td><td>${esc(p.type || "—")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}${p.end_date && p.end_date !== p.start_date ? `<span class="sub">إلى ${fmtDate(p.end_date)}</span>` : ""}</td><td>${durationText(p)}</td>`;
+  return `${programRowIdentity(p)}<td>${fmtDate(p.start_date)}${p.end_date && p.end_date !== p.start_date ? `<span class="sub">إلى ${fmtDate(p.end_date)}</span>` : ""}</td><td>${durationText(p)}</td>`;
+}
+
+// نسخة بتاريخي بداية ونهاية منفصلين — لجدول "الحالة مع الديوان العام للمحاسبة"
+function programRowStartSplitDates(p: Program): string {
+  return `${programRowIdentity(p)}<td>${fmtDate(p.start_date)}</td><td>${fmtDate(p.end_date)}</td><td>${durationText(p)}</td>`;
 }
 
 function programRowEdit(p: Program): string {
@@ -253,8 +249,8 @@ export function renderPrograms(): void {
   const gcaBody = $("#programsBodyGca");
   if (gcaBody) {
     gcaBody.innerHTML = rows.length
-      ? rows.map((p) => `${programRowStart(p)}<td>${pill(GCA_STATUS, p.status_gca)}</td>${programRowEdit(p)}${programRowEnd}`).join("")
-      : emptyMsg("لا توجد برامج مطابقة", 8);
+      ? rows.map((p) => `${programRowStartSplitDates(p)}<td>${pill(GCA_STATUS, p.status_gca)}</td>${programRowEdit(p)}${programRowEnd}`).join("")
+      : emptyMsg("لا توجد برامج مطابقة", 9);
   }
   const cntGca = $("#programsCountGca");
   if (cntGca) cntGca.textContent = `${rows.length} من ${state.programs.length} برنامج`;
@@ -352,7 +348,6 @@ export function fillStaticSelects(): void {
   fill("#t_status", TRAINER_STATUS.map((s) => s[0]));
   fill("#p_paymentStatus", PAYMENT_STATUS.map((s) => s[0]));
   fill("#pay_status", PO_PAYMENT_STATUS.map((s) => s[0]));
-  fill("#fPayStatus", PO_PAYMENT_STATUS.map((s) => s[0]), "كل حالات الدفع");
 }
 
 export function wireFilterInputs(): void {

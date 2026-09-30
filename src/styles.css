@@ -130,6 +130,18 @@ body.is-admin .pay-card:hover{border-color:var(--gold)}
 .pill.bad{background:var(--bad-bg);color:var(--bad)}
 .pill.info{background:var(--info-bg);color:var(--info)}
 .pill.gold{background:rgba(174,151,104,.18);color:var(--gold-2)}
+/* ألوان حالة البرنامج مع الديوان — نفس ألوان بطاقات معرض البرامج */
+.pill.gca-pending{background:color-mix(in srgb,#0B2B09 15%,transparent);color:#0B2B09}
+.pill.gca-progress{background:color-mix(in srgb,#324A31 15%,transparent);color:#324A31}
+.pill.gca-done{background:color-mix(in srgb,#7A6238 15%,transparent);color:#7A6238}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  .pill.gca-pending{color:color-mix(in srgb,#0B2B09 35%,white)}
+  .pill.gca-progress{color:color-mix(in srgb,#324A31 35%,white)}
+}}
+:root[data-theme="dark"]{
+  .pill.gca-pending{color:color-mix(in srgb,#0B2B09 35%,white)}
+  .pill.gca-progress{color:color-mix(in srgb,#324A31 35%,white)}
+}
 
 /* programs gallery */
 .gallery{margin:4px 0 30px}
@@ -165,12 +177,11 @@ body.is-admin .pay-card:hover{border-color:var(--gold)}
 .prog-card .stats-row{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px}
 .prog-card .badge-count{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#fff}
 .prog-card .badge-count .n{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-family:Tajawal,sans-serif;font-weight:800;font-size:12px;flex-shrink:0}
-.prog-card .stage-row{position:relative;z-index:1;display:flex;align-items:center;gap:10px;margin-top:12px}
-.prog-card .stage-ring{width:42px;height:42px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--ring-color) calc(var(--pct)*1%),rgba(255,255,255,.18) 0)}
-.prog-card .stage-ring span{width:31px;height:31px;border-radius:50%;background:var(--card-color,var(--navy-2));display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff;font-family:Tajawal,sans-serif}
-.prog-card .stage-text{display:flex;flex-direction:column;gap:1px;min-width:0}
-.prog-card .stage-text b{font-size:11px;color:rgba(255,255,255,.6);font-weight:600}
-.prog-card .stage-text small{font-size:12.5px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog-card .stage-progress{position:relative;z-index:1;margin-top:12px;padding:8px 12px;gap:8px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);flex-wrap:nowrap}
+.prog-card .stage-progress .sp-item{font-size:11.5px;color:#fff}
+.prog-card .stage-progress .sp-bar{background:rgba(255,255,255,.22);min-width:0}
+.prog-card .stage-progress .sp-fill{background:#013B1B}
+.prog-card .stage-progress .sp-pct{font-size:11.5px;color:#fff;min-width:30px}
 
 /* program page hero (عجلة مراحل الاعتماد الكبيرة) */
 .stage-hero{display:flex;flex-direction:column;gap:18px;margin-bottom:16px;padding:24px}
@@ -194,7 +205,7 @@ body.is-admin .pay-card:hover{border-color:var(--gold)}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .toolbar input,.toolbar select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:150px}
 .toolbar input[type=search]{flex:1;min-width:200px}
-.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.tbl-wrap{overflow-x:auto;background:color-mix(in srgb,var(--surface) 70%,var(--surface-2) 30%);border:1px solid var(--line);border-radius:var(--r)}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th{text-align:start;font-weight:600;color:var(--muted);font-size:12.5px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
 td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -217,8 +228,10 @@ td .sub{display:block;font-size:12px;color:var(--muted)}
 .btn.block{display:flex;width:100%;justify-content:center}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
 .icons{display:flex;gap:6px}
+td .icons .btn{background:transparent}
 .admin-only{display:none}
 body.is-admin .admin-only{display:inline-flex}
+body.is-admin th.admin-only,body.is-admin td.admin-only{display:table-cell}
 body.is-admin .admin-only.block{display:block}
 
 /* upcoming list */

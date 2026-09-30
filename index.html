@@ -86,17 +86,10 @@
     </div>
     <h3 class="table-split-head">الحالة مع الديوان العام للمحاسبة</h3>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>رقم الأمر</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>الحالة مع الديوان</th><th class="admin-only"></th></tr></thead>
+      <thead><tr><th>رقم أمر الشراء</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>تاريخ البداية</th><th>تاريخ النهاية</th><th>المدة</th><th>الحالة مع الديوان</th><th class="admin-only"></th></tr></thead>
       <tbody id="programsBodyGca"></tbody>
     </table></div>
     <p class="hint" style="margin-top:8px" id="programsCountGca"></p>
-
-    <h3 class="table-split-head">مدفوعات البرامج</h3>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>رقم الأمر</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>مدفوعات البرامج</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الدفع</th><th>حالة الدفع</th><th>رقم الشهادة</th><th>رقم الفاتورة</th><th class="admin-only"></th></tr></thead>
-      <tbody id="programsBodyTr"></tbody>
-    </table></div>
-    <p class="hint" style="margin-top:8px" id="programsCountTr"></p>
   </section>
 
   <!-- ===== TRAINERS ===== -->
@@ -124,17 +117,13 @@
     </div>
 
     <div class="section-head" id="paymentsTableHead"><h2>سجل المدفوعات</h2><span class="spacer"></span><button class="btn primary admin-only" id="btnNewPayment">＋ إضافة أمر شراء</button></div>
-    <div class="toolbar">
-      <input type="search" id="fPaySearch" placeholder="بحث برقم أمر الشراء أو اسم البرنامج…">
-      <select id="fPayStatus"><option value="">كل حالات الدفع</option></select>
-    </div>
 
     <h3 class="table-split-head">مدفوعات المشاريع مع المركز</h3>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>أمر الشراء</th><th>البرنامج</th><th>قيمة العقد</th><th>الجزء المستحق</th><th>قيمة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>رقم الشهادة</th><th>رقم الفاتورة</th><th class="admin-only"></th></tr></thead>
-      <tbody id="paymentsBodyMoney"></tbody>
+      <thead><tr><th>رقم الأمر</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>مدفوعات البرامج</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الدفع</th><th>حالة الدفع</th><th>رقم الشهادة</th><th>رقم الفاتورة</th><th class="admin-only"></th></tr></thead>
+      <tbody id="programsBodyTr"></tbody>
     </table></div>
-    <p class="hint" style="margin-top:8px" id="paymentsCountMoney"></p>
+    <p class="hint" style="margin-top:8px" id="programsCountTr"></p>
 
     <div class="section-head"><h3 class="table-split-head" style="margin:0">مدفوعات المدربين</h3><span class="spacer"></span><button class="btn primary admin-only" id="btnNewTrainerPayment">＋ إضافة</button></div>
     <div class="tbl-wrap"><table>
