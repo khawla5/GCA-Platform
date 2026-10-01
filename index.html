@@ -172,7 +172,7 @@
     <form class="card" id="paymentForm">
       <div class="form">
         <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><select id="pay_program" required></select></div>
-        <div class="field"><label>أمر الشراء <span class="req">*</span></label><input id="pay_po" dir="ltr" required placeholder="مثال: PO-2026-0101"></div>
+        <div class="field"><label>أمر الشراء</label><input id="pay_po" dir="ltr" readonly placeholder="يُسحب تلقائيًا من رقم أمر الشراء الخاص بالبرنامج"></div>
         <div class="field"><label>حالة الدفع</label><select id="pay_status"></select></div>
         <div class="field"><label>مبلغ كامل الدفعات <span class="req">*</span></label><input type="number" id="pay_total" min="0" step="0.01" required></div>
         <div class="field"><label>الدفعات المدفوعة</label><input type="number" id="pay_paid" min="0" step="1"></div>

@@ -20,6 +20,12 @@ function closePaymentPage(): void {
   ($(`.tab[data-tab="payments"]`) as HTMLElement | null)?.click();
 }
 
+// رقم أمر الشراء يُسحب من رقم أمر الشراء الخاص بالبرنامج نفسه — ما يُكتب يدويًا
+function syncPayPoFromProgram(): void {
+  const prog = state.programs.find((pr) => pr.title === v("pay_program"));
+  setv("pay_po", prog?.ref || "");
+}
+
 function openPaymentForm(id?: string): void {
   if (state.role !== "admin") return;
   const p = id ? state.payments.find((x) => String(x.id) === id) : null;
@@ -31,8 +37,8 @@ function openPaymentForm(id?: string): void {
   fill("#pay_program", state.programs.map((pr) => pr.title), "— اختر البرنامج —");
 
   setv("pay_id", p?.id);
-  setv("pay_po", p?.purchase_order);
   setv("pay_program", p?.program_name);
+  syncPayPoFromProgram();
   setv("pay_status", p?.status || "تم الطلب");
   setv("pay_total", p?.installments_total ?? 1);
   setv("pay_paid", p?.installments_paid ?? 0);
@@ -170,6 +176,7 @@ export function wirePaymentForms(): void {
     const el = $("#tpay_percent") as HTMLInputElement | null;
     if (el && +el.value > 100) el.value = "100";
   });
+  $("#pay_program")?.addEventListener("change", syncPayPoFromProgram);
   $("#btnNewTrainerPayment")?.addEventListener("click", () => openTrainerPaymentForm());
   $("#btnSaveTrainerPayment")?.addEventListener("click", saveTrainerPayment);
   $("#btnDeleteTrainerPayment")?.addEventListener("click", removeTrainerPayment);
