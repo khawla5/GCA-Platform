@@ -1,4 +1,4 @@
-import { PAYMENT_STATUS, TYPES } from "./constants";
+import { DUE_PORTION_OPTIONS, PAYMENT_STATUS, TYPES } from "./constants";
 import { deleteProgram, deleteProgramPayment, deleteTrainer, upsertProgram, upsertProgramPayment, upsertTrainer, uploadTrainerCv } from "./data";
 import { state } from "./state";
 import type { ProgramInput, ProgramPayment, ProgramPaymentInput, TrainerInput } from "./types";
@@ -9,8 +9,8 @@ import { refreshData } from "./boot";
 // خيارات "مكان التنفيذ" تابعة لـ"أسلوب التنفيذ" — كل أسلوب له خيارات مكان ثابتة
 const LOCATION_OPTIONS: Record<string, string[]> = {
   "حضوري": ["مقر المركز - الرياض", "خارج المركز"],
-  "افتراضي": ["Microsoft"],
-  "هجين": ["مقر الديوان - الرياض / Microsoft"],
+  "افتراضي": ["Microsoft Teams"],
+  "هجين": ["مقر المركز - الرياض / Microsoft Teams"],
 };
 
 function updateLocationOptions(preferred?: string | null): void {
@@ -29,10 +29,12 @@ function programPaymentRowHtml(pp?: ProgramPayment): string {
   return `<div class="pp-row" data-pp-id="${esc(pp?.id || "")}">
     <div class="pp-row-head"><b>دفعة</b><button type="button" class="pp-remove" title="حذف الدفعة">✕</button></div>
     <div class="pp-grid">
-      <div class="field"><label>الجزء المستحق</label><input class="pp-portion" value="${esc(pp?.due_portion || "")}"></div>
+      <div class="field"><label>ترتيب الدفعة</label><select class="pp-portion">${DUE_PORTION_OPTIONS.map(
+        (o) => `<option value="${esc(o)}"${pp?.due_portion === o ? " selected" : ""}>${esc(o)}</option>`
+      ).join("")}</select></div>
       <div class="field"><label>نسبة الاستحقاق %</label><input type="number" class="pp-percent" min="0" max="100" step="0.1" value="${pp?.entitlement_percent ?? ""}"></div>
       <div class="field"><label>قيمة الاستحقاق</label><input type="number" class="pp-value" min="0" step="0.01" value="${pp?.entitlement_value ?? ""}"></div>
-      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pp-date" value="${esc(pp?.due_date || "")}"></div>
+      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pp-date${pp?.due_date ? "" : " date-empty"}" lang="en" value="${esc(pp?.due_date || "")}"></div>
       <div class="field"><label>حالة الدفع</label><select class="pp-status">${statusOptions}</select></div>
       <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input class="pp-coc" value="${esc(pp?.coc_number || "")}"></div>
       <div class="field"><label>رقم الفاتورة</label><input class="pp-invoice" value="${esc(pp?.invoice_number || "")}"></div>
@@ -97,12 +99,14 @@ function closeProgramPage(): void {
 
 function updateStageHero(): void {
   const wheel = $("#stageWheel");
+  const heroStatus = $("#stageHeroStatus");
   const heroTitle = $("#stageHeroTitle");
   const heroMeta = $("#stageHeroMeta");
-  if (!wheel || !heroTitle || !heroMeta) return;
+  if (!wheel || !heroStatus || !heroTitle || !heroMeta) return;
 
   wheel.innerHTML = buildProgressLine(v("p_start") || null, v("p_end") || null, v("p_statusGca"), +v("p_days") || null);
 
+  heroStatus.textContent = v("p_statusGca") || "بانتظار صدور أمر الشراء";
   heroTitle.textContent = v("p_title") || "برنامج جديد";
 
   const trainerSelect = $("#p_trainer") as HTMLSelectElement | null;
@@ -315,7 +319,7 @@ function exportTrainersCsv(): void {
   save(
     "المدربون.csv",
     csv([
-      ["الاسم", "التخصص", "المؤهل", "الجوال", "البريد", "الحالة", "المدينة", "عدد البرامج", "الساعات", "ملاحظات"],
+      ["الاسم", "التخصص", "المؤهل", "الجوال", "البريد", "الحالة", "الجهة", "عدد البرامج", "الساعات", "ملاحظات"],
       ...state.trainers.map((t) => {
         const ps = state.programs.filter((p) => p.trainer_id === t.id);
         return [t.name, t.specialty, t.qualification, t.phone, t.email, t.status, t.city, ps.length, ps.reduce((s, p) => s + (+(p.hours || 0)), 0), t.notes];
@@ -350,6 +354,12 @@ export function wireForms(): void {
     }
   });
 
+  // يخفي نص يوم/شهر/سنة الافتراضي لحقول التاريخ الفاضية (يطلع مبعثر بالصفحات العربية) — يبان بمجرد اختيار تاريخ
+  document.addEventListener("input", (e) => {
+    const t = e.target as HTMLElement;
+    if (t instanceof HTMLInputElement && t.type === "date") t.classList.toggle("date-empty", !t.value);
+  });
+
   $("#btnPrintCard")?.addEventListener("click", () => window.print());
   $("#btnPrintReport")?.addEventListener("click", () => {
     document.body.classList.add("print-report");
@@ -382,6 +392,8 @@ export function wireForms(): void {
   $("#p_start")?.addEventListener("change", () => {
     const endEl = $("#p_end") as HTMLInputElement | null;
     if (endEl && (!v("p_end") || v("p_end") < v("p_start"))) endEl.value = v("p_start");
+    // بمجرد تحديد تاريخ البداية يصير البرنامج "قيد التنفيذ" تلقائيًا (ما لم يكن منجزًا أصلًا)
+    if (v("p_start") && v("p_statusGca") !== "منجز") setv("p_statusGca", "قيد التنفيذ");
     updateStageHero();
   });
   $("#p_end")?.addEventListener("change", updateStageHero);
@@ -413,9 +425,11 @@ export function wireForms(): void {
   $("#programPaymentsList")?.addEventListener("input", (e) => {
     const target = e.target as HTMLElement;
     if (!target.classList.contains("pp-percent")) return;
+    const input = target as HTMLInputElement;
+    if (+input.value > 100) input.value = "100";
     const row = target.closest(".pp-row") as HTMLElement | null;
     const valueInput = row?.querySelector(".pp-value") as HTMLInputElement | null;
-    const percent = +(target as HTMLInputElement).value || 0;
+    const percent = +input.value || 0;
     const contractValue = +v("p_contractValue") || 0;
     if (valueInput && percent && contractValue) valueInput.value = ((contractValue * percent) / 100).toFixed(2);
   });

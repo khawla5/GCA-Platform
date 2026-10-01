@@ -33,9 +33,12 @@ export function buildProgressLine(
   const deadline = compact
     ? ""
     : `<span class="sp-item sp-deadline"><i class="sp-ic sp-ic-cal"></i>الموعد النهائي <b>${esc(fmtDate(endDate))}</b></span>`;
+  const start = compact
+    ? `<span class="sp-item"><i class="sp-ic sp-ic-list"></i>${esc(String(daysTotal))}</span>`
+    : `<span class="sp-item sp-start"><i class="sp-ic sp-ic-cal"></i>تاريخ البداية <b>${esc(fmtDate(startDate))}</b></span>`;
 
   return `<div class="stage-progress${compact ? " sp-compact" : ""}">
-    <span class="sp-item"><i class="sp-ic sp-ic-list"></i>${esc(String(daysTotal))}</span>
+    ${start}
     <div class="sp-bar"><div class="sp-fill" style="width:${pct}%"></div></div>
     <span class="sp-pct">${pct}%</span>
     ${deadline}
@@ -291,9 +294,9 @@ export function renderTrainers(): void {
   el.innerHTML = T.length
     ? T.map((t) => {
         const ps = state.programs.filter((p) => p.trainer_id === t.id);
-        return `<tr data-trainer="${esc(t.id)}"><td class="t">${esc(t.name)}${t.city ? `<span class="sub">${esc(t.city)}</span>` : ""}${t.cv_url ? `<a href="${esc(t.cv_url)}" target="_blank" rel="noopener" class="sub" onclick="event.stopPropagation()">📄 CV</a>` : ""}</td><td dir="ltr" style="text-align:end">${esc(t.phone || "")}${t.email ? `<span class="sub">${esc(t.email)}</span>` : ""}</td><td>${pill(TRAINER_STATUS, t.status)}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td class="admin-only"><button class="btn sm" data-edit-trainer="${esc(t.id)}">✎</button></td></tr>`;
+        return `<tr data-trainer="${esc(t.id)}"><td class="t">${esc(t.name)}${t.city ? `<span class="sub">${esc(t.city)}</span>` : ""}${t.cv_url ? `<a href="${esc(t.cv_url)}" target="_blank" rel="noopener" class="sub" onclick="event.stopPropagation()">📄 CV</a>` : ""}</td><td dir="ltr" style="text-align:end">${esc(t.email || "—")}</td><td dir="ltr" style="text-align:end">${esc(t.phone || "—")}</td><td>${pill(TRAINER_STATUS, t.status)}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td class="admin-only"><button class="btn sm" data-edit-trainer="${esc(t.id)}">✎</button></td></tr>`;
       }).join("")
-    : `<tr><td colspan="6"><div class="empty"><b>لا يوجد مدربون بعد</b>${state.role === "admin" ? "أضف أول مدرب من الزر أعلاه" : ""}</div></td></tr>`;
+    : `<tr><td colspan="7"><div class="empty"><b>لا يوجد مدربون بعد</b>${state.role === "admin" ? "أضف أول مدرب من الزر أعلاه" : ""}</div></td></tr>`;
 }
 
 export function renderReport(): void {
@@ -324,7 +327,7 @@ export function renderReport(): void {
 export function cardHtml(p: Program): string {
   const t = state.trainers.find((x) => x.id === p.trainer_id);
   return `<div class="pcard">
-    <div class="pcard-h"><div class="bars"><i></i><i></i><i></i><i></i></div><div class="who"><b>يسير لإدارة المشاريع</b><span>بطاقة برنامج تدريبي — الديوان العام للمحاسبة</span></div><div class="ref">رقم أمر الشراء<b>${esc(p.ref || "—")}</b></div></div>
+    <div class="pcard-h"><img src="/images/gca-emblem.png" alt="" class="pcard-emblem"><div class="who"><b>الديوان العام للمحاسبة</b><span>بطاقة برنامج تدريبي</span></div><div class="ref">رقم أمر الشراء<b>${esc(p.ref || "—")}</b></div></div>
     <div class="pcard-title"><h2>${esc(p.title)}</h2><div class="type">${esc(p.type || "")}${p.mode ? ` · ${esc(p.mode)}` : ""}</div></div>
     <div class="pcard-status"><div class="st"><small>الحالة مع الديوان العام للمحاسبة</small>${pill(GCA_STATUS, p.status_gca)}</div><div class="st"><small>الحالة مع المدرب</small>${pill(TR_STATUS, p.status_trainer)}</div></div>
     <div class="kv">
