@@ -117,7 +117,9 @@ export const v = (id: string): string => (($(`#${id}`) as HTMLInputElement | HTM
 
 export const setv = (id: string, val: string | number | null | undefined): void => {
   const el = $(`#${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-  if (el) el.value = (val ?? "") as string;
+  if (!el) return;
+  el.value = (val ?? "") as string;
+  if (el instanceof HTMLInputElement && el.type === "date") el.classList.toggle("date-empty", !el.value);
 };
 
 // دفاع إضافي على مستوى الواجهة — الحماية الحقيقية هي سياسات RLS في قاعدة البيانات (is_admin())،
