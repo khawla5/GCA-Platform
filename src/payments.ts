@@ -1,7 +1,7 @@
-import { DUE_PORTION_OPTIONS, PAYMENT_CARD_COLOR, PAYMENT_CARD_DONE_COLOR, PAYMENT_CARD_PARTIAL_COLOR, PAYMENT_STATUS } from "./constants";
+import { DUE_PORTION_OPTIONS, GCA_STATUS, PAYMENT_CARD_COLOR, PAYMENT_CARD_DONE_COLOR, PAYMENT_CARD_PARTIAL_COLOR, PAYMENT_STATUS, TR_STATUS } from "./constants";
 import { state } from "./state";
 import type { Program } from "./types";
-import { $, esc, fmtDate, pill } from "./utils";
+import { $, $$, esc, fmtDate, fmtLong, pill } from "./utils";
 
 // دفعات البرنامج المرتبط (من program_payments) — تحدد لون البطاقة وحالة الدفع والنسبة المدفوعة المعروضة بالكارد
 function programPaymentsFor(programId: string | undefined): { done: boolean; partial: boolean; status: string | null; percent: number } {
@@ -17,11 +17,12 @@ function programPaymentsFor(programId: string | undefined): { done: boolean; par
 }
 
 // دائرة مقسّمة بالتساوي على عدد الدفعات الفعلي للبرنامج — كل قطاع يأخذ لون حالة دفعته
-function donutColor(status: string | null): string {
-  return status === "تم الدفع" ? "#013B1B" : status === "معلقة" ? "var(--warn-hi)" : "rgba(255,255,255,.3)";
+function donutColor(status: string | null, themed = false): string {
+  if (themed) return status === "تم الدفع" ? "var(--ok)" : status === "معلقة" ? "var(--warn)" : "var(--line)";
+  return status === "تم الدفع" ? "#013B1B" : "rgba(255,255,255,.3)";
 }
 
-function donutHtml(programId: string): string {
+function donutHtml(programId: string, large = false): string {
   const rows = state.programPayments.filter((pp) => pp.program_id === programId);
   if (!rows.length) return "";
   const sorted = rows
@@ -29,14 +30,23 @@ function donutHtml(programId: string): string {
     .sort((a, b) => DUE_PORTION_OPTIONS.indexOf(a.due_portion || "") - DUE_PORTION_OPTIONS.indexOf(b.due_portion || ""));
   const n = sorted.length;
   const step = 100 / n;
-  const stops = sorted.map((r, i) => `${donutColor(r.payment_status)} ${(i * step).toFixed(2)}% ${((i + 1) * step).toFixed(2)}%`).join(", ");
+  const gap = n > 1 ? 1.5 : 0;
+  const stops = sorted
+    .map((r, i) => {
+      const start = i * step;
+      const end = (i + 1) * step - gap;
+      return `${donutColor(r.payment_status, large)} ${start.toFixed(2)}% ${end.toFixed(2)}%, transparent ${end.toFixed(2)}% ${((i + 1) * step).toFixed(2)}%`;
+    })
+    .join(", ");
   const paidCount = sorted.filter((r) => r.payment_status === "تم الدفع").length;
-  return `<div class="pay-donut-wrap"><div class="pay-donut" style="background:conic-gradient(${stops})"><div class="pay-donut-hole"><b>${paidCount}/${n}</b></div></div></div>`;
+  const size = large ? " pay-donut-lg" : "";
+  const holeSize = large ? " pay-donut-hole-lg" : "";
+  return `<div class="pay-donut-wrap"><div class="pay-donut${size}" style="background:conic-gradient(${stops})"><div class="pay-donut-hole${holeSize}"><b>${paidCount}/${n}</b></div></div></div>`;
 }
 
 // الكاردز = نفس برامج قسم "البرامج التدريبية" بالضبط — كل برنامج له كارد هنا بغض النظر عن وجود طلب صرف له
 function paymentCard(prog: Program): string {
-  const editAttr = state.role === "admin" ? ` data-edit-payment="${esc(prog.id)}"` : "";
+  const editAttr = ` data-pay-detail="${esc(prog.id)}"`;
   const { done, partial, status, percent } = programPaymentsFor(prog.id);
   const color = done ? PAYMENT_CARD_DONE_COLOR : partial ? PAYMENT_CARD_PARTIAL_COLOR : PAYMENT_CARD_COLOR;
   const stateCls = done ? " is-done" : partial ? " is-partial" : "";
@@ -49,6 +59,74 @@ function paymentCard(prog: Program): string {
       ${donutHtml(prog.id)}
     </div>
   </article>`;
+}
+
+const money = (n: number | null | undefined): string =>
+  n == null ? "—" : n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+export function openPaymentDetail(programId: string): void {
+  const prog = state.programs.find((x) => x.id === programId);
+  if (!prog) return;
+  const { status, percent } = programPaymentsFor(prog.id);
+  const installments = state.programPayments
+    .filter((pp) => pp.program_id === prog.id)
+    .sort((a, b) => DUE_PORTION_OPTIONS.indexOf(a.due_portion || "") - DUE_PORTION_OPTIONS.indexOf(b.due_portion || ""));
+  const trainer = state.trainers.find((x) => x.id === prog.trainer_id);
+
+  const title = $("#paymentDetailTitle");
+  if (title) title.textContent = prog.title;
+
+  const head = $("#paymentDetailDonut");
+  if (head) {
+    head.innerHTML = `<div class="pd-status">
+      ${donutHtml(prog.id, true)}
+      <div class="pd-status-text"><small>حالة الدفع</small>${pill(PAYMENT_STATUS, status)}<span class="pay-percent">${percent}%</span><small>عدد الدفعات: ${installments.length}</small></div>
+    </div>`;
+  }
+
+  const info = $("#paymentDetailInfo");
+  if (info) {
+    info.innerHTML = `<div class="kv">
+      <div><small>رقم أمر الشراء</small><b dir="ltr">${esc(prog.ref || "—")}</b></div>
+      <div><small>النوع</small><b>${esc(prog.type || "—")}</b></div>
+      <div><small>قيمة العقد</small><b>${money(prog.contract_value)}</b></div>
+      <div><small>المدرب</small><b>${esc(trainer?.name || "—")}</b></div>
+      <div><small>تاريخ البداية</small><b>${fmtLong(prog.start_date)}</b></div>
+      <div><small>تاريخ النهاية</small><b>${fmtLong(prog.end_date)}</b></div>
+      <div><small>مكان التنفيذ</small><b>${esc(prog.location || "—")}</b></div>
+      <div><small>الحالة مع الديوان</small>${pill(GCA_STATUS, prog.status_gca)}</div>
+      <div><small>الحالة مع المدرب</small>${pill(TR_STATUS, prog.status_trainer)}</div>
+    </div>`;
+  }
+
+  const programRows = $("#paymentDetailProgramRows");
+  if (programRows) {
+    programRows.innerHTML = installments.length
+      ? installments
+          .map((pp) => `<tr><td>${esc(pp.due_portion || "—")}</td><td>${pp.entitlement_percent != null ? `${pp.entitlement_percent}%` : "—"}</td><td>${money(pp.entitlement_value)}</td><td>${fmtDate(pp.due_date)}</td><td>${pill(PAYMENT_STATUS, pp.payment_status)}</td><td>${esc(pp.invoice_number || "—")}</td><td>${esc(pp.coc_number || "—")}</td></tr>`)
+          .join("")
+      : `<tr><td colspan="7"><div class="empty"><b>لا توجد دفعات لهذا البرنامج</b></div></td></tr>`;
+  }
+
+  const trainerRows = $("#paymentDetailTrainerRows");
+  if (trainerRows) {
+    const rows = state.trainerPayments.filter((tp) => tp.program_name === prog.title);
+    trainerRows.innerHTML = rows.length
+      ? rows
+          .map((tp) => {
+            const tr = state.trainers.find((t) => t.id === tp.trainer_id);
+            return `<tr><td>${esc(tp.track || "—")}</td><td>${esc(tr?.name || "—")}</td><td>${esc(tp.due_portion || "—")}</td><td>${tp.entitlement_percent != null ? `${tp.entitlement_percent}%` : "—"}</td><td>${fmtDate(tp.due_date)}</td><td>${pill(PAYMENT_STATUS, tp.payment_status)}</td></tr>`;
+          })
+          .join("")
+      : `<tr><td colspan="6"><div class="empty"><b>لا توجد مدفوعات مدربين لهذا البرنامج</b></div></td></tr>`;
+  }
+
+  const editBtn = $("#btnEditFromPaymentDetail") as HTMLElement | null;
+  if (editBtn) editBtn.dataset.programId = prog.id;
+
+  $$(".panel").forEach((p) => p.classList.remove("active"));
+  $("#panel-paymentDetail")?.classList.add("active");
+  window.scrollTo(0, 0);
 }
 
 function renderGallery(): void {

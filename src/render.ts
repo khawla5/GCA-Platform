@@ -17,7 +17,6 @@ export function buildProgressLine(
   startDate: string | null | undefined,
   endDate: string | null | undefined,
   statusGca?: string,
-  daysOverride?: number | null,
   compact = false
 ): string {
   if (!startDate || !endDate) {
@@ -29,19 +28,17 @@ export function buildProgressLine(
   else if (t < startDate) pct = 0;
   else pct = Math.round((daysBetween(startDate, t) / daysBetween(startDate, endDate)) * 100);
 
-  const daysTotal = daysOverride || daysBetween(startDate, endDate);
-  const deadline = compact
-    ? ""
-    : `<span class="sp-item sp-deadline"><i class="sp-ic sp-ic-cal"></i>الموعد النهائي <b>${esc(fmtDate(endDate))}</b></span>`;
-  const start = compact
-    ? `<span class="sp-item"><i class="sp-ic sp-ic-list"></i>${esc(String(daysTotal))}</span>`
-    : `<span class="sp-item sp-start"><i class="sp-ic sp-ic-cal"></i>تاريخ البداية <b>${esc(fmtDate(startDate))}</b></span>`;
-
-  return `<div class="stage-progress${compact ? " sp-compact" : ""}">
-    ${start}
+  if (compact) {
+    return `<div class="stage-progress sp-compact">
     <div class="sp-bar"><div class="sp-fill" style="width:${pct}%"></div></div>
     <span class="sp-pct">${pct}%</span>
-    ${deadline}
+  </div>`;
+  }
+  return `<div class="stage-progress">
+    <span class="sp-item sp-start"><i class="sp-ic sp-ic-cal"></i>تاريخ البداية <b>${esc(fmtDate(startDate))}</b></span>
+    <div class="sp-bar"><div class="sp-fill" style="width:${pct}%"></div></div>
+    <span class="sp-pct">${pct}%</span>
+    <span class="sp-item sp-deadline"><i class="sp-ic sp-ic-cal"></i>الموعد النهائي <b>${esc(fmtDate(endDate))}</b></span>
   </div>`;
 }
 
@@ -90,7 +87,7 @@ export function renderGallery(): void {
         <div class="stats-row">
           ${pill(GCA_STATUS, p.status_gca)}
         </div>
-        ${buildProgressLine(p.start_date, p.end_date, p.status_gca, p.days, true)}
+        ${buildProgressLine(p.start_date, p.end_date, p.status_gca, true)}
       </article>`;
     })
     .join("");
@@ -109,6 +106,7 @@ export function renderKpis(): void {
   const pending = P.filter((p) => p.status_gca === "بانتظار صدور أمر الشراء").length;
   const hours = P.reduce((s, p) => s + (+(p.hours || 0)), 0);
   const trainees = P.filter((p) => p.status_gca === "منجز").reduce((s, p) => s + (+(p.participants || 0)), 0);
+  const allTrainees = P.reduce((s, p) => s + (+(p.participants || 0)), 0);
   const thisMonth = P.filter((p) => (p.start_date || "").slice(0, 7) === tm).length;
   const active = T.filter((t) => t.status === "نشط").length;
 
@@ -119,6 +117,7 @@ export function renderKpis(): void {
     ["بانتظار صدور أمر الشراء", pending, "تحتاج متابعة", pending ? "warn" : ""],
     ["مدربون نشطون", active, `من أصل ${T.length}`, ""],
     ["ساعات تدريبية", hours, "إجمالي البرامج", ""],
+    ["عدد المتدربين", allTrainees, "في كل البرامج", ""],
   ];
   const el = $("#kpis");
   if (el) el.innerHTML = k.map(([l, n, s, c]) => `<div class="kpi ${c}"><div class="n">${n}</div><div class="l">${l}</div><div class="s">${s}</div></div>`).join("");
