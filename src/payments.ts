@@ -1,4 +1,4 @@
-import { DUE_PORTION_OPTIONS, GCA_STATUS, PAYMENT_CARD_COLOR, PAYMENT_CARD_DONE_COLOR, PAYMENT_CARD_PARTIAL_COLOR, PAYMENT_STATUS, TR_STATUS } from "./constants";
+import { DUE_PORTION_OPTIONS, GCA_STATUS, PAYMENT_CARD_COLOR, PAYMENT_CARD_DONE_COLOR, PAYMENT_STATUS, TR_STATUS } from "./constants";
 import { state } from "./state";
 import type { Program } from "./types";
 import { $, $$, esc, fmtDate, fmtLong, pill } from "./utils";
@@ -18,8 +18,8 @@ function programPaymentsFor(programId: string | undefined): { done: boolean; par
 
 // دائرة مقسّمة بالتساوي على عدد الدفعات الفعلي للبرنامج — كل قطاع يأخذ لون حالة دفعته
 function donutColor(status: string | null, themed = false): string {
-  if (themed) return status === "تم الدفع" ? "var(--ok)" : status === "معلقة" ? "var(--warn)" : "var(--line)";
-  return status === "تم الدفع" ? "#013B1B" : "rgba(255,255,255,.3)";
+  if (themed) return status === "تم الدفع" ? "var(--ok)" : status === "مدفوع جزئياً" ? "var(--gold)" : status === "معلقة" ? "var(--warn)" : "var(--line)";
+  return status === "تم الدفع" ? "#013B1B" : status === "مدفوع جزئياً" ? "#AE9768" : "rgba(255,255,255,.3)";
 }
 
 function donutHtml(programId: string, large = false): string {
@@ -47,12 +47,12 @@ function donutHtml(programId: string, large = false): string {
 // الكاردز = نفس برامج قسم "البرامج التدريبية" بالضبط — كل برنامج له كارد هنا بغض النظر عن وجود طلب صرف له
 function paymentCard(prog: Program): string {
   const editAttr = ` data-pay-detail="${esc(prog.id)}"`;
-  const { done, partial, status, percent } = programPaymentsFor(prog.id);
-  const color = done ? PAYMENT_CARD_DONE_COLOR : partial ? PAYMENT_CARD_PARTIAL_COLOR : PAYMENT_CARD_COLOR;
-  const stateCls = done ? " is-done" : partial ? " is-partial" : "";
+  const { done, status, percent } = programPaymentsFor(prog.id);
+  const color = done ? PAYMENT_CARD_DONE_COLOR : PAYMENT_CARD_COLOR;
+  const stateCls = done ? " is-done" : "";
   return `<article class="prog-card pay-prog${stateCls}" style="--card-color:${color}"${editAttr}>
     <div class="bars-wm"><i></i><i></i><i></i><i></i></div>
-    <div class="row1"><span class="eyebrow">${esc(prog.type || "أمر شراء")}</span><span class="ref">رقم أمر الشراء <bdi dir="ltr">${esc(prog.ref || "—")}</bdi></span></div>
+    <div class="row1"><span class="eyebrow">${esc(prog.type || "أمر شراء")}</span><span class="ref">${prog.ref ? `رقم أمر الشراء <bdi dir="ltr">${esc(prog.ref)}</bdi>` : "لم يتم اصدار أمر الشراء بعد"}</span></div>
     <h4>${esc(prog.title)}</h4>
     <div class="stats-row">
       <div class="pay-status"><small>حالة الدفع</small>${pill(PAYMENT_STATUS, status)}<span class="pay-percent">${percent}%</span></div>

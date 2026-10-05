@@ -305,7 +305,7 @@ export function renderReport(): void {
   const P = state.programs.filter((p) => (!g || p.status_gca === g) && inRange(p, from, to)).sort((a, b) => (a.start_date || "").localeCompare(b.start_date || ""));
   const hours = P.reduce((s, p) => s + (+(p.hours || 0)), 0);
   const trainees = P.reduce((s, p) => s + (+(p.participants || 0)), 0);
-  const byStatus = GCA_STATUS.map(([s]) => [s, P.filter((p) => p.status_gca === s).length] as [string, number]).filter((x) => x[1]);
+  const byStatus = TR_STATUS.map(([s]) => [s, P.filter((p) => p.status_trainer === s).length] as [string, number]).filter((x) => x[1]);
   const byTrainer = state.trainers.map((t) => ({ t, ps: P.filter((p) => p.trainer_id === t.id) })).filter((x) => x.ps.length);
   const period = from || to ? `${from ? fmtMonth(from) : "البداية"} — ${to ? fmtMonth(to) : "الآن"}` : "كامل المدة";
 
@@ -314,12 +314,12 @@ export function renderReport(): void {
   el.innerHTML = `
     <div class="rh"><div class="bars"><i></i><i></i><i></i><i></i></div><h2>تقرير متابعة توريد المدربين — الديوان العام للمحاسبة</h2><div class="meta">أُعدّ بواسطة: يسير لإدارة المشاريع<br>تاريخ الإصدار: ${fmtLong(today())}<br>الفترة: ${period}${g ? `<br>الحالة: ${esc(g)}` : ""}</div></div>
     <div class="rsum"><div><b>${P.length}</b><span>برنامج</span></div><div><b>${byTrainer.length}</b><span>مدرب</span></div><div><b>${hours}</b><span>ساعة تدريبية</span></div><div><b>${trainees}</b><span>متدرب</span></div><div><b>${P.filter((p) => p.status_gca === "منجز").length}</b><span>برنامج منجز</span></div></div>
-    <h3>١. ملخص الحالة مع الديوان</h3>
-    <div class="tbl-wrap"><table><thead><tr><th>الحالة</th><th>عدد البرامج</th><th>النسبة</th></tr></thead><tbody>${byStatus.map(([s, n]) => `<tr><td>${pill(GCA_STATUS, s)}</td><td>${n}</td><td>${Math.round((n / P.length) * 100)}%</td></tr>`).join("") || `<tr><td colspan="3" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
+    <h3>١. ملخص الحالة مع المدرب</h3>
+    <div class="tbl-wrap"><table><thead><tr><th>الحالة</th><th>عدد البرامج</th><th>النسبة</th></tr></thead><tbody>${byStatus.map(([s, n]) => `<tr><td>${pill(TR_STATUS, s)}</td><td>${n}</td><td>${Math.round((n / P.length) * 100)}%</td></tr>`).join("") || `<tr><td colspan="3" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
     <h3>٢. سجل البرامج</h3>
-    <div class="tbl-wrap"><table><thead><tr><th>#</th><th>رقم الأمر</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>التاريخ</th><th>المدة</th><th>المتدربون</th><th>مع الديوان</th><th>مع المدرب</th></tr></thead><tbody>${P.map((p, i) => `<tr data-open="${esc(p.id)}"><td>${i + 1}</td><td>${esc(p.ref || "")}</td><td class="t">${esc(p.title)}</td><td>${esc(p.type || "")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}${p.end_date !== p.start_date ? " – " + fmtDate(p.end_date) : ""}</td><td>${durationText(p)}</td><td>${p.participants || "—"}</td><td>${pill(GCA_STATUS, p.status_gca)}</td><td>${pill(TR_STATUS, p.status_trainer)}</td></tr>`).join("") || `<tr><td colspan="10" class="empty">لا برامج في هذه الفترة</td></tr>`}</tbody></table></div>
+    <div class="tbl-wrap"><table><thead><tr><th>#</th><th>رقم الأمر</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>تاريخ البداية</th><th>تاريخ النهاية</th><th>المدة</th><th>المتدربون</th><th>مع الديوان</th><th>مع المدرب</th></tr></thead><tbody>${P.map((p, i) => `<tr data-open="${esc(p.id)}"><td>${i + 1}</td><td>${esc(p.ref || "")}</td><td class="t">${esc(p.title)}</td><td>${esc(p.type || "")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}</td><td>${fmtDate(p.end_date)}</td><td>${durationText(p)}</td><td>${p.participants || "—"}</td><td>${pill(GCA_STATUS, p.status_gca)}</td><td>${pill(TR_STATUS, p.status_trainer)}</td></tr>`).join("") || `<tr><td colspan="11" class="empty">لا برامج في هذه الفترة</td></tr>`}</tbody></table></div>
     <h3>٣. توزيع البرامج على المدربين</h3>
-    <div class="tbl-wrap"><table><thead><tr><th>المدرب</th><th>التخصص</th><th>البرامج</th><th>الساعات</th><th>منجز</th><th>تم التعاقد</th></tr></thead><tbody>${byTrainer.map(({ t, ps }) => `<tr><td class="t">${esc(t.name)}</td><td>${esc(t.specialty || "")}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td>${ps.filter((p) => p.status_gca === "منجز").length}</td><td>${ps.filter((p) => p.status_trainer === "تم التعاقد").length}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
+    <div class="tbl-wrap"><table><thead><tr><th>المدرب</th><th>التخصص</th><th>عدد البرامج</th><th>الساعات</th></tr></thead><tbody>${byTrainer.map(({ t, ps }) => `<tr><td class="t">${esc(t.name)}</td><td>${esc(t.specialty || "")}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td></tr>`).join("") || `<tr><td colspan="4" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
     <div class="pcard-f" style="margin-top:18px;border-radius:8px"><span>يسير لإدارة المشاريع · info@yaaseer.com · +966 50 168 3310 · الرياض</span><span>وثيقة متابعة مشتركة — للاستخدام بين الطرفين</span></div>`;
 }
 
@@ -335,7 +335,6 @@ export function cardHtml(p: Program): string {
       <div><small>تاريخ النهاية</small><b>${fmtLong(p.end_date)}</b></div>
       <div><small>المدة</small><b>${durationText(p)}</b></div>
       <div><small>مكان التنفيذ</small><b>${esc(p.location || "—")}</b></div>
-      <div><small>الفئة المستهدفة</small><b>${esc(p.target_group || "—")}</b></div>
       <div><small>عدد المتدربين</small><b>${p.participants || "—"}</b></div>
       <div><small>المسؤول من جهة الديوان</small><b>${esc(p.gca_contact || "—")}</b></div>
     </div>

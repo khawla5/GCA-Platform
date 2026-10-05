@@ -1,6 +1,6 @@
 import { refreshData } from "./boot";
 import { DUE_PORTION_OPTIONS, PAYMENT_STATUS } from "./constants";
-import { deletePayment, deleteTrainerPayment, upsertPayment, upsertTrainerPayment } from "./data";
+import { deletePayment, deleteTrainerPayment, upsertPayment, upsertProgram, upsertProgramPayment, upsertTrainerPayment } from "./data";
 import { openProgramForm } from "./forms";
 import { state } from "./state";
 import type { PaymentInput, TrainerPaymentInput } from "./types";
@@ -21,10 +21,11 @@ function closePaymentPage(): void {
   ($(`.tab[data-tab="payments"]`) as HTMLElement | null)?.click();
 }
 
-// رقم أمر الشراء يُسحب من رقم أمر الشراء الخاص بالبرنامج نفسه — ما يُكتب يدويًا
-function syncPayPoFromProgram(): void {
+// رقم أمر الشراء وقيمة العقد يُسحبان من بيانات البرنامج نفسه
+function syncPayFromProgram(): void {
   const prog = state.programs.find((pr) => pr.title === v("pay_program"));
   setv("pay_po", prog?.ref || "");
+  setv("pay_contract", prog?.contract_value ?? "");
 }
 
 function openPaymentForm(id?: string): void {
@@ -39,10 +40,8 @@ function openPaymentForm(id?: string): void {
 
   setv("pay_id", p?.id);
   setv("pay_program", p?.program_name);
-  syncPayPoFromProgram();
+  syncPayFromProgram();
   setv("pay_status", p?.status || "تم الطلب");
-  setv("pay_total", p?.installments_total ?? 1);
-  setv("pay_paid", p?.installments_paid ?? 0);
   setv("pay_contract", p?.contract_value ?? "");
   setv("pay_entitlement", p?.entitlement_value ?? "");
   fill("#pay_portion", DUE_PORTION_OPTIONS);
@@ -53,23 +52,41 @@ function openPaymentForm(id?: string): void {
   openPaymentPage();
 }
 
+// الدفعة اللي في نموذج طلب الصرف تنكتب كصف في "مدفوعات المشاريع مع المركز" للبرنامج المختار
+async function saveProgramInstallmentFromPayment(): Promise<void> {
+  const prog = state.programs.find((pr) => pr.title === v("pay_program"));
+  if (!prog) return;
+  const contract = v("pay_contract") ? +v("pay_contract") : prog.contract_value;
+  if (contract !== prog.contract_value) {
+    const { id: _id, created_at: _c, updated_at: _u, ...program } = prog;
+    await upsertProgram(prog.id, { ...program, contract_value: contract });
+  }
+  const portion = v("pay_portion") || null;
+  const row = state.programPayments.find((pp) => pp.program_id === prog.id && pp.due_portion === portion);
+  await upsertProgramPayment(row?.id ?? null, {
+    program_id: prog.id,
+    due_portion: portion,
+    entitlement_percent: row?.entitlement_percent ?? null,
+    entitlement_value: v("pay_entitlement") ? +v("pay_entitlement") : null,
+    due_date: v("pay_dueDate") || null,
+    payment_status: v("pay_status") || "تم الطلب",
+    coc_number: v("pay_coc") || null,
+    invoice_number: v("pay_invoice") || null,
+  });
+}
+
 async function savePayment(): Promise<void> {
   if (!requireAdmin()) return;
   const f = $("#paymentForm") as HTMLFormElement | null;
   if (!f || !f.reportValidity()) return;
-  const total = +v("pay_total");
-  const paid = Math.floor(+v("pay_paid") || 0);
-  if (paid > total) {
-    toast("عدد الدفعات المدفوعة أكبر من عدد الدفعات الكلي");
-    return;
-  }
   const id = v("pay_id") || null;
+  const existing = id ? state.payments.find((x) => String(x.id) === id) : null;
   const input: PaymentInput = {
     purchase_order: v("pay_po"),
     program_name: v("pay_program"),
     status: v("pay_status"),
-    installments_total: total,
-    installments_paid: paid,
+    installments_total: existing?.installments_total ?? 1,
+    installments_paid: existing?.installments_paid ?? 0,
     contract_value: v("pay_contract") ? +v("pay_contract") : null,
     entitlement_value: v("pay_entitlement") ? +v("pay_entitlement") : null,
     due_portion: v("pay_portion"),
@@ -79,6 +96,7 @@ async function savePayment(): Promise<void> {
   };
   try {
     await upsertPayment(id, input);
+    await saveProgramInstallmentFromPayment();
     toast(id ? "تم تحديث أمر الشراء" : "تمت إضافة أمر الشراء");
     await refreshData();
     closePaymentPage();
@@ -177,7 +195,7 @@ export function wirePaymentForms(): void {
     const el = $("#tpay_percent") as HTMLInputElement | null;
     if (el && +el.value > 100) el.value = "100";
   });
-  $("#pay_program")?.addEventListener("change", syncPayPoFromProgram);
+  $("#pay_program")?.addEventListener("change", syncPayFromProgram);
   $("#btnBackFromPaymentDetail")?.addEventListener("click", closePaymentPage);
   $("#btnEditFromPaymentDetail")?.addEventListener("click", (e) => {
     const id = (e.currentTarget as HTMLElement).dataset.programId;

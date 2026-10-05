@@ -36,8 +36,6 @@ function programPaymentRowHtml(pp?: ProgramPayment): string {
       <div class="field"><label>قيمة الاستحقاق</label><input type="number" class="pp-value" min="0" step="0.01" value="${pp?.entitlement_value ?? ""}"></div>
       <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pp-date${pp?.due_date ? "" : " date-empty"}" lang="en" value="${esc(pp?.due_date || "")}"></div>
       <div class="field"><label>حالة الدفع</label><select class="pp-status">${statusOptions}</select></div>
-      <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input class="pp-coc" value="${esc(pp?.coc_number || "")}"></div>
-      <div class="field"><label>رقم الفاتورة</label><input class="pp-invoice" value="${esc(pp?.invoice_number || "")}"></div>
     </div>
   </div>`;
 }
@@ -55,6 +53,7 @@ async function saveProgramPaymentsList(programId: string): Promise<void> {
   const rows = list ? $$(".pp-row", list) : [];
   for (const row of rows) {
     const id = (row as HTMLElement).dataset.ppId || null;
+    const existing = id ? state.programPayments.find((pp) => pp.id === id) : null;
     const g = (cls: string) => (row.querySelector(cls) as HTMLInputElement | HTMLSelectElement | null)?.value || "";
     const input: ProgramPaymentInput = {
       program_id: programId,
@@ -63,8 +62,8 @@ async function saveProgramPaymentsList(programId: string): Promise<void> {
       entitlement_value: g(".pp-value") ? +g(".pp-value") : null,
       due_date: g(".pp-date") || null,
       payment_status: g(".pp-status") || "تم الطلب",
-      coc_number: g(".pp-coc") || null,
-      invoice_number: g(".pp-invoice") || null,
+      coc_number: existing?.coc_number ?? null,
+      invoice_number: existing?.invoice_number ?? null,
     };
     await upsertProgramPayment(id, input);
   }
@@ -93,8 +92,21 @@ function openProgramPage(): void {
   window.scrollTo(0, 0);
 }
 
+const hoursToText = (h: number): string => {
+  const totalMinutes = Math.round(h * 60);
+  return `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
+};
+
+const textToHours = (text: string): number => {
+  const [h, m] = text.split(":");
+  const minutes = +(m || 0);
+  return Math.round(((+h || 0) + minutes / 60) * 100) / 100;
+};
+
+let programFormReturnTab = "programs";
+
 function closeProgramPage(): void {
-  ($(`.tab[data-tab="programs"]`) as HTMLElement | null)?.click();
+  ($(`.tab[data-tab="${programFormReturnTab}"]`) as HTMLElement | null)?.click();
 }
 
 function updateStageHero(): void {
@@ -104,6 +116,7 @@ function updateStageHero(): void {
   const heroMeta = $("#stageHeroMeta");
   if (!wheel || !heroStatus || !heroTitle || !heroMeta) return;
 
+  setv("p_days", v("p_start") && v("p_end") ? daysBetween(v("p_start"), v("p_end")) : "");
   wheel.innerHTML = buildProgressLine(v("p_start") || null, v("p_end") || null, v("p_statusGca"));
 
   heroStatus.textContent = v("p_statusGca") || "بانتظار صدور أمر الشراء";
@@ -130,6 +143,9 @@ export function openProgramForm(id?: string, focusPayment = false): void {
   const heroEl = $(".stage-hero") as HTMLElement | null;
   if (heroEl) heroEl.style.display = p ? "" : "none";
 
+  const activePanel = $(".panel.active")?.id;
+  programFormReturnTab = activePanel === "panel-payments" || activePanel === "panel-paymentDetail" ? "payments" : "programs";
+
   const formEl = $("#programForm") as HTMLElement | null;
   if (formEl) formEl.classList.toggle("payment-focus", focusPayment);
   const legend = $("#contractFieldsetLegend");
@@ -144,7 +160,7 @@ export function openProgramForm(id?: string, focusPayment = false): void {
   setv("p_start", p?.start_date);
   setv("p_end", p?.end_date);
   setv("p_days", p?.days ?? "");
-  setv("p_hours", p?.hours ?? "");
+  setv("p_hours", p?.hours != null ? hoursToText(p.hours) : "");
   updateLocationOptions(p?.location);
   setv("p_participants", p?.participants ?? "");
   setv("p_statusGca", p?.status_gca || "بانتظار صدور أمر الشراء");
@@ -187,8 +203,8 @@ async function persistProgram(): Promise<void> {
     mode: v("p_mode"),
     start_date: v("p_start"),
     end_date: v("p_end"),
-    days: +v("p_days") || daysBetween(v("p_start"), v("p_end")),
-    hours: +v("p_hours") || 0,
+    days: daysBetween(v("p_start"), v("p_end")),
+    hours: textToHours(v("p_hours")),
     location: v("p_location"),
     target_group: existing?.target_group ?? null,
     participants: +v("p_participants") || 0,
