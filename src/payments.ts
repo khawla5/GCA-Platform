@@ -8,18 +8,18 @@ function programPaymentsFor(programId: string | undefined): { done: boolean; par
   if (!programId) return { done: false, partial: false, status: null, percent: 0 };
   const rows = state.programPayments.filter((pp) => pp.program_id === programId);
   if (!rows.length) return { done: false, partial: false, status: null, percent: 0 };
-  const done = rows.every((r) => r.payment_status === "تم الدفع");
-  const paidSome = rows.some((r) => r.payment_status === "تم الدفع");
-  const pending = rows.filter((r) => r.payment_status !== "تم الدفع").sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""));
-  const status = done ? "تم الدفع" : pending[0]?.payment_status || "تم الدفع";
-  const percent = rows.filter((r) => r.payment_status === "تم الدفع").reduce((s, r) => s + (+(r.entitlement_percent || 0)), 0);
+  const done = rows.every((r) => r.payment_status === "مدفوع بالكامل");
+  const paidSome = rows.some((r) => r.payment_status === "مدفوع بالكامل");
+  const pending = rows.filter((r) => r.payment_status !== "مدفوع بالكامل").sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""));
+  const status = done ? "مدفوع بالكامل" : pending[0]?.payment_status || "مدفوع بالكامل";
+  const percent = rows.filter((r) => r.payment_status === "مدفوع بالكامل").reduce((s, r) => s + (+(r.entitlement_percent || 0)), 0);
   return { done, partial: !done && paidSome, status, percent };
 }
 
 // دائرة مقسّمة بالتساوي على عدد الدفعات الفعلي للبرنامج — كل قطاع يأخذ لون حالة دفعته
 function donutColor(status: string | null, themed = false): string {
-  if (themed) return status === "تم الدفع" ? "var(--ok)" : status === "مدفوع جزئياً" ? "var(--gold)" : status === "معلقة" ? "var(--warn)" : "var(--line)";
-  return status === "تم الدفع" ? "#013B1B" : status === "مدفوع جزئياً" ? "#AE9768" : "rgba(255,255,255,.3)";
+  if (themed) return status === "مدفوع بالكامل" ? "var(--ok)" : status === "مدفوع جزئياً" ? "var(--gold)" : status === "معلقة" ? "var(--warn)" : "var(--line)";
+  return status === "مدفوع بالكامل" ? "#013B1B" : status === "مدفوع جزئياً" ? "#AE9768" : "rgba(255,255,255,.3)";
 }
 
 function donutHtml(programId: string, large = false): string {
@@ -38,7 +38,7 @@ function donutHtml(programId: string, large = false): string {
       return `${donutColor(r.payment_status, large)} ${start.toFixed(2)}% ${end.toFixed(2)}%, transparent ${end.toFixed(2)}% ${((i + 1) * step).toFixed(2)}%`;
     })
     .join(", ");
-  const paidCount = sorted.filter((r) => r.payment_status === "تم الدفع").length;
+  const paidCount = sorted.filter((r) => r.payment_status === "مدفوع بالكامل").length;
   const size = large ? " pay-donut-lg" : "";
   const holeSize = large ? " pay-donut-hole-lg" : "";
   return `<div class="pay-donut-wrap"><div class="pay-donut${size}" style="background:conic-gradient(${stops})"><div class="pay-donut-hole${holeSize}"><b>${paidCount}/${n}</b></div></div></div>`;

@@ -22,7 +22,7 @@ function updateLocationOptions(preferred?: string | null): void {
 }
 
 /* ---------- دفعات عقد البرنامج (قائمة ديناميكية — برنامج واحد ممكن ياخذ أكثر من دفعة) ---------- */
-function programPaymentRowHtml(pp?: ProgramPayment): string {
+function programPaymentRowHtml(pp?: ProgramPayment, defaultPortion?: string): string {
   const statusOptions = PAYMENT_STATUS.map(
     ([s]) => `<option value="${esc(s)}"${pp?.payment_status === s ? " selected" : ""}>${esc(s)}</option>`
   ).join("");
@@ -30,9 +30,9 @@ function programPaymentRowHtml(pp?: ProgramPayment): string {
     <div class="pp-row-head"><b>دفعة</b><button type="button" class="pp-remove" title="حذف الدفعة">✕</button></div>
     <div class="pp-grid">
       <div class="field"><label>ترتيب الدفعة</label><select class="pp-portion">${DUE_PORTION_OPTIONS.map(
-        (o) => `<option value="${esc(o)}"${pp?.due_portion === o ? " selected" : ""}>${esc(o)}</option>`
+        (o) => `<option value="${esc(o)}"${(pp?.due_portion ?? defaultPortion) === o ? " selected" : ""}>${esc(o)}</option>`
       ).join("")}</select></div>
-      <div class="field"><label>نسبة الاستحقاق %</label><input type="number" class="pp-percent" min="0" max="100" step="0.1" value="${pp?.entitlement_percent ?? ""}"></div>
+      <div class="field"><label>نسبة الاستحقاق</label><div class="pct-wrap"><input type="number" class="pp-percent" min="0" max="100" step="0.1" value="${pp?.entitlement_percent ?? ""}"><span class="pct-suffix">%</span></div></div>
       <div class="field"><label>قيمة الاستحقاق</label><input type="number" class="pp-value" min="0" step="0.01" value="${pp?.entitlement_value ?? ""}"></div>
       <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pp-date${pp?.due_date ? "" : " date-empty"}" lang="en" value="${esc(pp?.due_date || "")}"></div>
       <div class="field"><label>حالة الدفع</label><select class="pp-status">${statusOptions}</select></div>
@@ -71,8 +71,8 @@ async function saveProgramPaymentsList(programId: string): Promise<void> {
 
 function nextRef(): string {
   const y = new Date().getFullYear();
-  const n = state.programs.filter((p) => (p.ref || "").startsWith(`GCA-${y}-`)).length + 1;
-  return `GCA-${y}-${String(n).padStart(3, "0")}`;
+  const n = state.programs.filter((p) => (p.ref || "").startsWith(`PO-${y}-`)).length + 1;
+  return `PO-${y}-${String(n).padStart(3, "0")}`;
 }
 
 /* ---------- program card ---------- */
@@ -435,7 +435,10 @@ export function wireForms(): void {
   $("#btnCancelProgram")?.addEventListener("click", closeProgramPage);
 
   $("#btnAddProgramPayment")?.addEventListener("click", () => {
-    $("#programPaymentsList")?.insertAdjacentHTML("beforeend", programPaymentRowHtml());
+    const list = $("#programPaymentsList");
+    const lastPortion = list ? ($$(".pp-portion", list).pop() as HTMLSelectElement | undefined)?.value : undefined;
+    const nextIndex = lastPortion ? Math.min(DUE_PORTION_OPTIONS.indexOf(lastPortion) + 1, DUE_PORTION_OPTIONS.length - 1) : 0;
+    list?.insertAdjacentHTML("beforeend", programPaymentRowHtml(undefined, DUE_PORTION_OPTIONS[nextIndex]));
   });
   $("#programPaymentsList")?.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest(".pp-remove") as HTMLElement | null;

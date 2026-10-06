@@ -12,7 +12,22 @@ const GALLERY_STATUS_PRIORITY: Record<string, number> = {
   "منجز": 2,
 };
 
-// شريط تقدّم البرنامج (بدل عجلة المراحل) — نسبة مبنية على مرور الأيام بين تاريخ البداية والنهاية
+// نسبة الإنجاز مبنية على مرور الأيام بين تاريخ البداية والنهاية
+export function progressPct(startDate: string | null | undefined, endDate: string | null | undefined, statusGca?: string): number {
+  if (!startDate || !endDate) return 0;
+  const t = today();
+  if (statusGca === "منجز" || t > endDate) return 100;
+  if (t < startDate) return 0;
+  return Math.round((daysBetween(startDate, t) / daysBetween(startDate, endDate)) * 100);
+}
+
+export function progressStatusLabel(pct: number): string {
+  if (pct >= 100) return "منجز";
+  if (pct > 0) return "قيد التنفيذ";
+  return "بانتظار صدور أمر الشراء";
+}
+
+// شريط تقدّم البرنامج (بدل عجلة المراحل)
 export function buildProgressLine(
   startDate: string | null | undefined,
   endDate: string | null | undefined,
@@ -22,11 +37,7 @@ export function buildProgressLine(
   if (!startDate || !endDate) {
     return `<div class="stage-progress${compact ? " sp-compact" : ""}"><span class="sp-empty">حدّد تاريخ البداية والنهاية لعرض نسبة الإنجاز</span></div>`;
   }
-  const t = today();
-  let pct: number;
-  if (statusGca === "منجز" || t > endDate) pct = 100;
-  else if (t < startDate) pct = 0;
-  else pct = Math.round((daysBetween(startDate, t) / daysBetween(startDate, endDate)) * 100);
+  const pct = progressPct(startDate, endDate, statusGca);
 
   if (compact) {
     return `<div class="stage-progress sp-compact">
