@@ -3,7 +3,7 @@ import { deleteProgram, deleteProgramPayment, deleteTrainer, upsertProgram, upse
 import { state } from "./state";
 import type { ProgramInput, ProgramPayment, ProgramPaymentInput, TrainerInput } from "./types";
 import { $, $$, closeModal, csv, daysBetween, esc, fill, fmtAmountInput, openModal, parseAmount, requireAdmin, save, setAmount, setv, toast, today, trainerName, v } from "./utils";
-import { buildProgressLine, cardHtml } from "./render";
+import { buildProgressLine, cardDownloadHtml, cardHtml } from "./render";
 import { refreshData } from "./boot";
 
 // خيارات "مكان التنفيذ" تابعة لـ"أسلوب التنفيذ" — كل أسلوب له خيارات مكان ثابتة
@@ -22,10 +22,14 @@ function updateLocationOptions(preferred?: string | null): void {
 }
 
 /* ---------- دفعات عقد البرنامج (قائمة ديناميكية — برنامج واحد ممكن ياخذ أكثر من دفعة) ---------- */
-function programPaymentRowHtml(pp?: ProgramPayment, defaultPortion?: string): string {
+function programPaymentRowHtml(pp?: ProgramPayment, defaultPortion?: string, showCocInvoice = false): string {
   const statusOptions = PAYMENT_STATUS.map(
     ([s]) => `<option value="${esc(s)}"${pp?.payment_status === s ? " selected" : ""}>${esc(s)}</option>`
   ).join("");
+  const cocInvoiceFields = showCocInvoice
+    ? `<div class="field"><label>رقم شهادة الإنجاز (COC)</label><input class="pp-coc" value="${esc(pp?.coc_number || "")}"></div>
+      <div class="field"><label>رقم الفاتورة</label><input class="pp-invoice" value="${esc(pp?.invoice_number || "")}"></div>`
+    : "";
   return `<div class="pp-row" data-pp-id="${esc(pp?.id || "")}">
     <div class="pp-row-head"><b>دفعة</b><button type="button" class="pp-remove" title="حذف الدفعة">✕</button></div>
     <div class="pp-grid">
@@ -33,9 +37,10 @@ function programPaymentRowHtml(pp?: ProgramPayment, defaultPortion?: string): st
         (o) => `<option value="${esc(o)}"${(pp?.due_portion ?? defaultPortion) === o ? " selected" : ""}>${esc(o)}</option>`
       ).join("")}</select></div>
       <div class="field"><label>نسبة الاستحقاق</label><div class="pct-wrap"><input type="number" class="pp-percent" min="0" max="100" step="0.1" value="${pp?.entitlement_percent ?? ""}"><span class="pct-suffix">%</span></div></div>
-      <div class="field"><label>قيمة الاستحقاق</label><input type="number" class="pp-value" min="0" step="0.01" value="${pp?.entitlement_value ?? ""}"></div>
+      <div class="field"><label>قيمة الاستحقاق</label><input type="text" inputmode="decimal" dir="ltr" data-amount class="pp-value" value="${pp?.entitlement_value != null ? fmtAmountInput(pp.entitlement_value.toFixed(2)) : ""}"></div>
       <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pp-date${pp?.due_date ? "" : " date-empty"}" lang="en" value="${esc(pp?.due_date || "")}"></div>
       <div class="field"><label>حالة الدفع</label><select class="pp-status">${statusOptions}</select></div>
+      ${cocInvoiceFields}
     </div>
   </div>`;
 }
@@ -44,7 +49,7 @@ function renderProgramPaymentsList(programId: string | null): void {
   const list = $("#programPaymentsList");
   if (!list) return;
   const rows = programId ? state.programPayments.filter((pp) => pp.program_id === programId) : [];
-  list.innerHTML = rows.map((pp) => programPaymentRowHtml(pp)).join("");
+  list.innerHTML = rows.map((pp) => programPaymentRowHtml(pp, undefined, !!programId)).join("");
 }
 
 // يحفظ كل صفوف الدفعات المعروضة حاليًا بالقائمة (إضافة/تعديل) لبرنامج معيّن
@@ -55,15 +60,16 @@ async function saveProgramPaymentsList(programId: string): Promise<void> {
     const id = (row as HTMLElement).dataset.ppId || null;
     const existing = id ? state.programPayments.find((pp) => pp.id === id) : null;
     const g = (cls: string) => (row.querySelector(cls) as HTMLInputElement | HTMLSelectElement | null)?.value || "";
+    const hasCoc = !!row.querySelector(".pp-coc");
     const input: ProgramPaymentInput = {
       program_id: programId,
       due_portion: g(".pp-portion") || null,
       entitlement_percent: g(".pp-percent") ? +g(".pp-percent") : null,
-      entitlement_value: g(".pp-value") ? +g(".pp-value") : null,
+      entitlement_value: parseAmount(g(".pp-value")),
       due_date: g(".pp-date") || null,
       payment_status: g(".pp-status") || "تم الطلب",
-      coc_number: existing?.coc_number ?? null,
-      invoice_number: existing?.invoice_number ?? null,
+      coc_number: hasCoc ? g(".pp-coc") || null : existing?.coc_number ?? null,
+      invoice_number: hasCoc ? g(".pp-invoice") || null : existing?.invoice_number ?? null,
     };
     await upsertProgramPayment(id, input);
   }
@@ -104,6 +110,7 @@ const textToHours = (text: string): number => {
 };
 
 let programFormReturnTab = "programs";
+let cvRemoved = false;
 
 function closeProgramPage(): void {
   ($(`.tab[data-tab="${programFormReturnTab}"]`) as HTMLElement | null)?.click();
@@ -257,15 +264,11 @@ export function openTrainerForm(id?: string): void {
   setv("t_notes", t?.notes);
   const cvInput = $("#t_cv") as HTMLInputElement | null;
   if (cvInput) cvInput.value = "";
+  cvRemoved = false;
   const cvLink = $("#t_cvCurrent") as HTMLAnchorElement | null;
-  if (cvLink) {
-    if (t?.cv_url) {
-      cvLink.href = t.cv_url;
-      cvLink.style.display = "";
-    } else {
-      cvLink.style.display = "none";
-    }
-  }
+  const cvWrap = $("#t_cvCurrentWrap") as HTMLElement | null;
+  if (cvLink) cvLink.href = t?.cv_url || "#";
+  if (cvWrap) cvWrap.style.display = t?.cv_url ? "flex" : "none";
   openModal("trainerModal");
 }
 
@@ -276,7 +279,7 @@ async function saveTrainer(): Promise<void> {
   const id = v("t_id") || null;
   const existing = id ? state.trainers.find((x) => x.id === id) : null;
   const cvFile = ($("#t_cv") as HTMLInputElement | null)?.files?.[0] || null;
-  let cvUrl = existing?.cv_url ?? null;
+  let cvUrl = cvRemoved ? null : existing?.cv_url ?? null;
   if (cvFile) {
     try {
       cvUrl = await uploadTrainerCv(cvFile);
@@ -403,16 +406,7 @@ export function wireForms(): void {
   $("#btnDlCard")?.addEventListener("click", async () => {
     const p = state.current;
     if (!p) return;
-    const cssText = Array.from(document.styleSheets)
-      .map((s) => {
-        try {
-          return [...s.cssRules].map((r) => r.cssText).join("\n");
-        } catch {
-          return "";
-        }
-      })
-      .join("\n");
-    const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>بطاقة ${p.title}</title><style>${cssText} body{padding:24px;background:#fff}</style></head><body>${cardHtml(p)}</body></html>`;
+    const html = cardDownloadHtml(p);
     await save(`بطاقة-${(p.ref || p.title).replace(/[\\/:*?"<>|]/g, "-")}.html`, html);
   });
 
@@ -442,7 +436,7 @@ export function wireForms(): void {
     const list = $("#programPaymentsList");
     const lastPortion = list ? ($$(".pp-portion", list).pop() as HTMLSelectElement | undefined)?.value : undefined;
     const nextIndex = lastPortion ? Math.min(DUE_PORTION_OPTIONS.indexOf(lastPortion) + 1, DUE_PORTION_OPTIONS.length - 1) : 0;
-    list?.insertAdjacentHTML("beforeend", programPaymentRowHtml(undefined, DUE_PORTION_OPTIONS[nextIndex]));
+    list?.insertAdjacentHTML("beforeend", programPaymentRowHtml(undefined, DUE_PORTION_OPTIONS[nextIndex], !!v("p_id")));
   });
   $("#programPaymentsList")?.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest(".pp-remove") as HTMLElement | null;
@@ -465,12 +459,17 @@ export function wireForms(): void {
     const valueInput = row?.querySelector(".pp-value") as HTMLInputElement | null;
     const percent = +input.value || 0;
     const contractValue = parseAmount(v("p_contractValue")) || 0;
-    if (valueInput && percent && contractValue) valueInput.value = ((contractValue * percent) / 100).toFixed(2);
+    if (valueInput && percent && contractValue) valueInput.value = fmtAmountInput(((contractValue * percent) / 100).toFixed(2));
   });
 
   $("#btnNewTrainer")?.addEventListener("click", () => openTrainerForm());
   $("#btnSaveTrainer")?.addEventListener("click", saveTrainer);
   $("#btnDeleteTrainer")?.addEventListener("click", removeTrainer);
+  $("#btnRemoveCv")?.addEventListener("click", () => {
+    cvRemoved = true;
+    const cvWrap = $("#t_cvCurrentWrap") as HTMLElement | null;
+    if (cvWrap) cvWrap.style.display = "none";
+  });
 
   $("#btnCsvPrograms")?.addEventListener("click", exportProgramsCsv);
   $("#btnCsvTrainers")?.addEventListener("click", exportTrainersCsv);

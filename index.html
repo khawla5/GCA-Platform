@@ -56,7 +56,7 @@
     </div>
 
     <div class="section-head"><h2>المدربون وحِمل التدريب</h2></div>
-    <div class="tbl-wrap"><table><thead><tr><th>المدرب</th><th>التخصص</th><th>الحالة</th><th>البرامج</th><th>قيد التنفيذ</th><th>الساعات</th><th>آخر برنامج</th></tr></thead><tbody id="trainerLoad"></tbody></table></div>
+    <div class="tbl-wrap"><table id="trainerLoadTable"><thead><tr><th>المدرب</th><th>الحالة</th><th>عدد البرامج</th><th>قيد التنفيذ</th><th>عدد الساعات</th><th>آخر برنامج</th></tr></thead><tbody id="trainerLoad"></tbody></table></div>
   </section>
 
   <!-- ===== PROGRAMS ===== -->
@@ -89,14 +89,22 @@
       <thead><tr><th>رقم أمر الشراء</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>تاريخ البداية</th><th>تاريخ النهاية</th><th>المدة</th><th>الحالة مع الديوان</th><th class="admin-only"></th></tr></thead>
       <tbody id="programsBodyGca"></tbody>
     </table></div>
-    <p class="hint" style="margin-top:8px" id="programsCountGca"></p>
+    <div class="section-head" style="margin-top:8px">
+      <p class="hint" id="programsCountGca" style="margin:0"></p>
+      <span class="spacer"></span>
+      <div class="pager" id="gcaPager">
+        <button type="button" class="btn sm" id="gcaPagerPrev">السابق</button>
+        <span id="gcaPagerLabel" class="hint" style="margin:0"></span>
+        <button type="button" class="btn sm" id="gcaPagerNext">التالي</button>
+      </div>
+    </div>
   </section>
 
   <!-- ===== TRAINERS ===== -->
   <section class="panel" id="panel-trainers">
     <div class="section-head"><h2>قاعدة المدربين</h2><span class="spacer"></span><button class="btn primary admin-only" id="btnNewTrainer">＋ إضافة مدرب</button></div>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>الاسم</th><th>البريد الإلكتروني</th><th>رقم الجوال</th><th>الحالة</th><th>البرامج</th><th>الساعات</th><th class="admin-only"></th></tr></thead>
+    <div class="tbl-wrap"><table id="trainersTable">
+      <thead><tr><th>الاسم</th><th>البريد الإلكتروني</th><th>رقم الجوال</th><th>الحالة</th><th>عدد البرامج</th><th>الساعات</th><th class="admin-only"></th></tr></thead>
       <tbody id="trainersBody"></tbody>
     </table></div>
   </section>
@@ -119,18 +127,44 @@
     <div class="section-head" id="paymentsTableHead"><h2>سجل المدفوعات</h2><span class="spacer"></span><button class="btn primary admin-only" id="btnNewPayment">＋ اضافة طلب صرف</button></div>
 
     <h3 class="table-split-head">مدفوعات المشاريع مع المركز</h3>
+    <div class="toolbar">
+      <input type="search" id="fTrSearch" placeholder="بحث باسم البرنامج أو رقم أمر الشراء…">
+      <select id="fTrType"><option value="">كل الأنواع</option></select>
+      <select id="fTrStatus"><option value="">كل حالات الدفع</option></select>
+    </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>رقم شهادة الإنجاز</th><th>رقم الفاتورة</th><th>رقم أمر الشراء</th><th>اسم البرنامج</th><th>المسار</th><th>النوع</th><th>قيمة العقد</th><th>الدفعة المستحقة</th><th>نسبة الاستحقاق</th><th>قيمة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
+      <thead><tr><th>رقم شهادة الإنجاز</th><th>رقم الفاتورة</th><th>رقم أمر الشراء</th><th>اسم البرنامج</th><th>النوع</th><th>قيمة العقد</th><th>الدفعة المستحقة</th><th>نسبة الاستحقاق</th><th>قيمة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
       <tbody id="programsBodyTr"></tbody>
     </table></div>
-    <p class="hint" style="margin-top:8px" id="programsCountTr"></p>
+    <div class="section-head" style="margin-top:8px">
+      <p class="hint" id="programsCountTr" style="margin:0"></p>
+      <span class="spacer"></span>
+      <div class="pager" id="trPager">
+        <button type="button" class="btn sm" id="trPagerPrev">السابق</button>
+        <span id="trPagerLabel" class="hint" style="margin:0"></span>
+        <button type="button" class="btn sm" id="trPagerNext">التالي</button>
+      </div>
+    </div>
 
     <div class="section-head"><h3 class="table-split-head" style="margin:0">مدفوعات المدربين</h3><span class="spacer"></span><button class="btn primary admin-only" id="btnNewTrainerPayment">＋ إضافة</button></div>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>اسم البرنامج</th><th>المسار</th><th>اسم المدرب</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
+    <div class="toolbar">
+      <input type="search" id="fTpSearch" placeholder="بحث باسم البرنامج أو المدرب…">
+      <select id="fTpStatus"><option value="">كل حالات الدفع</option></select>
+      <select id="fTpTrainer"><option value="">كل المدربين</option></select>
+    </div>
+    <div class="tbl-wrap"><table id="trainerPaymentsTable">
+      <thead><tr><th>اسم البرنامج</th><th>اسم المدرب</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
       <tbody id="trainerPaymentsBody"></tbody>
     </table></div>
-    <p class="hint" style="margin-top:8px" id="trainerPaymentsCount"></p>
+    <div class="section-head" style="margin-top:8px">
+      <p class="hint" id="trainerPaymentsCount" style="margin:0"></p>
+      <span class="spacer"></span>
+      <div class="pager" id="tpPager">
+        <button type="button" class="btn sm" id="tpPagerPrev">السابق</button>
+        <span id="tpPagerLabel" class="hint" style="margin:0"></span>
+        <button type="button" class="btn sm" id="tpPagerNext">التالي</button>
+      </div>
+    </div>
   </section>
 
   <!-- ===== TRAINER PAYMENT FORM (صفحة كاملة) ===== -->
@@ -139,19 +173,17 @@
       <button class="btn" id="btnBackFromTrainerPayment" type="button">‹ رجوع</button>
       <h2 id="trainerPaymentFormTitle">إضافة مدفوعات مدرب</h2>
       <span class="spacer"></span>
-      <button class="btn danger" id="btnDeleteTrainerPayment" type="button">حذف السجل</button>
     </div>
     <form class="card" id="trainerPaymentForm">
       <div class="form">
-        <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><input id="tpay_program" list="programTitles" required></div>
-        <div class="field"><label>المسار</label><input id="tpay_track"></div>
+        <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><select id="tpay_program" required></select></div>
         <div class="field"><label>اسم المدرب</label><select id="tpay_trainer"></select></div>
-        <div class="field"><label>الدفعة</label><select id="tpay_portion"></select></div>
-        <div class="field"><label>نسبة الاستحقاق</label><div class="pct-wrap"><input type="number" id="tpay_percent" min="0" max="100" step="0.1"><span class="pct-suffix">%</span></div></div>
-        <div class="field"><label>تاريخ الاستحقاق</label><input type="date" id="tpay_dueDate" lang="en"></div>
-        <div class="field"><label>حالة الدفع</label><select id="tpay_status"></select></div>
+        <div class="field full">
+          <label>الدفعات</label>
+          <div id="trainerPaymentRowsList" class="pp-list"></div>
+          <button type="button" class="btn sm" id="btnAddTrainerPaymentRow">＋ إضافة دفعة</button>
+        </div>
       </div>
-      <input type="hidden" id="tpay_id">
     </form>
     <div class="page-actions">
       <span class="spacer"></span>
@@ -159,7 +191,6 @@
       <button class="btn primary" id="btnSaveTrainerPayment" type="button">حفظ</button>
     </div>
   </section>
-  <datalist id="programTitles"></datalist>
 
   <!-- ===== PAYMENT FORM (صفحة كاملة) ===== -->
   <section class="panel" id="panel-paymentForm">
@@ -176,7 +207,7 @@
         <div class="field"><label>حالة الدفع</label><select id="pay_status"></select></div>
         <fieldset><legend>مدفوعات المشاريع مع المركز</legend>
           <div class="field"><label>قيمة العقد</label><input type="text" inputmode="decimal" dir="ltr" data-amount id="pay_contract"></div>
-          <div class="field"><label>قيمة الاستحقاق</label><input type="number" id="pay_entitlement" min="0" step="0.01"></div>
+          <div class="field"><label>قيمة الاستحقاق</label><input type="text" inputmode="decimal" dir="ltr" data-amount id="pay_entitlement"></div>
           <div class="field"><label>الجزء المستحق</label><select id="pay_portion"></select></div>
           <div class="field"><label>تاريخ الاستحقاق</label><input type="date" id="pay_dueDate" lang="en"></div>
           <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input id="pay_coc"></div>
@@ -251,7 +282,7 @@
         <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><input id="p_title" required></div>
         <div class="field"><label>رقم أمر الشراء</label><input id="p_ref" placeholder="فضلاً قم بإدخال أمر الشراء الصادر من الديوان"></div>
         <div class="field"><label>نوع البرنامج <span class="req">*</span></label><select id="p_type" required></select></div>
-        <div class="field"><label>المدرب <span class="req">*</span></label><select id="p_trainer" required></select></div>
+        <div class="field"><label>المدرب</label><select id="p_trainer"></select></div>
         <div class="field"><label>أسلوب التنفيذ</label><select id="p_mode"><option>حضوري</option><option>افتراضي</option><option>هجين</option></select></div>
         <div class="field"><label>تاريخ البداية <span class="req">*</span></label><input type="date" id="p_start" required lang="en"></div>
         <div class="field"><label>تاريخ النهاية <span class="req">*</span></label><input type="date" id="p_end" required lang="en"></div>
@@ -314,7 +345,10 @@
         <div class="field full">
           <label>رابط الـ CV</label>
           <input type="file" id="t_cv" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg">
-          <a id="t_cvCurrent" href="#" target="_blank" rel="noopener" class="hint" style="display:none">📄 عرض الملف الحالي</a>
+          <span id="t_cvCurrentWrap" style="display:none;align-items:center;gap:10px">
+            <a id="t_cvCurrent" href="#" target="_blank" rel="noopener" class="hint">📄 عرض الملف الحالي</a>
+            <button type="button" id="btnRemoveCv" class="btn sm danger">✕ حذف الملف</button>
+          </span>
         </div>
         <div class="field full"><label>ملاحظات</label><textarea id="t_notes"></textarea></div>
       </div>

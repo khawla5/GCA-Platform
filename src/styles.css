@@ -13,14 +13,14 @@
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --navy:#1B6B3A; --navy-2:#001A0B; --gold:#AE9768; --gold-2:#C9B58A;
-  --bg:#0a3d0a; --bg-grad:#0a3d0a; --surface:#003218; --surface-2:#0A4526; --line:#1F5C39;
+  --bg:#003218; --bg-grad:#003218; --surface:#003218; --surface-2:#0A4526; --line:#1F5C39;
   --ink:#F3EDDD; --muted:#BDB398; --faint:#8B8467;
   --ok:#7FD19C; --ok-bg:#0F4A2A; --warn:#D8BE85; --warn-bg:#3F3418; --bad:#F09A90; --bad-bg:#4A1F1C; --info:#9EC4AE; --info-bg:#123F2A; --neutral:#BDB398; --neutral-bg:#1B4A31;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.4);
 }}
 :root[data-theme="dark"]{
   --navy:#1B6B3A; --navy-2:#001A0B; --gold:#AE9768; --gold-2:#C9B58A;
-  --bg:#0a3d0a; --bg-grad:#0a3d0a; --surface:#003218; --surface-2:#0A4526; --line:#1F5C39;
+  --bg:#003218; --bg-grad:#003218; --surface:#003218; --surface-2:#0A4526; --line:#1F5C39;
   --ink:#F3EDDD; --muted:#BDB398; --faint:#8B8467;
   --ok:#7FD19C; --ok-bg:#0F4A2A; --warn:#D8BE85; --warn-bg:#3F3418; --bad:#F09A90; --bad-bg:#4A1F1C; --info:#9EC4AE; --info-bg:#123F2A; --neutral:#BDB398; --neutral-bg:#1B4A31;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.4);
@@ -171,6 +171,7 @@ body.is-admin .pay-card:hover{border-color:var(--gold)}
 .prog-card .bars-wm i:nth-child(4){height:130px}
 .prog-card .row1{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .prog-card .eyebrow{font-size:11px;letter-spacing:.02em;color:var(--gold);background:rgba(174,151,104,.16);border:1px solid rgba(174,151,104,.32);border-radius:999px;padding:3px 10px;font-weight:600;white-space:nowrap}
+.prog-card.is-gold-card .eyebrow{color:#7FD19C;background:rgba(1,59,27,.3);border-color:rgba(1,59,27,.5)}
 .prog-card .ref{font-size:11px;color:rgba(255,255,255,.55);font-family:Tajawal,sans-serif}
 .prog-card h4{position:relative;z-index:1;font-family:Tajawal,sans-serif;font-size:18.5px;font-weight:800;line-height:1.35;margin:16px 0 8px}
 .prog-card .meta{position:relative;z-index:1;font-size:12.5px;color:rgba(255,255,255,.68);margin-bottom:auto}
@@ -341,7 +342,7 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 .login-card .theme-toggle{position:absolute;top:20px;right:20px;z-index:5}
 
 .login-right{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;padding:40px 24px;overflow-y:auto}
-.login-right-inner{width:100%;max-width:400px}
+.login-right-inner{width:100%;max-width:400px;background:color-mix(in srgb,var(--surface) 92%,transparent);border:2px solid var(--gold);border-radius:20px;padding:32px 28px;box-shadow:0 8px 24px rgba(0,50,24,.12)}
 .login-avatar{display:block;height:88px;width:88px;object-fit:contain;margin:0 auto 16px;border-radius:50%;background:var(--surface-2);padding:16px;box-shadow:0 0 0 4px var(--login-surface-solid),0 0 0 5px var(--line)}
 .login-right-inner h2{text-align:center;font-size:26px;font-weight:800;margin-bottom:4px}
 .login-right-inner > p{text-align:center;color:var(--muted);margin:0 0 24px;font-size:13.5px}
@@ -364,14 +365,14 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 
 .role-tabs{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:22px}
 .role-tab{flex:1;border:0;background:none;border-radius:999px;padding:9px 8px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.role-tab.active{background:color-mix(in srgb,var(--gold) 80%,transparent);color:#003218}
+.role-tab.active{background:#bdaa71;color:#003218}
 
 .login-form{display:flex;flex-direction:column;gap:14px}
 .login-form .field label{font-size:12px}
 .login-form input{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:13px 20px;font-size:14.5px}
 .login-form input[readonly]{color:var(--muted);cursor:default}
-.btn.pill{border-radius:999px;padding:13px 14px;font-size:15px;font-weight:600;background:color-mix(in srgb,var(--gold) 80%,transparent);border-color:var(--gold);color:#003218;margin-top:4px}
-.btn.pill:hover{background:color-mix(in srgb,var(--gold-2) 88%,transparent);border-color:var(--gold-2)}
+.btn.pill{border-radius:999px;padding:13px 14px;font-size:15px;font-weight:600;background:#bdaa71;border-color:#bdaa71;color:#003218;margin-top:4px}
+.btn.pill:hover{background:#c9a63c;border-color:#c9a63c}
 .auth-error{background:var(--bad-bg);color:var(--bad);border-radius:8px;padding:8px 12px;font-size:13px;margin-top:14px}
 .demo-tag{display:inline-block;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;margin-inline-start:8px}
 
@@ -417,3 +418,25 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 .pct-wrap{position:relative}
 .pct-wrap input{padding-inline-end:30px}
 .pct-suffix{position:absolute;inset-inline-end:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);font-weight:600}
+
+.login-right-inner .role-tabs{background:var(--navy-2);border-color:var(--navy-2)}
+.login-right-inner .role-tab:not(.active){color:#C9CDC8}
+.login-right-inner .login-form input{background:var(--navy-2);color:#C9CDC8;border-color:var(--navy-2)}
+.login-right-inner .login-form input::placeholder{color:rgba(255,255,255,.65)}
+.login-right-inner .login-form input[readonly]{color:rgba(255,255,255,.75)}
+
+#trainerLoadTable th,#trainerLoadTable td{text-align:center}
+#trainerLoadTable th:first-child,#trainerLoadTable td:first-child,#trainerLoadTable th:last-child,#trainerLoadTable td:last-child{text-align:start}
+
+.pager{display:flex;align-items:center;gap:10px}
+
+#trainerStatusSummaryTable th:not(:first-child),#trainerStatusSummaryTable td:not(:first-child){text-align:center}
+
+#programLogTable th,#programLogTable td{text-align:center}
+#programLogTable th:nth-child(2),#programLogTable td:nth-child(2),#programLogTable th:nth-child(3),#programLogTable td:nth-child(3),#programLogTable th:nth-child(5),#programLogTable td:nth-child(5){text-align:start}
+
+#trainerDistTable th:not(:first-child),#trainerDistTable td:not(:first-child){text-align:center}
+
+#trainersTable th:nth-child(4),#trainersTable td:nth-child(4),#trainersTable th:nth-child(5),#trainersTable td:nth-child(5),#trainersTable th:nth-child(6),#trainersTable td:nth-child(6){text-align:center}
+
+#trainerPaymentsTable th:not(:first-child):not(:nth-child(2)),#trainerPaymentsTable td:not(:first-child):not(:nth-child(2)){text-align:center}
