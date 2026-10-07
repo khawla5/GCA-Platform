@@ -2,7 +2,7 @@ import { DUE_PORTION_OPTIONS, PAYMENT_STATUS, TYPES } from "./constants";
 import { deleteProgram, deleteProgramPayment, deleteTrainer, upsertProgram, upsertProgramPayment, upsertTrainer, uploadTrainerCv } from "./data";
 import { state } from "./state";
 import type { ProgramInput, ProgramPayment, ProgramPaymentInput, TrainerInput } from "./types";
-import { $, $$, closeModal, csv, daysBetween, esc, fill, openModal, requireAdmin, save, setv, toast, today, trainerName, v } from "./utils";
+import { $, $$, closeModal, csv, daysBetween, esc, fill, fmtAmountInput, openModal, parseAmount, requireAdmin, save, setAmount, setv, toast, today, trainerName, v } from "./utils";
 import { buildProgressLine, cardHtml } from "./render";
 import { refreshData } from "./boot";
 
@@ -165,7 +165,7 @@ export function openProgramForm(id?: string, focusPayment = false): void {
   setv("p_participants", p?.participants ?? "");
   setv("p_statusGca", p?.status_gca || "بانتظار صدور أمر الشراء");
   setv("p_statusTrainer", p?.status_trainer || "مرحلة الفرز والترشيح");
-  setv("p_contractValue", p?.contract_value ?? "");
+  setAmount("p_contractValue", p?.contract_value);
   renderProgramPaymentsList(p?.id || null);
   setv("p_notes", p?.notes);
 
@@ -211,7 +211,7 @@ async function persistProgram(): Promise<void> {
     gca_contact: existing?.gca_contact ?? null,
     status_gca: v("p_statusGca"),
     status_trainer: v("p_statusTrainer"),
-    contract_value: v("p_contractValue") ? +v("p_contractValue") : null,
+    contract_value: parseAmount(v("p_contractValue")),
     notes: v("p_notes"),
   };
   try {
@@ -416,6 +416,10 @@ export function wireForms(): void {
     await save(`بطاقة-${(p.ref || p.title).replace(/[\\/:*?"<>|]/g, "-")}.html`, html);
   });
 
+  document.addEventListener("input", (e) => {
+    const t = e.target;
+    if (t instanceof HTMLInputElement && t.hasAttribute("data-amount")) t.value = fmtAmountInput(t.value);
+  });
   $("#p_start")?.addEventListener("change", () => {
     const endEl = $("#p_end") as HTMLInputElement | null;
     if (endEl && (!v("p_end") || v("p_end") < v("p_start"))) endEl.value = v("p_start");
@@ -460,7 +464,7 @@ export function wireForms(): void {
     const row = target.closest(".pp-row") as HTMLElement | null;
     const valueInput = row?.querySelector(".pp-value") as HTMLInputElement | null;
     const percent = +input.value || 0;
-    const contractValue = +v("p_contractValue") || 0;
+    const contractValue = parseAmount(v("p_contractValue")) || 0;
     if (valueInput && percent && contractValue) valueInput.value = ((contractValue * percent) / 100).toFixed(2);
   });
 

@@ -5,7 +5,7 @@ import { openProgramForm } from "./forms";
 import { state } from "./state";
 import type { PaymentInput, TrainerPaymentInput } from "./types";
 import { openPaymentDetail } from "./payments";
-import { $, $$, fill, requireAdmin, setv, toast, v } from "./utils";
+import { $, $$, fill, parseAmount, requireAdmin, setAmount, setv, toast, v } from "./utils";
 
 function openFormPanel(panelId: string): void {
   $$(".panel").forEach((p) => p.classList.remove("active"));
@@ -25,7 +25,7 @@ function closePaymentPage(): void {
 function syncPayFromProgram(): void {
   const prog = state.programs.find((pr) => pr.title === v("pay_program"));
   setv("pay_po", prog?.ref || "");
-  setv("pay_contract", prog?.contract_value ?? "");
+  setAmount("pay_contract", prog?.contract_value);
 }
 
 function openPaymentForm(id?: string): void {
@@ -42,7 +42,7 @@ function openPaymentForm(id?: string): void {
   setv("pay_program", p?.program_name);
   syncPayFromProgram();
   setv("pay_status", p?.status || "تم الطلب");
-  setv("pay_contract", p?.contract_value ?? "");
+  setAmount("pay_contract", p?.contract_value);
   setv("pay_entitlement", p?.entitlement_value ?? "");
   fill("#pay_portion", DUE_PORTION_OPTIONS);
   setv("pay_portion", p?.due_portion || DUE_PORTION_OPTIONS[0]);
@@ -56,7 +56,7 @@ function openPaymentForm(id?: string): void {
 async function saveProgramInstallmentFromPayment(): Promise<void> {
   const prog = state.programs.find((pr) => pr.title === v("pay_program"));
   if (!prog) return;
-  const contract = v("pay_contract") ? +v("pay_contract") : prog.contract_value;
+  const contract = parseAmount(v("pay_contract")) ?? prog.contract_value;
   if (contract !== prog.contract_value) {
     const { id: _id, created_at: _c, updated_at: _u, ...program } = prog;
     await upsertProgram(prog.id, { ...program, contract_value: contract });
@@ -87,7 +87,7 @@ async function savePayment(): Promise<void> {
     status: v("pay_status"),
     installments_total: existing?.installments_total ?? 1,
     installments_paid: existing?.installments_paid ?? 0,
-    contract_value: v("pay_contract") ? +v("pay_contract") : null,
+    contract_value: parseAmount(v("pay_contract")),
     entitlement_value: v("pay_entitlement") ? +v("pay_entitlement") : null,
     due_portion: v("pay_portion"),
     due_date: v("pay_dueDate") || null,
