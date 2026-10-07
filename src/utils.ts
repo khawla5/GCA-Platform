@@ -115,6 +115,23 @@ export const save = async (filename: string, data: string | Blob): Promise<void>
 
 export const v = (id: string): string => (($(`#${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)?.value || "").trim();
 
+export const fmtAmountInput = (raw: string): string => {
+  const cleaned = raw.replace(/[^\d.]/g, "");
+  const [intPart = "", decPart] = cleaned.split(".");
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return decPart !== undefined ? `${grouped}.${decPart.slice(0, 2)}` : grouped;
+};
+
+export const parseAmount = (text: string): number | null => {
+  const n = parseFloat(text.replace(/,/g, ""));
+  return Number.isFinite(n) ? n : null;
+};
+
+export const setAmount = (id: string, val: number | null | undefined): void => {
+  const el = $(`#${id}`) as HTMLInputElement | null;
+  if (el) el.value = val == null ? "" : fmtAmountInput(val.toFixed(2));
+};
+
 export const setv = (id: string, val: string | number | null | undefined): void => {
   const el = $(`#${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
   if (!el) return;

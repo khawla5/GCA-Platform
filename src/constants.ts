@@ -28,14 +28,16 @@ export const TRAINER_STATUS: [string, string][] = [
 export const PAYMENT_STATUS: [string, string][] = [
   ["تم الطلب", "info"],
   ["معلقة", "warn"],
-  ["تم الدفع", "ok"],
+  ["مدفوع جزئياً", "gold"],
+  ["مدفوع بالكامل", "ok"],
 ];
 
 // حالات الدفع الخاصة بأوامر الشراء في تبويب المدفوعات
 export const PO_PAYMENT_STATUS: [string, string][] = [
   ["تم الطلب", "info"],
   ["معلق", "warn"],
-  ["تم الدفع", "ok"],
+  ["مدفوع جزئياً", "gold"],
+  ["مدفوع بالكامل", "ok"],
 ];
 
 // خيارات ترتيب الدفعة (تُستخدم في نموذج دفعات البرنامج ونموذج أمر الشراء)
@@ -61,7 +63,6 @@ export const STATUS_CARD_COLORS: Record<string, string> = {
 
 // ألوان بطاقات أوامر الشراء في قسم المدفوعات حسب حالة السداد
 export const PAYMENT_CARD_COLOR = "#324A31"; // لم يُدفع منها شيء بعد
-export const PAYMENT_CARD_PARTIAL_COLOR = "#C9B58A"; // دُفع جزء وباقي دفعات
 export const PAYMENT_CARD_DONE_COLOR = "#7A6238"; // اكتمل سداد كل الدفعات
 
 // حسابان ثابتان فقط: مشاهدة وإدارة (لا يوجد تسجيل عام). أنشئهما في Supabase كما هو موضح في README.
