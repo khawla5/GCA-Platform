@@ -339,7 +339,7 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 .login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:32px;overflow:hidden}
 .login::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,60,26,.12),rgba(0,50,24,.18)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;z-index:-1}
 
-.login-card{--login-surface-solid:#e4d4b8;--login-surface:rgba(228,212,184,.55);--muted:#44554A;color:var(--ink);position:relative;width:min(1320px,96vw);height:min(780px,94vh);display:flex;flex-direction:row;background:var(--login-surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:0;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.25)}
+.login-card{--login-surface-solid:#e4d4b8;--login-surface:rgba(228,212,184,.55);--muted:#44554A;color:var(--ink);position:relative;width:min(1320px,96vw);height:min(780px,94vh);display:flex;flex-direction:row;background:var(--login-surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:32px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.25)}
 /* جهة الفورم في الوضع الغامق فقط: #013119 */
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-card{--login-surface-solid:#013119;--login-surface:rgba(1,49,25,.7);--ink:#F3EDDD;--muted:#BDB398;--surface-2:rgba(255,255,255,.07);--line:rgba(174,151,104,.4);--bad:#F09A90;--bad-bg:#4A1F1C;}}
 :root[data-theme="dark"] .login-card{--login-surface-solid:#013119;--login-surface:rgba(1,49,25,.7);--ink:#F3EDDD;--muted:#BDB398;--surface-2:rgba(255,255,255,.07);--line:rgba(174,151,104,.4);--bad:#F09A90;--bad-bg:#4A1F1C;}
