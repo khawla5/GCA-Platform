@@ -148,15 +148,15 @@ async function saveTrainerPayment(): Promise<void> {
   }
 }
 
-async function removeTrainerPayment(): Promise<void> {
+async function removeTrainerPayment(rowId?: string): Promise<void> {
   if (!requireAdmin()) return;
-  const id = v("tpay_id");
+  const id = rowId || v("tpay_id");
   if (!id || !confirm("حذف هذا السجل نهائيًا؟")) return;
   try {
     await deleteTrainerPayment(id);
     toast("تم حذف السجل");
     await refreshData();
-    closePaymentPage();
+    if (!rowId) closePaymentPage();
   } catch (e) {
     toast("تعذّر الحذف: " + ((e as Error)?.message || ""));
   }
@@ -169,6 +169,11 @@ export function wirePaymentForms(): void {
       openProgramForm(ep.dataset.editPayment as string, true);
       return;
     }
+    const dt = (e.target as HTMLElement).closest("[data-del-tpay]") as HTMLElement | null;
+    if (dt) {
+      removeTrainerPayment(dt.dataset.delTpay as string);
+      return;
+    }
     const et = (e.target as HTMLElement).closest("[data-edit-tpay]") as HTMLElement | null;
     if (et) openTrainerPaymentForm(et.dataset.editTpay as string);
   });
@@ -179,7 +184,7 @@ export function wirePaymentForms(): void {
   $("#pay_program")?.addEventListener("change", syncPayPoFromProgram);
   $("#btnNewTrainerPayment")?.addEventListener("click", () => openTrainerPaymentForm());
   $("#btnSaveTrainerPayment")?.addEventListener("click", saveTrainerPayment);
-  $("#btnDeleteTrainerPayment")?.addEventListener("click", removeTrainerPayment);
+  $("#btnDeleteTrainerPayment")?.addEventListener("click", () => removeTrainerPayment());
   $("#btnBackFromTrainerPayment")?.addEventListener("click", closePaymentPage);
   $("#btnCancelTrainerPayment")?.addEventListener("click", closePaymentPage);
   $("#btnNewPayment")?.addEventListener("click", () => openPaymentForm());

@@ -1,4 +1,5 @@
 import { DUE_PORTION_OPTIONS, PAYMENT_CARD_COLOR, PAYMENT_CARD_DONE_COLOR, PAYMENT_CARD_PARTIAL_COLOR, PAYMENT_STATUS } from "./constants";
+import { paginate } from "./pager";
 import { state } from "./state";
 import type { Program } from "./types";
 import { $, esc, fmtDate, pill } from "./utils";
@@ -74,14 +75,15 @@ function renderTrainerPayments(): void {
   if (!body) return;
   const rows = state.trainerPayments;
   body.innerHTML = rows.length
-    ? rows
+    ? paginate("trainerPaymentsBody", rows, renderTrainerPayments)
         .map((tp) => {
           const trainer = state.trainers.find((t) => t.id === tp.trainer_id);
           const editAttr = state.role === "admin" ? ` data-edit-tpay="${esc(tp.id)}"` : "";
-          return `<tr${editAttr}><td><span class="t">${esc(tp.program_name)}</span></td><td>${esc(tp.track || "—")}</td><td>${esc(trainer?.name || "—")}</td><td>${esc(tp.due_portion || "—")}</td><td>${tp.entitlement_percent != null ? `${tp.entitlement_percent}%` : "—"}</td><td>${fmtDate(tp.due_date)}</td><td>${pill(PAYMENT_STATUS, tp.payment_status)}</td><td class="admin-only"><div class="icons"><button class="btn sm" data-edit-tpay="${esc(tp.id)}">✎</button></div></td></tr>`;
+          return `<tr${editAttr}><td><span class="t">${esc(tp.program_name)}</span></td><td>${esc(tp.track || "—")}</td><td>${esc(trainer?.name || "—")}</td><td>${esc(tp.due_portion || "—")}</td><td>${tp.entitlement_percent != null ? `${tp.entitlement_percent}%` : "—"}</td><td>${fmtDate(tp.due_date)}</td><td>${pill(PAYMENT_STATUS, tp.payment_status)}</td><td class="admin-only"><div class="icons"><button class="btn sm" data-edit-tpay="${esc(tp.id)}" title="تعديل">✎</button><button class="btn sm danger" data-del-tpay="${esc(tp.id)}" title="حذف">🗑</button></div></td></tr>`;
         })
         .join("")
     : `<tr><td colspan="8"><div class="empty"><b>لا توجد مدفوعات مدربين بعد</b>${state.role === "admin" ? "أضف سجلًا جديدًا من الزر أعلاه" : ""}</div></td></tr>`;
+  if (!rows.length) paginate("trainerPaymentsBody", rows, renderTrainerPayments);
   const count = $("#trainerPaymentsCount");
   if (count) count.textContent = `${rows.length} سجل`;
 }

@@ -79,6 +79,11 @@ a{color:var(--info)}
 .section-head h2{font-size:18px;font-weight:700;padding-inline-start:12px;border-inline-start:4px solid var(--gold)}
 .section-head .spacer{flex:1}
 .hint{color:var(--muted);font-size:13px}
+.pager{display:flex;align-items:center;gap:10px;margin-top:8px}
+.pager[hidden]{display:none}
+.pager .hint{margin:0}
+.pager .spacer{flex:1}
+.pager-label{font-size:12.5px;color:var(--muted);min-width:44px;text-align:center}
 .table-split-head{font-size:15px;font-weight:700;margin:22px 0 10px;padding-inline-start:10px;border-inline-start:3px solid var(--gold)}
 .table-split-head:first-of-type{margin-top:14px}
 
@@ -334,15 +339,24 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 .login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:32px;overflow:hidden}
 .login::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,60,26,.12),rgba(0,50,24,.18)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;z-index:-1}
 
-.login-card{--login-surface-solid:#e4d4b8;--login-surface:#e4d4b8;--muted:#44554A;color:var(--ink);position:relative;width:min(1320px,96vw);height:min(780px,94vh);display:flex;flex-direction:row;background:var(--login-surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:0;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.25)}
+.login-card{--login-surface-solid:#e4d4b8;--login-surface:rgba(228,212,184,.55);--muted:#44554A;color:var(--ink);position:relative;width:min(1320px,96vw);height:min(780px,94vh);display:flex;flex-direction:row;background:var(--login-surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:0;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.25)}
 /* جهة الفورم في الوضع الغامق فقط: #013119 */
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-card{--login-surface-solid:#013119;--login-surface:#013119;--ink:#F3EDDD;--muted:#BDB398;--surface-2:rgba(255,255,255,.07);--line:rgba(174,151,104,.4);--bad:#F09A90;--bad-bg:#4A1F1C;}}
-:root[data-theme="dark"] .login-card{--login-surface-solid:#013119;--login-surface:#013119;--ink:#F3EDDD;--muted:#BDB398;--surface-2:rgba(255,255,255,.07);--line:rgba(174,151,104,.4);--bad:#F09A90;--bad-bg:#4A1F1C;}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-card{--login-surface-solid:#013119;--login-surface:rgba(1,49,25,.7);--ink:#F3EDDD;--muted:#BDB398;--surface-2:rgba(255,255,255,.07);--line:rgba(174,151,104,.4);--bad:#F09A90;--bad-bg:#4A1F1C;}}
+:root[data-theme="dark"] .login-card{--login-surface-solid:#013119;--login-surface:rgba(1,49,25,.7);--ink:#F3EDDD;--muted:#BDB398;--surface-2:rgba(255,255,255,.07);--line:rgba(174,151,104,.4);--bad:#F09A90;--bad-bg:#4A1F1C;}
 .login-card .theme-toggle{position:absolute;top:20px;right:20px;z-index:5}
+.login-card .theme-toggle{background:transparent;border:0;color:#013119}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-card .theme-toggle{color:#D2BA8F}}
+:root[data-theme="dark"] .login-card .theme-toggle{color:#D2BA8F}
+.theme-toggle .theme-icon{display:block;flex-shrink:0}
+.login-card .theme-toggle{width:46px;height:46px}
+.login-card .theme-toggle .theme-icon{width:30px;height:30px}
 
 .login-right{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;padding:40px 24px;overflow-y:auto}
-.login-right-inner{width:100%;max-width:400px}
-.login-avatar{display:block;height:88px;width:88px;object-fit:contain;margin:0 auto 16px;border-radius:50%;background:var(--surface-2);padding:16px;box-shadow:0 0 0 4px var(--login-surface-solid),0 0 0 5px var(--line)}
+/* إطار تسجيل الدخول: بدون خلفية — حدّ بيج في الوضع الداكن وأخضر غامق في الفاتح */
+.login-right-inner{--ink:#013119;--muted:#013119;--field-bg:#fff;--field-ink:#013119;--field-muted:#013119;color:var(--ink);width:100%;max-width:440px;padding:36px 32px;background:transparent;border:2px solid #013119;border-radius:26px}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-right-inner{border-color:#D2BA8F;--ink:#fff;--muted:#fff;--field-ink:#fff;--field-muted:#fff;--field-bg:var(--surface-2);}}
+:root[data-theme="dark"] .login-right-inner{border-color:#D2BA8F;--ink:#fff;--muted:#fff;--field-ink:#fff;--field-muted:#fff;--field-bg:var(--surface-2);}
+.login-avatar{display:block;height:116px;width:116px;object-fit:contain;margin:0 auto 16px;border-radius:50%;background:transparent;padding:16px;content:url('/images/gca-emblem-aa8e60.png')}
 .login-right-inner h2{text-align:center;font-size:26px;font-weight:800;margin-bottom:4px}
 .login-right-inner > p{text-align:center;color:var(--muted);margin:0 0 24px;font-size:13.5px}
 
@@ -350,28 +364,44 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
    بينما الصورة نفسها (طبقة داخلية) تُقصّ بخط مائل — فتظهر خلفية البطاقة نفسها في المنطقة المقصوصة دون أي تصحيح لوني */
 .login-left{flex:0 0 46%;position:relative;margin:22px 0 22px 22px;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:32px;transform:translateZ(0)}
 .login-left-photo{position:absolute;inset:0;background:linear-gradient(rgba(0,60,26,.4),rgba(1,59,27,.3) 50%,rgba(0,26,11,.62)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;clip-path:polygon(0 0,100% 0,63% 100%,0 100%)}
-.login-left-brand{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
-.login-left-brand img{height:32px;width:auto}
-.login-left-brand span{color:#fff;font-family:Tajawal,sans-serif;font-weight:800;font-size:13px;letter-spacing:.1em}
+/* بوردر يحيط بالصورة بنفس شكلها (يُرسم في loginFrame.ts): أخضر غامق في الفاتح، بيج في الداكن */
+.login-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.login-frame path{fill:none;stroke:#013119;stroke-width:2;stroke-linejoin:round}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-frame path{stroke:#D2BA8F}}
+:root[data-theme="dark"] .login-frame path{stroke:#D2BA8F}
+.login-left-brand{display:flex;flex-direction:row-reverse;align-items:center;gap:10px;margin-right:auto;position:relative;z-index:1}
+.login-left-brand img{height:52px;width:auto}
+.login-left-brand span{color:#fff;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;font-weight:400;font-size:29px;letter-spacing:.14em;line-height:1}
 
 @media (max-width:820px){
   .login{padding:0}
   .login-card{width:100%;height:100%;border-radius:0;flex-direction:column;overflow-y:auto}
   .login-left{flex:0 0 170px;margin:16px 16px 0;border-radius:20px 20px 0 0;padding:20px}
   .login-left-photo{clip-path:polygon(0 0,100% 0,100% 78%,0 100%)}
+  .login-frame{display:none}
   .login-right{flex:1 1 auto;padding:28px 20px}
+  .login-right-inner{padding:26px 20px;border-radius:20px}
 }
 
-.role-tabs{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:22px}
-.role-tab{flex:1;border:0;background:none;border-radius:999px;padding:9px 8px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.role-tab.active{background:color-mix(in srgb,var(--gold) 80%,transparent);color:#003218}
+.role-tabs{display:flex;gap:4px;background:var(--field-bg);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:22px}
+.role-tab{flex:1;border:0;background:none;border-radius:999px;padding:9px 8px;font-size:12.5px;font-weight:600;color:var(--field-muted);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.role-tab.active{background:#013119;color:#fff}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .role-tab.active{background:#D2BA8F;color:#013119}}
+:root[data-theme="dark"] .role-tab.active{background:#D2BA8F;color:#013119}
 
 .login-form{display:flex;flex-direction:column;gap:14px}
 .login-form .field label{font-size:12px}
-.login-form input{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:13px 20px;font-size:14.5px}
-.login-form input[readonly]{color:var(--muted);cursor:default}
-.btn.pill{border-radius:999px;padding:13px 14px;font-size:15px;font-weight:600;background:color-mix(in srgb,var(--gold) 80%,transparent);border-color:var(--gold);color:#003218;margin-top:4px}
-.btn.pill:hover{background:color-mix(in srgb,var(--gold-2) 88%,transparent);border-color:var(--gold-2)}
+.login-form input{width:100%;background:var(--field-bg);color:var(--field-ink);border:1px solid var(--line);border-radius:999px;padding:13px 20px;font-size:14.5px}
+.login-form .field input[readonly]{background:var(--field-bg);color:var(--field-muted);cursor:default}
+.login-form input::placeholder{color:var(--field-muted);opacity:.8}
+.btn.pill{border-radius:999px;padding:13px 14px;font-size:15px;font-weight:700;background:transparent;border:2px solid #013119;color:#013119;margin-top:4px;transition:background .18s,color .18s}
+.btn.pill:hover:not([disabled]){background:#013119;border-color:#013119;color:#fff}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .btn.pill{border-color:#D2BA8F;color:#fff}
+  :root:not([data-theme="light"]) .btn.pill:hover:not([disabled]){background:#D2BA8F;border-color:#D2BA8F;color:#003218}
+}
+:root[data-theme="dark"] .btn.pill{border-color:#D2BA8F;color:#fff}
+:root[data-theme="dark"] .btn.pill:hover:not([disabled]){background:#D2BA8F;border-color:#D2BA8F;color:#003218}
 .auth-error{background:var(--bad-bg);color:var(--bad);border-radius:8px;padding:8px 12px;font-size:13px;margin-top:14px}
 .demo-tag{display:inline-block;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;margin-inline-start:8px}
 

@@ -1,4 +1,5 @@
 import { AR_MONTHS, DEFAULT_CARD_COLOR, GCA_STATUS, PAYMENT_STATUS, PO_PAYMENT_STATUS, STATUS_CARD_COLORS, TR_STATUS, TRAINER_STATUS, TYPES } from "./constants";
+import { paginate, resetPage } from "./pager";
 import { renderPayments } from "./payments";
 import { state } from "./state";
 import type { Program, ProgramPayment } from "./types";
@@ -191,7 +192,7 @@ function renderTrainerLoad(): void {
   const el = $("#trainerLoad");
   if (!el) return;
   el.innerHTML = rows.length
-    ? rows
+    ? paginate("trainerLoad", rows, renderTrainerLoad)
         .map(
           (r) =>
             `<tr data-trainer="${esc(r.t.id)}"><td class="t">${esc(r.t.name)}</td><td>${esc(r.t.specialty || "—")}</td><td>${pill(TRAINER_STATUS, r.t.status)}</td><td>${r.n}</td><td>${r.run}</td><td>${r.h}</td><td>${r.last ? esc(r.last.title) + `<span class="sub">${fmtDate(r.last.start_date)}</span>` : "—"}</td></tr>`
@@ -262,10 +263,11 @@ export function renderPrograms(): void {
   const emptyMsg = (label: string, cols: number) =>
     `<tr><td colspan="${cols}"><div class="empty"><b>${label}</b>${state.role === "admin" ? "أضف برنامجًا جديدًا من الزر أعلاه" : "سيظهر هنا ما تضيفه يسير من برامج"}</div></td></tr>`;
 
+  if (!rows.length) paginate("programsBodyGca", rows, renderPrograms);
   const gcaBody = $("#programsBodyGca");
   if (gcaBody) {
     gcaBody.innerHTML = rows.length
-      ? rows.map((p) => `${programRowStartSplitDates(p)}<td>${pill(GCA_STATUS, p.status_gca)}</td>${programRowEdit(p)}${programRowEnd}`).join("")
+      ? paginate("programsBodyGca", rows, renderPrograms).map((p) => `${programRowStartSplitDates(p)}<td>${pill(GCA_STATUS, p.status_gca)}</td>${programRowEdit(p)}${programRowEnd}`).join("")
       : emptyMsg("لا توجد برامج مطابقة", 9);
   }
   const cntGca = $("#programsCountGca");
@@ -278,9 +280,10 @@ export function renderPrograms(): void {
     .map((pp) => ({ pp, p: state.programs.find((x) => x.id === pp.program_id) }))
     .filter((x): x is { pp: ProgramPayment; p: Program } => !!x.p)
     .sort((a, b) => (a.pp.due_date || "").localeCompare(b.pp.due_date || ""));
+  if (!ppRows.length) paginate("programsBodyTr", ppRows, renderPrograms);
   if (trBody) {
     trBody.innerHTML = ppRows.length
-      ? ppRows.map(({ pp, p }) => programPaymentRow(pp, p)).join("")
+      ? paginate("programsBodyTr", ppRows, renderPrograms).map(({ pp, p }) => programPaymentRow(pp, p)).join("")
       : emptyMsg("لا توجد دفعات مطابقة", 13);
   }
   const cntTr = $("#programsCountTr");
@@ -292,7 +295,7 @@ export function renderTrainers(): void {
   const el = $("#trainersBody");
   if (!el) return;
   el.innerHTML = T.length
-    ? T.map((t) => {
+    ? paginate("trainersBody", T, renderTrainers).map((t) => {
         const ps = state.programs.filter((p) => p.trainer_id === t.id);
         return `<tr data-trainer="${esc(t.id)}"><td class="t">${esc(t.name)}${t.city ? `<span class="sub">${esc(t.city)}</span>` : ""}${t.cv_url ? `<a href="${esc(t.cv_url)}" target="_blank" rel="noopener" class="sub" onclick="event.stopPropagation()">📄 CV</a>` : ""}</td><td dir="ltr" style="text-align:end">${esc(t.email || "—")}</td><td dir="ltr" style="text-align:end">${esc(t.phone || "—")}</td><td>${pill(TRAINER_STATUS, t.status)}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td class="admin-only"><button class="btn sm" data-edit-trainer="${esc(t.id)}">✎</button></td></tr>`;
       }).join("")
@@ -373,7 +376,13 @@ export function fillStaticSelects(): void {
 }
 
 export function wireFilterInputs(): void {
-  ["fSearch", "fType", "fGca", "fTr", "fTrainer"].forEach((id) => $(`#${id}`)?.addEventListener("input", renderPrograms));
+  ["fSearch", "fType", "fGca", "fTr", "fTrainer"].forEach((id) =>
+    $(`#${id}`)?.addEventListener("input", () => {
+      resetPage("programsBodyGca");
+      resetPage("programsBodyTr");
+      renderPrograms();
+    }),
+  );
   ["rGca", "rFrom", "rTo"].forEach((id) => $(`#${id}`)?.addEventListener("input", renderReport));
 }
 
