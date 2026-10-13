@@ -37,7 +37,7 @@ a{color:var(--info)}
 .app-shell{display:flex;align-items:stretch;min-height:100vh}
 .sidebar{width:264px;flex-shrink:0;background:var(--navy-2);color:#fff;border-inline-start:3px solid var(--gold);display:flex;flex-direction:column;gap:22px;padding:20px 16px;position:sticky;top:0;height:100vh;overflow-y:auto}
 .brand{display:flex;align-items:center;gap:12px}
-.brand-emblem{height:34px;width:auto;flex-shrink:0}
+.brand-emblem{height:52px;width:auto;flex-shrink:0}
 .bars{display:flex;gap:3px;align-items:flex-end;height:26px}
 .bars i{display:block;width:6px;background:#fff;border-radius:2px}
 .bars i:nth-child(1){height:10px}.bars i:nth-child(2){height:16px}.bars i:nth-child(3){height:22px}.bars i:nth-child(4){height:26px;background:var(--gold)}
@@ -222,6 +222,17 @@ td .sub{display:block;font-size:12px;color:var(--muted)}
 .empty{padding:40px 20px;text-align:center;color:var(--muted)}
 .empty b{display:block;font-family:Tajawal,sans-serif;font-size:17px;color:var(--ink);margin-bottom:4px}
 
+/* جدول المدربين: كل الأعمدة في المنتصف عدا اسم المدرب (يمين) */
+#panel-trainers th,#panel-trainers td{text-align:center}
+#panel-trainers th:nth-child(2),#panel-trainers td:nth-child(2){text-align:start}
+#panel-trainers th:first-child,#panel-trainers td:first-child{width:48px}
+#panel-trainers td .sub,#panel-trainers td .sub a{text-align:start}
+.tbl-center th,.tbl-center td,.rep-trainers th,.rep-trainers td{text-align:center}
+.tbl-center th:first-child,.tbl-center td:first-child,.rep-trainers th:nth-child(2),.rep-trainers td:nth-child(2){text-align:start}
+.rep-trainers th:first-child,.rep-trainers td:first-child{width:48px}
+.tbl-all-center th,.tbl-all-center td{text-align:center}
+.tbl-last-start th:last-child,.tbl-last-start td:last-child{text-align:start}
+
 /* buttons */
 .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;white-space:nowrap;text-decoration:none;color:var(--ink)}
 .btn:hover{border-color:var(--navy)}
@@ -288,6 +299,35 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 .pp-list{display:flex;flex-direction:column;gap:10px;margin-top:6px}
 .pp-row{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--bg)}
 .pp-row-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12.5px;font-weight:600;color:var(--muted)}
+#panel-programForm.pay-mode .stage-hero-info{display:none}
+.pay-hero{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
+.pay-hero-donut{width:220px;height:220px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pay-hero-hole{width:150px;height:150px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.pay-hero-hole b{font-family:Tajawal,sans-serif;font-size:32px;font-weight:800;line-height:1}
+.pay-hero-hole small{color:var(--muted);font-size:12px}
+.pay-hero-info{min-width:260px;max-width:460px;display:flex;flex-direction:column;gap:10px}
+.pay-hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pay-hero-type{font-size:12px;font-weight:600;color:var(--gold-2);background:rgba(174,151,104,.16);border:1px solid rgba(174,151,104,.32);border-radius:999px;padding:3px 12px}
+.pay-hero-ref{font-size:12.5px;color:var(--muted)}
+.pay-hero-info h3{font-size:20px;font-weight:800;line-height:1.35;margin:0}
+.pay-hero-status{display:flex;align-items:center;gap:10px}
+.pay-hero-status small{color:var(--muted);font-size:12px}
+.pay-hero-percent{font-weight:800;font-size:15px}
+.pay-hero-legend{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px}
+.pay-hero-legend li{display:flex;align-items:center;gap:10px;font-size:13px}
+.pay-hero-legend li i{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.pay-hero-legend li b{margin-inline-start:auto}
+#btnEditProgram{display:none}
+#panel-programForm.view-mode #btnEditProgram{display:inline-flex}
+#panel-programForm.view-mode #btnDeleteProgram,
+#panel-programForm.view-mode .page-actions,
+#panel-programForm.view-mode #btnAddProgramPayment,
+#panel-programForm.view-mode .pp-portion:disabled,.pb-portion:disabled{opacity:1;color:var(--ink);-webkit-text-fill-color:var(--ink);cursor:default;appearance:none;-webkit-appearance:none;background-image:none}
+.pp-remove{display:none}
+#panel-programForm.view-mode input:disabled,
+#panel-programForm.view-mode select:disabled,
+#panel-programForm.view-mode textarea:disabled{opacity:1;color:var(--ink);-webkit-text-fill-color:var(--ink);cursor:default}
+#panel-programForm.view-mode select:disabled{appearance:none;-webkit-appearance:none;background-image:none}
 .pp-remove{background:none;border:0;color:var(--bad);cursor:pointer;font-size:14px;line-height:1;padding:2px 6px}
 .pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
 @media (max-width:640px){.pp-grid{grid-template-columns:1fr}}
@@ -295,7 +335,7 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 /* program card (بطاقة) */
 .pcard{border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .pcard-h{background:var(--navy-2);color:#fff;padding:16px 20px;display:flex;gap:14px;align-items:center;border-bottom:3px solid var(--gold)}
-.pcard-emblem{height:34px;width:auto;flex-shrink:0}
+.pcard-emblem{height:64px;width:auto;flex-shrink:0}
 .pcard-h .who{flex:1}
 .pcard-h .who b{font-family:Tajawal,sans-serif;font-size:16px;display:block}
 .pcard-h .who span{font-size:11.5px;opacity:.75}
@@ -329,33 +369,35 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 .rsum b{display:block;font-family:Tajawal,sans-serif;font-size:22px}
 .rsum span{font-size:12px;color:var(--muted)}
 
-.toast{position:fixed;bottom:20px;inset-inline-start:20px;background:var(--navy-2);color:#fff;padding:10px 16px;border-radius:8px;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;z-index:99;font-size:13.5px;max-width:calc(100% - 40px)}
-.toast.show{opacity:1;transform:none}
+.toast{position:fixed;bottom:36px;left:50%;background:var(--navy-2);color:#fff;padding:15px 30px;border-radius:14px;box-shadow:var(--shadow);opacity:0;transform:translate(-50%,12px);transition:.25s;pointer-events:none;z-index:200;font-size:16.5px;font-weight:600;text-align:center;line-height:1.5;width:max-content;max-width:min(90vw,620px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 .banner{background:var(--warn-bg);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13.5px;display:none}
 .banner.show{display:block}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
 
 /* login / auth — بطاقة عائمة بقطع مائل، فوق خلفية واضحة لنفس صورة المبنى */
 .login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:32px;overflow:hidden}
-.login::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,60,26,.12),rgba(0,50,24,.18)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;z-index:-1}
+.login::before{content:"";position:absolute;inset:0;--tint:rgba(239,230,210,.25);background:linear-gradient(var(--tint),var(--tint)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;z-index:-1}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login::before{--tint:rgba(1,36,20,.35)}}
+:root[data-theme="dark"] .login::before{--tint:rgba(1,36,20,.35)}
 
-.login-card{--login-surface-solid:#e4d4b8;--login-surface:rgba(228,212,184,.55);--muted:#44554A;color:var(--ink);position:relative;width:min(1320px,96vw);height:min(780px,94vh);display:flex;flex-direction:row;background:var(--login-surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:32px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.25)}
+.login-card{--login-surface-solid:#e4d4b8;--login-surface:rgba(201, 191, 174, 0.55);--muted:#44554A;color:var(--ink);position:relative;width:min(1320px,96vw);height:min(780px,94vh);display:flex;flex-direction:row;background:var(--login-surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:32px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.25)}
 /* جهة الفورم في الوضع الغامق فقط: #013119 */
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-card{--login-surface-solid:#013119;--login-surface:rgba(1,49,25,.7);--ink:#F3EDDD;--muted:#BDB398;--surface-2:rgba(255,255,255,.07);--line:rgba(174,151,104,.4);--bad:#F09A90;--bad-bg:#4A1F1C;}}
 :root[data-theme="dark"] .login-card{--login-surface-solid:#013119;--login-surface:rgba(1,49,25,.7);--ink:#F3EDDD;--muted:#BDB398;--surface-2:rgba(255,255,255,.07);--line:rgba(174,151,104,.4);--bad:#F09A90;--bad-bg:#4A1F1C;}
 .login-card .theme-toggle{position:absolute;top:20px;right:20px;z-index:5}
 .login-card .theme-toggle{background:transparent;border:0;color:#013119}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-card .theme-toggle{color:#D2BA8F}}
-:root[data-theme="dark"] .login-card .theme-toggle{color:#D2BA8F}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-card .theme-toggle{color:#AA8E60}}
+:root[data-theme="dark"] .login-card .theme-toggle{color:#AA8E60}
 .theme-toggle .theme-icon{display:block;flex-shrink:0}
 .login-card .theme-toggle{width:46px;height:46px}
 .login-card .theme-toggle .theme-icon{width:30px;height:30px}
 
 .login-right{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;padding:40px 24px;overflow-y:auto}
 /* إطار تسجيل الدخول: بدون خلفية — حدّ بيج في الوضع الداكن وأخضر غامق في الفاتح */
-.login-right-inner{--ink:#013119;--muted:#013119;--field-bg:#fff;--field-ink:#013119;--field-muted:#013119;color:var(--ink);width:100%;max-width:440px;padding:36px 32px;background:transparent;border:2px solid #013119;border-radius:26px}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-right-inner{border-color:#D2BA8F;--ink:#fff;--muted:#fff;--field-ink:#fff;--field-muted:#fff;--field-bg:var(--surface-2);}}
-:root[data-theme="dark"] .login-right-inner{border-color:#D2BA8F;--ink:#fff;--muted:#fff;--field-ink:#fff;--field-muted:#fff;--field-bg:var(--surface-2);}
+.login-right-inner{--line:#AA8E60;--ink:#013119;--muted:#013119;--field-bg:#fff;--field-ink:#013119;--field-muted:#013119;color:var(--ink);width:100%;max-width:440px;padding:36px 32px;background:transparent;border:2px solid #013119;border-radius:26px}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-right-inner{border-color:#AA8E60;--ink:#fff;--muted:#fff;--field-ink:#fff;--field-muted:#fff;--field-bg:var(--surface-2);}}
+:root[data-theme="dark"] .login-right-inner{border-color:#AA8E60;--ink:#fff;--muted:#fff;--field-ink:#fff;--field-muted:#fff;--field-bg:var(--surface-2);}
 .login-avatar{display:block;height:116px;width:116px;object-fit:contain;margin:0 auto 16px;border-radius:50%;background:transparent;padding:16px;content:url('/images/gca-emblem-aa8e60.png')}
 .login-right-inner h2{text-align:center;font-size:26px;font-weight:800;margin-bottom:4px}
 .login-right-inner > p{text-align:center;color:var(--muted);margin:0 0 24px;font-size:13.5px}
@@ -367,8 +409,8 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 /* بوردر يحيط بالصورة بنفس شكلها (يُرسم في loginFrame.ts): أخضر غامق في الفاتح، بيج في الداكن */
 .login-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .login-frame path{fill:none;stroke:#013119;stroke-width:2;stroke-linejoin:round}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-frame path{stroke:#D2BA8F}}
-:root[data-theme="dark"] .login-frame path{stroke:#D2BA8F}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-frame path{stroke:#AA8E60}}
+:root[data-theme="dark"] .login-frame path{stroke:#AA8E60}
 .login-left-brand{display:flex;flex-direction:row-reverse;align-items:center;gap:10px;margin-right:auto;position:relative;z-index:1}
 .login-left-brand img{height:52px;width:auto}
 .login-left-brand span{color:#fff;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;font-weight:400;font-size:29px;letter-spacing:.14em;line-height:1}
@@ -383,25 +425,26 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
   .login-right-inner{padding:26px 20px;border-radius:20px}
 }
 
-.role-tabs{display:flex;gap:4px;background:var(--field-bg);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:22px}
+.role-tabs{display:flex;gap:4px;background:var(--field-bg);border:1.5px solid var(--line);border-radius:999px;padding:4px;margin-bottom:22px}
 .role-tab{flex:1;border:0;background:none;border-radius:999px;padding:9px 8px;font-size:12.5px;font-weight:600;color:var(--field-muted);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .role-tab.active{background:#013119;color:#fff}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .role-tab.active{background:#D2BA8F;color:#013119}}
-:root[data-theme="dark"] .role-tab.active{background:#D2BA8F;color:#013119}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .role-tab.active{background:#AA8E60;color:#013119}}
+:root[data-theme="dark"] .role-tab.active{background:#AA8E60;color:#013119}
 
 .login-form{display:flex;flex-direction:column;gap:14px}
 .login-form .field label{font-size:12px}
-.login-form input{width:100%;background:var(--field-bg);color:var(--field-ink);border:1px solid var(--line);border-radius:999px;padding:13px 20px;font-size:14.5px}
+.login-form input{width:100%;background:var(--field-bg);color:var(--field-ink);border:1.5px solid var(--line);border-radius:999px;padding:13px 20px;font-size:14.5px}
 .login-form .field input[readonly]{background:var(--field-bg);color:var(--field-muted);cursor:default}
+.login-form input:focus,.login-form input:focus-visible{outline:none}
 .login-form input::placeholder{color:var(--field-muted);opacity:.8}
 .btn.pill{border-radius:999px;padding:13px 14px;font-size:15px;font-weight:700;background:transparent;border:2px solid #013119;color:#013119;margin-top:4px;transition:background .18s,color .18s}
 .btn.pill:hover:not([disabled]){background:#013119;border-color:#013119;color:#fff}
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]) .btn.pill{border-color:#D2BA8F;color:#fff}
-  :root:not([data-theme="light"]) .btn.pill:hover:not([disabled]){background:#D2BA8F;border-color:#D2BA8F;color:#003218}
+  :root:not([data-theme="light"]) .btn.pill{border-color:#AA8E60;color:#fff}
+  :root:not([data-theme="light"]) .btn.pill:hover:not([disabled]){background:#AA8E60;border-color:#AA8E60;color:#003218}
 }
-:root[data-theme="dark"] .btn.pill{border-color:#D2BA8F;color:#fff}
-:root[data-theme="dark"] .btn.pill:hover:not([disabled]){background:#D2BA8F;border-color:#D2BA8F;color:#003218}
+:root[data-theme="dark"] .btn.pill{border-color:#AA8E60;color:#fff}
+:root[data-theme="dark"] .btn.pill:hover:not([disabled]){background:#AA8E60;border-color:#AA8E60;color:#003218}
 .auth-error{background:var(--bad-bg);color:var(--bad);border-radius:8px;padding:8px 12px;font-size:13px;margin-top:14px}
 .demo-tag{display:inline-block;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;margin-inline-start:8px}
 

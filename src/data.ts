@@ -64,6 +64,11 @@ export async function upsertProgramPayment(id: string | null, input: ProgramPaym
   if (error) throw error;
 }
 
+export async function updateProgramContractValue(id: string, value: number | null): Promise<void> {
+  const { error } = await supabase.from("programs").update({ contract_value: value, updated_at: new Date().toISOString() }).eq("id", id);
+  if (error) throw error;
+}
+
 export async function deleteProgramPayment(id: string): Promise<void> {
   const { error } = await supabase.from("program_payments").delete().eq("id", id);
   if (error) throw error;

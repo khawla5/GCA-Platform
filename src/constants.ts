@@ -1,9 +1,10 @@
 export const TYPES = [
-  "برنامج تدريبي",
-  "دورة تدريبية قصيرة",
+  "برنامج تدريبي قصير",
+  "برنامج Nano Degree",
+  "برنامج زمالة",
   "ورشة عمل",
   "محاضرة",
-  "ملتقى / لقاء",
+  "ندوة",
   "برنامج تنفيذي",
 ];
 
@@ -43,11 +44,12 @@ export const DUE_PORTION_OPTIONS = ["الدفعة الأولى", "الدفعة �
 
 // لون مميز لكل نوع برنامج في معرض البطاقات — يرمز للنوع بدل صورة حقيقية
 export const TYPE_COLORS: Record<string, string> = {
-  "ورشة عمل": "#0F5A30",
-  "برنامج تدريبي": "#003C1A",
-  "دورة تدريبية قصيرة": "#7A6238",
-  "محاضرة": "#4A5E3F",
-  "ملتقى / لقاء": "#8A6F44",
+  "برنامج تدريبي قصير": "#003C1A",
+  "برنامج Nano Degree": "#7A6238",
+  "برنامج زمالة": "#0F5A30",
+  "ورشة عمل": "#4A5E3F",
+  "محاضرة": "#8A6F44",
+  "ندوة": "#6B7D52",
   "برنامج تنفيذي": "#5C4A2A",
 };
 export const DEFAULT_CARD_COLOR = "#003218";
@@ -63,6 +65,7 @@ export const STATUS_CARD_COLORS: Record<string, string> = {
 export const PAYMENT_CARD_COLOR = "#324A31"; // لم يُدفع منها شيء بعد
 export const PAYMENT_CARD_PARTIAL_COLOR = "#C9B58A"; // دُفع جزء وباقي دفعات
 export const PAYMENT_CARD_DONE_COLOR = "#7A6238"; // اكتمل سداد كل الدفعات
+export const PAYMENT_CARD_WAITING_COLOR = "#B7CDB0"; // أخضر فاتح: بانتظار صدور أمر الشراء
 
 // حسابان ثابتان فقط: مشاهدة وإدارة (لا يوجد تسجيل عام). أنشئهما في Supabase كما هو موضح في README.
 export const VIEWER_EMAIL = "viewer@gca.local";

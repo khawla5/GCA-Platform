@@ -39,6 +39,10 @@ function mountPager(tbodyId: string, page: number, pages: number, visible: boole
   pager.querySelector<HTMLButtonElement>('button[data-dir="1"]')!.disabled = page >= pages;
 }
 
+export function pageStart(tbodyId: string): number {
+  return ((pageOf.get(tbodyId) ?? 1) - 1) * PAGE_SIZE;
+}
+
 export function paginate<T>(tbodyId: string, rows: T[], rerender: () => void): T[] {
   const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const page = Math.min(Math.max(1, pageOf.get(tbodyId) ?? 1), pages);

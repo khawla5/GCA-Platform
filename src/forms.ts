@@ -4,6 +4,7 @@ import { state } from "./state";
 import type { ProgramInput, ProgramPayment, ProgramPaymentInput, TrainerInput } from "./types";
 import { $, $$, closeModal, csv, daysBetween, esc, fill, openModal, requireAdmin, save, setv, toast, today, trainerName, v } from "./utils";
 import { buildProgressLine, cardHtml } from "./render";
+import { buildPaymentHero } from "./payments";
 import { refreshData } from "./boot";
 
 // خيارات "مكان التنفيذ" تابعة لـ"أسلوب التنفيذ" — كل أسلوب له خيارات مكان ثابتة
@@ -22,15 +23,18 @@ function updateLocationOptions(preferred?: string | null): void {
 }
 
 /* ---------- دفعات عقد البرنامج (قائمة ديناميكية — برنامج واحد ممكن ياخذ أكثر من دفعة) ---------- */
-function programPaymentRowHtml(pp?: ProgramPayment): string {
+function programPaymentRowHtml(pp?: ProgramPayment, portion?: string): string {
+  const sel = pp?.due_portion ?? portion;
   const statusOptions = PAYMENT_STATUS.map(
     ([s]) => `<option value="${esc(s)}"${pp?.payment_status === s ? " selected" : ""}>${esc(s)}</option>`
-  ).join("");
+  ).join("") + (pp?.payment_status && !PAYMENT_STATUS.some(([s]) => s === pp.payment_status)
+    ? `<option value="${esc(pp.payment_status)}" selected>${esc(pp.payment_status)}</option>`
+    : "");
   return `<div class="pp-row" data-pp-id="${esc(pp?.id || "")}">
     <div class="pp-row-head"><b>دفعة</b><button type="button" class="pp-remove" title="حذف الدفعة">✕</button></div>
     <div class="pp-grid">
-      <div class="field"><label>ترتيب الدفعة</label><select class="pp-portion">${DUE_PORTION_OPTIONS.map(
-        (o) => `<option value="${esc(o)}"${pp?.due_portion === o ? " selected" : ""}>${esc(o)}</option>`
+      <div class="field"><label>ترتيب الدفعة</label><select class="pp-portion" disabled>${DUE_PORTION_OPTIONS.map(
+        (o) => `<option value="${esc(o)}"${sel === o ? " selected" : ""}>${esc(o)}</option>`
       ).join("")}</select></div>
       <div class="field"><label>نسبة الاستحقاق %</label><input type="number" class="pp-percent" min="0" max="100" step="0.1" value="${pp?.entitlement_percent ?? ""}"></div>
       <div class="field"><label>قيمة الاستحقاق</label><input type="number" class="pp-value" min="0" step="0.01" value="${pp?.entitlement_value ?? ""}"></div>
@@ -93,8 +97,10 @@ function openProgramPage(): void {
   window.scrollTo(0, 0);
 }
 
+// يرجع للتبويب اللي فُتحت منه الصفحة (البرامج أو المدفوعات) — التبويب المحدّد لا يتغيّر أثناء عرض الصفحة
 function closeProgramPage(): void {
-  ($(`.tab[data-tab="programs"]`) as HTMLElement | null)?.click();
+  const origin = ($(`.tab[aria-selected="true"]`) as HTMLElement | null) ?? ($(`.tab[data-tab="programs"]`) as HTMLElement | null);
+  origin?.click();
 }
 
 function updateStageHero(): void {
@@ -104,7 +110,10 @@ function updateStageHero(): void {
   const heroMeta = $("#stageHeroMeta");
   if (!wheel || !heroStatus || !heroTitle || !heroMeta) return;
 
-  wheel.innerHTML = buildProgressLine(v("p_start") || null, v("p_end") || null, v("p_statusGca"), +v("p_days") || null);
+  const payMode = !!$("#panel-programForm")?.classList.contains("pay-mode") && !!v("p_id");
+  wheel.innerHTML = payMode
+    ? buildPaymentHero(v("p_id"))
+    : buildProgressLine(v("p_start") || null, v("p_end") || null, v("p_statusGca"));
 
   heroStatus.textContent = v("p_statusGca") || "بانتظار صدور أمر الشراء";
   heroTitle.textContent = v("p_title") || "برنامج جديد";
@@ -115,8 +124,11 @@ function updateStageHero(): void {
   heroMeta.textContent = metaParts.length ? metaParts.join(" · ") : "حدّد المدرب والتواريخ لعرض التفاصيل";
 }
 
-export function openProgramForm(id?: string, focusPayment = false): void {
+let lastFocusPayment = false;
+
+export function openProgramForm(id?: string, focusPayment = false, viewOnly = false): void {
   if (state.role !== "admin") return;
+  lastFocusPayment = focusPayment;
   fill(
     "#p_trainer",
     state.trainers.filter((t) => t.status !== "موقوف").map((t) => [t.id, t.name] as [string, string]),
@@ -124,7 +136,7 @@ export function openProgramForm(id?: string, focusPayment = false): void {
   );
   const p = id ? state.programs.find((x) => x.id === id) : null;
   const title = $("#programFormTitle");
-  if (title) title.textContent = p ? "تعديل البرنامج" : "إضافة برنامج";
+  if (title) title.textContent = p ? (viewOnly ? "تفاصيل البرنامج" : "تعديل البرنامج") : "إضافة برنامج";
   const delBtn = $("#btnDeleteProgram") as HTMLButtonElement | null;
   if (delBtn) delBtn.style.display = p ? "" : "none";
   const heroEl = $(".stage-hero") as HTMLElement | null;
@@ -138,6 +150,15 @@ export function openProgramForm(id?: string, focusPayment = false): void {
   setv("p_id", p?.id);
   setv("p_title", p?.title);
   setv("p_ref", p?.ref);
+  const typeSel = $("#p_type") as HTMLSelectElement | null;
+  typeSel?.querySelectorAll("option[data-legacy]").forEach((o) => o.remove());
+  if (typeSel && p?.type && !TYPES.includes(p.type)) {
+    const legacy = document.createElement("option");
+    legacy.value = p.type;
+    legacy.textContent = p.type;
+    legacy.dataset.legacy = "1";
+    typeSel.appendChild(legacy);
+  }
   setv("p_type", p?.type || TYPES[0]);
   setv("p_trainer", p?.trainer_id);
   setv("p_mode", p?.mode || "حضوري");
@@ -151,10 +172,18 @@ export function openProgramForm(id?: string, focusPayment = false): void {
   setv("p_statusTrainer", p?.status_trainer || "مرحلة الفرز والترشيح");
   setv("p_contractValue", p?.contract_value ?? "");
   renderProgramPaymentsList(p?.id || null);
-  setv("p_notes", p?.notes);
 
   if (!state.trainers.length) toast("أضف مدربًا أولًا من تبويب المدربين");
+  $("#panel-programForm")?.classList.toggle("pay-mode", focusPayment && !!p);
   updateStageHero();
+  const view = viewOnly && !!p;
+  $("#panel-programForm")?.classList.toggle("view-mode", view);
+  $$("#programForm input, #programForm select, #programForm textarea").forEach((el) => {
+    (el as HTMLInputElement).disabled = view;
+  });
+  $$("#programPaymentsList .pp-portion").forEach((el) => {
+    (el as HTMLSelectElement).disabled = true;
+  });
   openProgramPage();
 }
 
@@ -185,7 +214,7 @@ async function saveProgram(): Promise<void> {
     status_gca: v("p_statusGca"),
     status_trainer: v("p_statusTrainer"),
     contract_value: v("p_contractValue") ? +v("p_contractValue") : null,
-    notes: v("p_notes"),
+    notes: existing?.notes ?? null,
   };
   try {
     const programId = await upsertProgram(id, input);
@@ -305,11 +334,11 @@ function exportProgramsCsv(): void {
   save(
     "البرامج-التدريبية.csv",
     csv([
-      ["رقم أمر الشراء", "البرنامج", "النوع", "المدرب", "أسلوب التنفيذ", "تاريخ البداية", "تاريخ النهاية", "الأيام", "الساعات", "المكان", "الفئة المستهدفة", "المتدربون", "المسؤول بالديوان", "الحالة مع الديوان", "الحالة مع المدرب", "ملاحظات"],
+      ["رقم أمر الشراء", "البرنامج", "النوع", "المدرب", "أسلوب التنفيذ", "تاريخ البداية", "تاريخ النهاية", "الأيام", "الساعات", "المكان", "الفئة المستهدفة", "المتدربون", "الحالة مع الديوان", "الحالة مع المدرب", "ملاحظات"],
       ...state.programs.map((p) => [
         p.ref, p.title, p.type, trainerName(p, state.trainers), p.mode, p.start_date, p.end_date,
         p.days || daysBetween(p.start_date || today(), p.end_date || today()), p.hours, p.location,
-        p.target_group, p.participants, p.gca_contact, p.status_gca, p.status_trainer, p.notes,
+        p.target_group, p.participants, p.status_gca, p.status_trainer, p.notes,
       ]),
     ])
   );
@@ -319,10 +348,10 @@ function exportTrainersCsv(): void {
   save(
     "المدربون.csv",
     csv([
-      ["الاسم", "التخصص", "المؤهل", "الجوال", "البريد", "الحالة", "الجهة", "عدد البرامج", "الساعات", "ملاحظات"],
+      ["الاسم", "المؤهل", "الجوال", "البريد", "الحالة", "الجهة", "عدد البرامج", "الساعات", "ملاحظات"],
       ...state.trainers.map((t) => {
         const ps = state.programs.filter((p) => p.trainer_id === t.id);
-        return [t.name, t.specialty, t.qualification, t.phone, t.email, t.status, t.city, ps.length, ps.reduce((s, p) => s + (+(p.hours || 0)), 0), t.notes];
+        return [t.name, t.qualification, t.phone, t.email, t.status, t.city, ps.length, ps.reduce((s, p) => s + (+(p.hours || 0)), 0), t.notes];
       }),
     ])
   );
@@ -335,6 +364,11 @@ export function wireForms(): void {
     const o = target.closest("[data-open]") as HTMLElement | null;
     if (o && !target.closest("[data-edit]")) {
       openCard(o.dataset.open as string);
+      return;
+    }
+    const vw = target.closest("[data-view]") as HTMLElement | null;
+    if (vw) {
+      openProgramForm(vw.dataset.view as string, false, true);
       return;
     }
     const ed = target.closest("[data-edit]") as HTMLElement | null;
@@ -403,12 +437,22 @@ export function wireForms(): void {
   $("#p_trainer")?.addEventListener("change", updateStageHero);
   $("#btnNewProgram")?.addEventListener("click", () => openProgramForm());
   $("#btnSaveProgram")?.addEventListener("click", saveProgram);
+  $("#btnEditProgram")?.addEventListener("click", () => {
+    const id = v("p_id");
+    if (id) openProgramForm(id, lastFocusPayment);
+  });
   $("#btnDeleteProgram")?.addEventListener("click", removeProgram);
   $("#btnBackFromProgram")?.addEventListener("click", closeProgramPage);
   $("#btnCancelProgram")?.addEventListener("click", closeProgramPage);
 
   $("#btnAddProgramPayment")?.addEventListener("click", () => {
-    $("#programPaymentsList")?.insertAdjacentHTML("beforeend", programPaymentRowHtml());
+    const used = new Set($$("#programPaymentsList .pp-portion").map((el) => (el as HTMLSelectElement).value));
+    const next = DUE_PORTION_OPTIONS.find((o) => !used.has(o));
+    if (!next) {
+      toast("اكتملت الدفعات الأربع لهذا البرنامج");
+      return;
+    }
+    $("#programPaymentsList")?.insertAdjacentHTML("beforeend", programPaymentRowHtml(undefined, next));
   });
   $("#programPaymentsList")?.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest(".pp-remove") as HTMLElement | null;
