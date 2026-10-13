@@ -3,7 +3,7 @@ import { DUE_PORTION_OPTIONS, PAYMENT_STATUS } from "./constants";
 import { deleteTrainerPayment, updateProgramContractValue, upsertProgramPayment, upsertTrainerPayment } from "./data";
 import { openProgramForm } from "./forms";
 import { state } from "./state";
-import type { TrainerPaymentInput } from "./types";
+import type { TrainerPayment, TrainerPaymentInput } from "./types";
 import { openPaymentDetail } from "./payments";
 import { $, $$, esc, fill, requireAdmin, setv, toast, v } from "./utils";
 
@@ -127,6 +127,57 @@ async function savePayment(): Promise<void> {
 }
 
 /* ---------- مدفوعات المدربين ---------- */
+function tpUsedPortions(): string[] {
+  const prog = v("tpay_program");
+  const trainer = v("tpay_trainer");
+  return [
+    ...state.trainerPayments
+      .filter((tp) => tp.program_name === prog && (tp.trainer_id || "") === trainer)
+      .map((tp) => tp.due_portion || ""),
+    ...$$("#tpayBlocks .tb-portion").map((el) => (el as HTMLSelectElement).value),
+  ];
+}
+
+function tpNextPortion(): string | null {
+  const used = new Set(tpUsedPortions());
+  return DUE_PORTION_OPTIONS.find((o) => !used.has(o)) ?? null;
+}
+
+function tpBlockHtml(portion: string, removable: boolean, tp?: TrainerPayment | null): string {
+  const opts = (list: string[], sel: string) => list.map((o) => `<option value="${esc(o)}"${o === sel ? " selected" : ""}>${esc(o)}</option>`).join("");
+  return `<div class="pp-row" data-tp-id="${esc(tp?.id || "")}">
+    <div class="pp-row-head"><b>دفعة</b>${removable ? '<button type="button" class="pp-remove" title="حذف الدفعة">✕</button>' : ""}</div>
+    <div class="pp-grid">
+      <div class="field"><label>الدفعة</label><select class="tb-portion" disabled>${opts(DUE_PORTION_OPTIONS, portion)}</select></div>
+      <div class="field"><label>نسبة الاستحقاق %</label><input type="number" class="tb-percent" min="0" max="100" step="0.1" value="${tp?.entitlement_percent ?? ""}"></div>
+      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="tb-date" lang="en" value="${esc(tp?.due_date || "")}"></div>
+      <div class="field"><label>حالة الدفع</label><select class="tb-status">${opts([...PAYMENT_STATUS.map((s) => s[0]), ...(tp?.payment_status && !PAYMENT_STATUS.some(([s]) => s === tp.payment_status) ? [tp.payment_status] : [])], tp?.payment_status || "تم الطلب")}</select></div>
+    </div>
+  </div>`;
+}
+
+function addTpBlock(): void {
+  const list = $("#tpayBlocks");
+  if (!list) return;
+  const first = !list.children.length;
+  const portion = tpNextPortion();
+  if (!portion) {
+    toast(first ? "هذا المدرب لديه الدفعات الأربع كاملة لهذا البرنامج" : "اكتملت الدفعات الأربع");
+    return;
+  }
+  list.insertAdjacentHTML("beforeend", tpBlockHtml(portion, !first));
+}
+
+function resetTpBlocks(tp?: TrainerPayment | null): void {
+  const list = $("#tpayBlocks");
+  if (!list) return;
+  list.innerHTML = "";
+  if (tp) list.innerHTML = tpBlockHtml(tp.due_portion || DUE_PORTION_OPTIONS[0], false, tp);
+  else addTpBlock();
+  const addBtn = $("#btnAddTpayBlock") as HTMLElement | null;
+  if (addBtn) addBtn.style.display = tp ? "none" : "";
+}
+
 function openTrainerPaymentForm(id?: string): void {
   if (state.role !== "admin") return;
   fill("#tpay_trainer", state.trainers.filter((t) => t.status !== "موقوف").map((t) => [t.id, t.name] as [string, string]), "— اختر المدرب —");
@@ -136,17 +187,10 @@ function openTrainerPaymentForm(id?: string): void {
   const delBtn = $("#btnDeleteTrainerPayment") as HTMLButtonElement | null;
   if (delBtn) delBtn.style.display = tp ? "" : "none";
 
-  fill("#tpay_portion", DUE_PORTION_OPTIONS);
-  fill("#tpay_status", PAYMENT_STATUS.map((s) => s[0]));
-
   setv("tpay_id", tp?.id);
   setv("tpay_program", tp?.program_name);
-  setv("tpay_track", tp?.track);
   setv("tpay_trainer", tp?.trainer_id);
-  setv("tpay_portion", tp?.due_portion || DUE_PORTION_OPTIONS[0]);
-  setv("tpay_percent", tp?.entitlement_percent ?? "");
-  setv("tpay_dueDate", tp?.due_date);
-  setv("tpay_status", tp?.payment_status || "تم الطلب");
+  resetTpBlocks(tp);
   openFormPanel("panel-trainerPaymentForm");
 }
 
@@ -155,18 +199,23 @@ async function saveTrainerPayment(): Promise<void> {
   const f = $("#trainerPaymentForm") as HTMLFormElement | null;
   if (!f || !f.reportValidity()) return;
   const id = v("tpay_id") || null;
-  const input: TrainerPaymentInput = {
-    program_name: v("tpay_program"),
-    track: v("tpay_track") || null,
-    trainer_id: v("tpay_trainer") || null,
-    due_portion: v("tpay_portion") || null,
-    entitlement_percent: v("tpay_percent") ? +v("tpay_percent") : null,
-    due_date: v("tpay_dueDate") || null,
-    payment_status: v("tpay_status") || "تم الطلب",
-  };
+  const existing = id ? state.trainerPayments.find((x) => x.id === id) : null;
+  const rows = $$("#tpayBlocks .pp-row");
+  const g = (row: Element, cls: string) => ((row.querySelector(cls) as HTMLInputElement | HTMLSelectElement | null)?.value || "").trim();
   try {
-    await upsertTrainerPayment(id, input);
-    toast(id ? "تم تحديث السجل" : "تمت إضافة السجل");
+    for (const row of rows) {
+      const input: TrainerPaymentInput = {
+        program_name: v("tpay_program"),
+        track: existing?.track ?? null,
+        trainer_id: v("tpay_trainer") || null,
+        due_portion: g(row, ".tb-portion") || null,
+        entitlement_percent: g(row, ".tb-percent") ? Math.min(100, +g(row, ".tb-percent")) : null,
+        due_date: g(row, ".tb-date") || null,
+        payment_status: g(row, ".tb-status") || "تم الطلب",
+      };
+      await upsertTrainerPayment(id, input);
+    }
+    toast(id ? "تم تحديث السجل" : rows.length > 1 ? `تمت إضافة ${rows.length} دفعات` : "تمت إضافة السجل");
     await refreshData();
     closePaymentPage();
   } catch (e) {
@@ -203,9 +252,19 @@ export function wirePaymentForms(): void {
     const et = (e.target as HTMLElement).closest("[data-edit-tpay]") as HTMLElement | null;
     if (et) openTrainerPaymentForm(et.dataset.editTpay as string);
   });
-  $("#tpay_percent")?.addEventListener("input", () => {
-    const el = $("#tpay_percent") as HTMLInputElement | null;
-    if (el && +el.value > 100) el.value = "100";
+  const onTpKeyChange = () => {
+    if (!v("tpay_id")) resetTpBlocks();
+  };
+  $("#tpay_program")?.addEventListener("change", onTpKeyChange);
+  $("#tpay_trainer")?.addEventListener("change", onTpKeyChange);
+  $("#btnAddTpayBlock")?.addEventListener("click", addTpBlock);
+  $("#tpayBlocks")?.addEventListener("click", (e) => {
+    const rm = (e.target as HTMLElement).closest(".pp-remove");
+    if (rm) rm.closest(".pp-row")?.remove();
+  });
+  $("#tpayBlocks")?.addEventListener("input", (e) => {
+    const el = e.target as HTMLInputElement;
+    if (el.classList.contains("tb-percent") && +el.value > 100) el.value = "100";
   });
   $("#pay_program")?.addEventListener("change", onPayProgramChange);
   $("#btnAddPayBlock")?.addEventListener("click", addPayBlock);
