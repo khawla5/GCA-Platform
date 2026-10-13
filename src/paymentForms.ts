@@ -1,10 +1,11 @@
 import { refreshData } from "./boot";
 import { DUE_PORTION_OPTIONS, PAYMENT_STATUS } from "./constants";
-import { deletePayment, deleteTrainerPayment, upsertPayment, upsertTrainerPayment } from "./data";
+import { deleteTrainerPayment, updateProgramContractValue, upsertProgramPayment, upsertTrainerPayment } from "./data";
 import { openProgramForm } from "./forms";
 import { state } from "./state";
-import type { PaymentInput, TrainerPaymentInput } from "./types";
-import { $, $$, fill, requireAdmin, setv, toast, v } from "./utils";
+import type { TrainerPaymentInput } from "./types";
+import { openPaymentDetail } from "./payments";
+import { $, $$, esc, fill, requireAdmin, setv, toast, v } from "./utils";
 
 function openFormPanel(panelId: string): void {
   $$(".panel").forEach((p) => p.classList.remove("active"));
@@ -20,35 +21,76 @@ function closePaymentPage(): void {
   ($(`.tab[data-tab="payments"]`) as HTMLElement | null)?.click();
 }
 
-// رقم أمر الشراء يُسحب من رقم أمر الشراء الخاص بالبرنامج نفسه — ما يُكتب يدويًا
-function syncPayPoFromProgram(): void {
-  const prog = state.programs.find((pr) => pr.title === v("pay_program"));
-  setv("pay_po", prog?.ref || "");
+// رقم أمر الشراء وقيمة العقد يُسحبان من البرنامج نفسه
+function selectedProgram() {
+  return state.programs.find((pr) => pr.id === v("pay_program"));
 }
 
-function openPaymentForm(id?: string): void {
+function blockPortions(except?: HTMLElement): string[] {
+  return $$("#payBlocks .pp-row")
+    .filter((row) => row !== except)
+    .map((row) => (row.querySelector(".pb-portion") as HTMLSelectElement).value);
+}
+
+// أول دفعة لم تُستخدم بعد (من دفعات البرنامج المحفوظة + الدفعات المفتوحة في النموذج)
+function nextPortion(): string | null {
+  const prog = selectedProgram();
+  const used = new Set<string>([
+    ...state.programPayments.filter((pp) => pp.program_id === prog?.id).map((pp) => pp.due_portion || ""),
+    ...blockPortions(),
+  ]);
+  return DUE_PORTION_OPTIONS.find((o) => !used.has(o)) ?? null;
+}
+
+function payBlockHtml(portion: string, removable: boolean): string {
+  const opts = (list: string[], sel: string) => list.map((o) => `<option value="${esc(o)}"${o === sel ? " selected" : ""}>${esc(o)}</option>`).join("");
+  return `<div class="pp-row">
+    <div class="pp-row-head"><b>دفعة</b>${removable ? '<button type="button" class="pp-remove" title="حذف الدفعة">✕</button>' : ""}</div>
+    <div class="pp-grid">
+      <div class="field"><label>الجزء المستحق</label><select class="pb-portion" disabled>${opts(DUE_PORTION_OPTIONS, portion)}</select></div>
+      <div class="field"><label>قيمة الاستحقاق</label><input type="number" class="pb-value" min="0" step="0.01"></div>
+      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pb-date" lang="en"></div>
+      <div class="field"><label>حالة الدفع</label><select class="pb-status">${opts(PAYMENT_STATUS.map((s) => s[0]), "تم الطلب")}</select></div>
+      <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input class="pb-coc"></div>
+      <div class="field"><label>رقم الفاتورة</label><input class="pb-invoice"></div>
+    </div>
+  </div>`;
+}
+
+function addPayBlock(): void {
+  const list = $("#payBlocks");
+  if (!list) return;
+  const first = !list.children.length;
+  const portion = nextPortion();
+  if (!portion) {
+    toast(first ? "هذا البرنامج لديه الدفعات الأربع كاملة" : "اكتملت الدفعات الأربع لهذا البرنامج");
+    return;
+  }
+  list.insertAdjacentHTML("beforeend", payBlockHtml(portion, !first));
+}
+
+function resetPayBlocks(): void {
+  const list = $("#payBlocks");
+  if (list) list.innerHTML = "";
+  addPayBlock();
+}
+
+function onPayProgramChange(): void {
+  const prog = selectedProgram();
+  setv("pay_po", prog?.ref || "");
+  setv("pay_contract", prog?.contract_value ?? "");
+  resetPayBlocks();
+}
+
+function openPaymentForm(): void {
   if (state.role !== "admin") return;
-  const p = id ? state.payments.find((x) => String(x.id) === id) : null;
   const title = $("#paymentFormTitle");
-  if (title) title.textContent = p ? "تعديل أمر الشراء" : "اضافة طلب صرف";
-  const delBtn = $("#btnDeletePayment") as HTMLButtonElement | null;
-  if (delBtn) delBtn.style.display = p ? "" : "none";
-
-  fill("#pay_program", state.programs.map((pr) => pr.title), "— اختر البرنامج —");
-
-  setv("pay_id", p?.id);
-  setv("pay_program", p?.program_name);
-  syncPayPoFromProgram();
-  setv("pay_status", p?.status || "تم الطلب");
-  setv("pay_total", p?.installments_total ?? 1);
-  setv("pay_paid", p?.installments_paid ?? 0);
-  setv("pay_contract", p?.contract_value ?? "");
-  setv("pay_entitlement", p?.entitlement_value ?? "");
-  fill("#pay_portion", DUE_PORTION_OPTIONS);
-  setv("pay_portion", p?.due_portion || DUE_PORTION_OPTIONS[0]);
-  setv("pay_dueDate", p?.due_date);
-  setv("pay_coc", p?.coc_number);
-  setv("pay_invoice", p?.invoice_number);
+  if (title) title.textContent = "اضافة طلب صرف";
+  fill("#pay_program", state.programs.map((pr) => [pr.id, pr.title] as [string, string]), "— اختر البرنامج —");
+  setv("pay_program", "");
+  setv("pay_po", "");
+  setv("pay_contract", "");
+  resetPayBlocks();
   openPaymentPage();
 }
 
@@ -56,47 +98,31 @@ async function savePayment(): Promise<void> {
   if (!requireAdmin()) return;
   const f = $("#paymentForm") as HTMLFormElement | null;
   if (!f || !f.reportValidity()) return;
-  const total = +v("pay_total");
-  const paid = Math.floor(+v("pay_paid") || 0);
-  if (paid > total) {
-    toast("عدد الدفعات المدفوعة أكبر من عدد الدفعات الكلي");
-    return;
-  }
-  const id = v("pay_id") || null;
-  const input: PaymentInput = {
-    purchase_order: v("pay_po"),
-    program_name: v("pay_program"),
-    status: v("pay_status"),
-    installments_total: total,
-    installments_paid: paid,
-    contract_value: v("pay_contract") ? +v("pay_contract") : null,
-    entitlement_value: v("pay_entitlement") ? +v("pay_entitlement") : null,
-    due_portion: v("pay_portion"),
-    due_date: v("pay_dueDate") || null,
-    coc_number: v("pay_coc"),
-    invoice_number: v("pay_invoice"),
-  };
+  const prog = selectedProgram();
+  if (!prog) return;
+  const contract = v("pay_contract") ? +v("pay_contract") : null;
+  const rows = $$("#payBlocks .pp-row");
+  const g = (row: Element, cls: string) => ((row.querySelector(cls) as HTMLInputElement | HTMLSelectElement | null)?.value || "").trim();
   try {
-    await upsertPayment(id, input);
-    toast(id ? "تم تحديث أمر الشراء" : "تمت إضافة أمر الشراء");
+    if (contract !== (prog.contract_value ?? null)) await updateProgramContractValue(prog.id, contract);
+    for (const row of rows) {
+      const value = g(row, ".pb-value") ? +g(row, ".pb-value") : null;
+      await upsertProgramPayment(null, {
+        program_id: prog.id,
+        due_portion: g(row, ".pb-portion") || null,
+        entitlement_percent: contract && value != null ? Math.round((value / contract) * 1000) / 10 : null,
+        entitlement_value: value,
+        due_date: g(row, ".pb-date") || null,
+        payment_status: g(row, ".pb-status") || "تم الطلب",
+        coc_number: g(row, ".pb-coc") || null,
+        invoice_number: g(row, ".pb-invoice") || null,
+      });
+    }
+    toast(rows.length > 1 ? `تمت إضافة ${rows.length} دفعات` : "تمت إضافة الدفعة");
     await refreshData();
     closePaymentPage();
   } catch (e) {
     toast("تعذّر الحفظ: " + ((e as Error)?.message || ""));
-  }
-}
-
-async function removePayment(): Promise<void> {
-  if (!requireAdmin()) return;
-  const id = v("pay_id");
-  if (!id || !confirm("حذف أمر الشراء هذا نهائيًا؟")) return;
-  try {
-    await deletePayment(id);
-    toast("تم حذف أمر الشراء");
-    await refreshData();
-    closePaymentPage();
-  } catch (e) {
-    toast("تعذّر الحذف: " + ((e as Error)?.message || ""));
   }
 }
 
@@ -148,15 +174,15 @@ async function saveTrainerPayment(): Promise<void> {
   }
 }
 
-async function removeTrainerPayment(): Promise<void> {
+async function removeTrainerPayment(rowId?: string): Promise<void> {
   if (!requireAdmin()) return;
-  const id = v("tpay_id");
+  const id = rowId || v("tpay_id");
   if (!id || !confirm("حذف هذا السجل نهائيًا؟")) return;
   try {
     await deleteTrainerPayment(id);
     toast("تم حذف السجل");
     await refreshData();
-    closePaymentPage();
+    if (!rowId) closePaymentPage();
   } catch (e) {
     toast("تعذّر الحذف: " + ((e as Error)?.message || ""));
   }
@@ -164,9 +190,14 @@ async function removeTrainerPayment(): Promise<void> {
 
 export function wirePaymentForms(): void {
   document.addEventListener("click", (e) => {
-    const ep = (e.target as HTMLElement).closest("[data-edit-payment]") as HTMLElement | null;
+    const ep = (e.target as HTMLElement).closest("[data-pay-detail]") as HTMLElement | null;
     if (ep) {
-      openProgramForm(ep.dataset.editPayment as string, true);
+      openPaymentDetail(ep.dataset.payDetail as string);
+      return;
+    }
+    const dt = (e.target as HTMLElement).closest("[data-del-tpay]") as HTMLElement | null;
+    if (dt) {
+      removeTrainerPayment(dt.dataset.delTpay as string);
       return;
     }
     const et = (e.target as HTMLElement).closest("[data-edit-tpay]") as HTMLElement | null;
@@ -176,15 +207,24 @@ export function wirePaymentForms(): void {
     const el = $("#tpay_percent") as HTMLInputElement | null;
     if (el && +el.value > 100) el.value = "100";
   });
-  $("#pay_program")?.addEventListener("change", syncPayPoFromProgram);
+  $("#pay_program")?.addEventListener("change", onPayProgramChange);
+  $("#btnAddPayBlock")?.addEventListener("click", addPayBlock);
+  $("#payBlocks")?.addEventListener("click", (e) => {
+    const rm = (e.target as HTMLElement).closest(".pp-remove");
+    if (rm) rm.closest(".pp-row")?.remove();
+  });
+  $("#btnBackFromPaymentDetail")?.addEventListener("click", closePaymentPage);
+  $("#btnEditFromPaymentDetail")?.addEventListener("click", (e) => {
+    const id = (e.currentTarget as HTMLElement).dataset.programId;
+    if (id) openProgramForm(id);
+  });
   $("#btnNewTrainerPayment")?.addEventListener("click", () => openTrainerPaymentForm());
   $("#btnSaveTrainerPayment")?.addEventListener("click", saveTrainerPayment);
-  $("#btnDeleteTrainerPayment")?.addEventListener("click", removeTrainerPayment);
+  $("#btnDeleteTrainerPayment")?.addEventListener("click", () => removeTrainerPayment());
   $("#btnBackFromTrainerPayment")?.addEventListener("click", closePaymentPage);
   $("#btnCancelTrainerPayment")?.addEventListener("click", closePaymentPage);
-  $("#btnNewPayment")?.addEventListener("click", () => openPaymentForm());
+  $("#btnNewPayment")?.addEventListener("click", openPaymentForm);
   $("#btnSavePayment")?.addEventListener("click", savePayment);
-  $("#btnDeletePayment")?.addEventListener("click", removePayment);
   $("#btnBackFromPayment")?.addEventListener("click", closePaymentPage);
   $("#btnCancelPayment")?.addEventListener("click", closePaymentPage);
 }

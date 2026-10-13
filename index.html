@@ -15,7 +15,7 @@
 <div class="app-shell">
 <aside class="sidebar">
   <div class="brand">
-    <img src="/images/gca-emblem.png" alt="" class="brand-emblem">
+    <img src="/images/gca-emblem-aa8e60.png" alt="" class="brand-emblem">
     <div><b>الديوان العام للمحاسبة</b><small>GENERAL COURT OF AUDIT</small></div>
   </div>
   <button type="button" class="theme-toggle theme-toggle-wide" id="themeToggle" aria-label="تبديل المظهر"></button>
@@ -56,7 +56,7 @@
     </div>
 
     <div class="section-head"><h2>المدربون وحِمل التدريب</h2></div>
-    <div class="tbl-wrap"><table><thead><tr><th>المدرب</th><th>التخصص</th><th>الحالة</th><th>البرامج</th><th>قيد التنفيذ</th><th>الساعات</th><th>آخر برنامج</th></tr></thead><tbody id="trainerLoad"></tbody></table></div>
+    <div class="tbl-wrap"><table class="tbl-center tbl-last-start"><thead><tr><th>المدرب</th><th>الحالة</th><th>عدد البرامج</th><th>قيد التنفيذ</th><th>عدد الساعات</th><th>آخر برنامج</th></tr></thead><tbody id="trainerLoad"></tbody></table></div>
   </section>
 
   <!-- ===== PROGRAMS ===== -->
@@ -96,7 +96,7 @@
   <section class="panel" id="panel-trainers">
     <div class="section-head"><h2>قاعدة المدربين</h2><span class="spacer"></span><button class="btn primary admin-only" id="btnNewTrainer">＋ إضافة مدرب</button></div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>الاسم</th><th>البريد الإلكتروني</th><th>رقم الجوال</th><th>الحالة</th><th>البرامج</th><th>الساعات</th><th class="admin-only"></th></tr></thead>
+      <thead><tr><th>#</th><th>الاسم</th><th>البريد الإلكتروني</th><th>رقم الجوال</th><th>الحالة</th><th>البرامج</th><th>الساعات</th><th class="admin-only"></th></tr></thead>
       <tbody id="trainersBody"></tbody>
     </table></div>
   </section>
@@ -119,6 +119,13 @@
     <div class="section-head" id="paymentsTableHead"><h2>سجل المدفوعات</h2><span class="spacer"></span><button class="btn primary admin-only" id="btnNewPayment">＋ اضافة طلب صرف</button></div>
 
     <h3 class="table-split-head">مدفوعات المشاريع مع المركز</h3>
+    <div class="toolbar">
+      <input type="search" id="pfSearch" placeholder="بحث باسم البرنامج أو رقم أمر الشراء أو الفاتورة أو الشهادة…">
+      <select id="pfType"><option value="">كل الأنواع</option></select>
+      <select id="pfStatus"><option value="">كل حالات الدفع</option></select>
+      <select id="pfPortion"><option value="">كل الدفعات</option></select>
+      <select id="pfTrainer"><option value="">كل المدربين</option></select>
+    </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>رقم شهادة الإنجاز</th><th>رقم الفاتورة</th><th>رقم أمر الشراء</th><th>اسم البرنامج</th><th>المسار</th><th>النوع</th><th>قيمة العقد</th><th>الدفعة المستحقة</th><th>نسبة الاستحقاق</th><th>قيمة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
       <tbody id="programsBodyTr"></tbody>
@@ -126,8 +133,14 @@
     <p class="hint" style="margin-top:8px" id="programsCountTr"></p>
 
     <div class="section-head"><h3 class="table-split-head" style="margin:0">مدفوعات المدربين</h3><span class="spacer"></span><button class="btn primary admin-only" id="btnNewTrainerPayment">＋ إضافة</button></div>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>اسم البرنامج</th><th>المسار</th><th>اسم المدرب</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
+    <div class="toolbar">
+      <input type="search" id="tfSearch" placeholder="بحث باسم البرنامج أو المدرب…">
+      <select id="tfStatus"><option value="">كل حالات الدفع</option></select>
+      <select id="tfPortion"><option value="">كل الدفعات</option></select>
+      <select id="tfTrainer"><option value="">كل المدربين</option></select>
+    </div>
+    <div class="tbl-wrap"><table class="tbl-center">
+      <thead><tr><th>اسم البرنامج</th><th>اسم المدرب</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
       <tbody id="trainerPaymentsBody"></tbody>
     </table></div>
     <p class="hint" style="margin-top:8px" id="trainerPaymentsCount"></p>
@@ -167,31 +180,48 @@
       <button class="btn" id="btnBackFromPayment" type="button">‹ رجوع</button>
       <h2 id="paymentFormTitle">اضافة طلب صرف</h2>
       <span class="spacer"></span>
-      <button class="btn danger" id="btnDeletePayment" type="button">حذف أمر الشراء</button>
     </div>
     <form class="card" id="paymentForm">
       <div class="form">
         <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><select id="pay_program" required></select></div>
         <div class="field"><label>أمر الشراء</label><input id="pay_po" dir="ltr" readonly placeholder="يُسحب تلقائيًا من رقم أمر الشراء الخاص بالبرنامج"></div>
-        <div class="field"><label>حالة الدفع</label><select id="pay_status"></select></div>
-        <div class="field"><label>مبلغ كامل الدفعات <span class="req">*</span></label><input type="number" id="pay_total" min="0" step="0.01" required></div>
-        <div class="field"><label>الدفعات المدفوعة</label><input type="number" id="pay_paid" min="0" step="1"></div>
-        <fieldset><legend>مدفوعات المشاريع مع المركز</legend>
-          <div class="field"><label>قيمة العقد</label><input type="number" id="pay_contract" min="0" step="0.01"></div>
-          <div class="field"><label>قيمة الاستحقاق</label><input type="number" id="pay_entitlement" min="0" step="0.01"></div>
-          <div class="field"><label>الجزء المستحق</label><select id="pay_portion"></select></div>
-          <div class="field"><label>تاريخ الاستحقاق</label><input type="date" id="pay_dueDate" lang="en"></div>
-          <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input id="pay_coc"></div>
-          <div class="field"><label>رقم الفاتورة</label><input id="pay_invoice"></div>
-        </fieldset>
+        <div class="field"><label>قيمة العقد</label><input type="number" id="pay_contract" min="0" step="0.01"></div>
+        <div class="field full">
+          <label>الدفعات</label>
+          <div id="payBlocks" class="pp-list"></div>
+          <button type="button" class="btn sm" id="btnAddPayBlock">＋ إضافة دفعة</button>
+        </div>
       </div>
-      <input type="hidden" id="pay_id">
     </form>
     <div class="page-actions">
       <span class="spacer"></span>
       <button class="btn" id="btnCancelPayment" type="button">إلغاء</button>
       <button class="btn primary" id="btnSavePayment" type="button">حفظ</button>
     </div>
+  </section>
+
+  <!-- ===== PAYMENT DETAIL (من كارد المدفوعات) ===== -->
+  <section class="panel" id="panel-paymentDetail">
+    <div class="section-head">
+      <button class="btn" id="btnBackFromPaymentDetail" type="button">‹ رجوع</button>
+      <h2 id="paymentDetailTitle"></h2>
+      <span class="spacer"></span>
+      <button class="btn admin-only" id="btnEditFromPaymentDetail" type="button">✎ تعديل البرنامج</button>
+    </div>
+    <div class="card pd-head">
+      <div id="paymentDetailDonut"></div>
+      <div class="pd-info" id="paymentDetailInfo"></div>
+    </div>
+    <h3 class="table-split-head">مدفوعات البرنامج</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>الدفعة</th><th>نسبة الاستحقاق</th><th>قيمة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th>رقم الفاتورة</th><th>رقم شهادة الإنجاز (COC)</th></tr></thead>
+      <tbody id="paymentDetailProgramRows"></tbody>
+    </table></div>
+    <h3 class="table-split-head">مدفوعات المدربين الخاصة بالبرنامج</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>المسار</th><th>اسم المدرب</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th></tr></thead>
+      <tbody id="paymentDetailTrainerRows"></tbody>
+    </table></div>
   </section>
 
   <!-- ===== REPORTS ===== -->
@@ -215,6 +245,7 @@
       <h2 id="programFormTitle">إضافة برنامج</h2>
       <span class="spacer"></span>
       <button class="btn danger" id="btnDeleteProgram" type="button">حذف البرنامج</button>
+      <button class="btn primary" id="btnEditProgram" type="button">تعديل</button>
     </div>
     <div class="stage-hero card">
       <div class="stage-hero-info">
@@ -227,7 +258,7 @@
     <form class="card" id="programForm">
       <div class="form">
         <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><input id="p_title" required></div>
-        <div class="field"><label>رقم أمر الشراء</label><input id="p_ref" placeholder="يُولَّد تلقائيًا إن تُرك فارغًا"></div>
+        <div class="field"><label>رقم أمر الشراء</label><input id="p_ref" placeholder="فضلاً قم بإدخال أمر الشراء الصادر من الديوان"></div>
         <div class="field"><label>نوع البرنامج <span class="req">*</span></label><select id="p_type" required></select></div>
         <div class="field"><label>المدرب <span class="req">*</span></label><select id="p_trainer" required></select></div>
         <div class="field"><label>أسلوب التنفيذ</label><select id="p_mode"><option>حضوري</option><option>افتراضي</option><option>هجين</option></select></div>
@@ -249,7 +280,6 @@
             <button type="button" class="btn sm" id="btnAddProgramPayment">＋ إضافة دفعة</button>
           </div>
         </fieldset>
-        <div class="field full"><label>ملاحظات</label><textarea id="p_notes"></textarea></div>
       </div>
       <input type="hidden" id="p_id">
     </form>
@@ -333,7 +363,7 @@
     <div class="login-left">
       <div class="login-left-photo"></div>
       <div class="login-left-brand">
-        <img src="/images/gca-emblem.png" alt="">
+        <img src="/images/gca-emblem-aa8e60.png" alt="">
         <span>GCA</span>
       </div>
     </div>

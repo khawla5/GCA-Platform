@@ -5,6 +5,7 @@ import { wireForms } from "./forms";
 import { wirePaymentForms } from "./paymentForms";
 import { wirePaymentFilters } from "./payments";
 import { supabaseConfigured } from "./supabaseClient";
+import { initLoginFrame } from "./loginFrame";
 import { initTheme } from "./theme";
 import { $ } from "./utils";
 
@@ -17,6 +18,7 @@ function warnIfUnconfigured(): void {
 }
 
 initTheme();
+initLoginFrame();
 fillStaticSelects();
 wireTabs();
 wireFilterInputs();
