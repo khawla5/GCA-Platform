@@ -4,6 +4,7 @@ import { deleteTrainerPayment, updateProgramContractValue, upsertProgramPayment,
 import { openProgramForm } from "./forms";
 import { state } from "./state";
 import type { TrainerPaymentInput } from "./types";
+import { openPaymentDetail } from "./payments";
 import { $, $$, esc, fill, requireAdmin, setv, toast, v } from "./utils";
 
 function openFormPanel(panelId: string): void {
@@ -189,9 +190,9 @@ async function removeTrainerPayment(rowId?: string): Promise<void> {
 
 export function wirePaymentForms(): void {
   document.addEventListener("click", (e) => {
-    const ep = (e.target as HTMLElement).closest("[data-view-payment]") as HTMLElement | null;
+    const ep = (e.target as HTMLElement).closest("[data-pay-detail]") as HTMLElement | null;
     if (ep) {
-      openProgramForm(ep.dataset.viewPayment as string, true, true);
+      openPaymentDetail(ep.dataset.payDetail as string);
       return;
     }
     const dt = (e.target as HTMLElement).closest("[data-del-tpay]") as HTMLElement | null;
@@ -211,6 +212,11 @@ export function wirePaymentForms(): void {
   $("#payBlocks")?.addEventListener("click", (e) => {
     const rm = (e.target as HTMLElement).closest(".pp-remove");
     if (rm) rm.closest(".pp-row")?.remove();
+  });
+  $("#btnBackFromPaymentDetail")?.addEventListener("click", closePaymentPage);
+  $("#btnEditFromPaymentDetail")?.addEventListener("click", (e) => {
+    const id = (e.currentTarget as HTMLElement).dataset.programId;
+    if (id) openProgramForm(id);
   });
   $("#btnNewTrainerPayment")?.addEventListener("click", () => openTrainerPaymentForm());
   $("#btnSaveTrainerPayment")?.addEventListener("click", saveTrainerPayment);

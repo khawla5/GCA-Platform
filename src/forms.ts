@@ -187,10 +187,21 @@ export function openProgramForm(id?: string, focusPayment = false, viewOnly = fa
   openProgramPage();
 }
 
+let programSaveInFlight = false;
+
 async function saveProgram(): Promise<void> {
-  if (!requireAdmin()) return;
+  if (programSaveInFlight || !requireAdmin()) return;
   const f = $("#programForm") as HTMLFormElement | null;
   if (!f || !f.reportValidity()) return;
+  programSaveInFlight = true;
+  try {
+    await persistProgram();
+  } finally {
+    programSaveInFlight = false;
+  }
+}
+
+async function persistProgram(): Promise<void> {
   if (v("p_end") < v("p_start")) {
     toast("تاريخ النهاية قبل تاريخ البداية");
     return;
