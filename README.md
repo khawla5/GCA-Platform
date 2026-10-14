@@ -1,121 +1,31 @@
-# GCA — منصة متابعة توريد المدربين
+# GCA — Trainer Supply Tracking Platform
+# منصة متابعة توريد المدربين
 
-منصة لمتابعة البرامج التدريبية والمدربين، مبنية لصالح **الديوان العام للمحاسبة** (بالتعاون مع يسير لإدارة المشاريع).
+## نبذة عن المشروع | About
 
-- **الواجهة:** HTML + CSS + TypeScript (بدون أي إطار عمل — Vanilla)، مبنية عبر [Vite](https://vitejs.dev).
-- **قاعدة البيانات والمصادقة:** [Supabase](https://supabase.com) (Postgres + Auth).
+منصة رقمية تهدف إلى تسهيل متابعة البرامج التدريبية والمدربين، وتنظيم المعلومات المرتبطة بها من خلال واجهة موحدة تساعد على عرض البيانات ومتابعة حالة البرامج.
 
----
+GCA is a digital platform designed to streamline the monitoring of training programs and trainers. It provides a unified interface for organizing information, viewing data, and tracking program statuses.
 
-## 1. المتطلبات
+## المميزات الرئيسية | Key Features
 
-- [Node.js](https://nodejs.org) الإصدار 18 أو أحدث.
-- حساب مجاني على [supabase.com](https://supabase.com).
-- [VS Code](https://code.visualstudio.com) (اختياري لكن موصى به).
+- **لوحة المتابعة | Dashboard:** عرض ملخص للبرامج التدريبية والمدربين.
+- **إدارة البرامج | Program Management:** تنظيم بيانات البرامج التدريبية ومتابعة حالاتها.
+- **إدارة المدربين | Trainer Management:** عرض معلومات المدربين والبيانات المرتبطة بهم.
+- **إدارة الصلاحيات | Access Management:** إتاحة الوظائف وفقًا لصلاحيات المستخدم.
+- **التقارير وتصدير البيانات | Reporting & Data Export:** استعراض البيانات وتصديرها عند الحاجة.
 
-## 2. إنشاء مشروع Supabase
+## التقنيات المستخدمة | Technology Stack
 
-1. سجّل الدخول إلى [supabase.com](https://supabase.com) وأنشئ مشروعًا جديدًا (New Project).
-2. من **Project Settings → API** انسخ:
-   - `Project URL`
-   - `anon public` key
-3. من **SQL Editor** داخل لوحة Supabase، الصق محتوى ملف [`supabase/schema.sql`](supabase/schema.sql) بالكامل ثم اضغط **Run**. هذا سينشئ الجداول والصلاحيات (RLS) اللازمة تلقائيًا.
+- TypeScript
+- HTML & CSS
+- Vite
+- Supabase
 
-## 3. ربط المشروع بـ Supabase
+## الهدف من المشروع | Project Objective
 
-انسخ ملف البيئة النموذجي وأضف بياناتك:
+توفير منصة موحدة تدعم تنظيم بيانات البرامج التدريبية والمدربين، وتسهّل متابعة المعلومات المرتبطة بها.
 
-```bash
-cp .env.example .env
-```
+To provide a centralized platform for organizing training program and trainer information and simplifying the tracking of related data.
 
-ثم افتح `.env` وضع القيم التي نسختها في الخطوة السابقة:
 
-```
-VITE_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
-```
-
-> ملف `.env` مستثنى من Git تلقائيًا — لن يُرفع بياناتك بالخطأ.
-
-## 4. التشغيل محليًا
-
-```bash
-npm install
-npm run dev
-```
-
-سيفتح الخادم على `http://localhost:5173` تلقائيًا. افتح المجلد في VS Code بالأمر:
-
-```bash
-code .
-```
-
-## 5. الحسابات والصلاحيات
-
-لا يوجد تسجيل عام — المنصة تستخدم **حسابين ثابتين فقط** عبر Supabase Auth الحقيقي:
-
-| الدور | البريد (اسم المستخدم) | كلمة المرور | الصلاحية |
-|---|---|---|---|
-| الديوان العام للمحاسبة (Viewer) | `viewer@gca.local` | `1234567` | مشاهدة فقط |
-| يسير لإدارة المشاريع (Admin) | `admin@gca.local` | `1234567` | إضافة/تعديل/حذف |
-
-> **تنبيه أمني:** هذه كلمة مرور بسيطة جدًا لمنصة تابعة للديوان العام للمحاسبة — مناسبة فقط للتجربة الداخلية. قبل أي استخدام فعلي أو مشاركة الرابط مع الديوان، غيّرها من لوحة Supabase (Authentication → Users → ⋮ → Reset password) إلى كلمتين مختلفتين وأقوى.
-
-### إنشاء الحسابين في Supabase (مرة واحدة فقط)
-
-1. من لوحة Supabase اذهب إلى **Authentication → Users → Add user → Create new user**.
-2. أنشئ المستخدم الأول:
-   - Email: `viewer@gca.local`
-   - Password: `1234567`
-   - فعّل **Auto Confirm User** حتى لا يحتاج تأكيد بريد.
-3. كرّر نفس الخطوة للمستخدم الثاني:
-   - Email: `admin@gca.local`
-   - Password: `1234567`
-4. عند إنشاء أي مستخدم، يقوم trigger موجود في `schema.sql` بإضافته تلقائيًا إلى جدول `profiles` بصلاحية `viewer` افتراضيًا.
-5. لترقية حساب `admin@gca.local` إلى صلاحية `admin`، افتح **SQL Editor** ونفّذ:
-
-```sql
-update public.profiles set role = 'admin' where email = 'admin@gca.local';
-```
-
-بعدها، زر "يسير لإدارة المشاريع" في شاشة الدخول سيمنح صلاحيات التعديل الكاملة، وزر "الديوان العام للمحاسبة" يبقى بصلاحية اطلاع فقط.
-
-### كيف تُطبَّق الصلاحيات فعليًا (RBAC)
-
-- **مكان تخزين الدور:** عمود `role` في جدول `public.profiles` (القيم الممكنة: `admin` أو `viewer`، والافتراضي `viewer`).
-- **التطبيق الفعلي (Backend):** لا يوجد خادم منفصل في هذا المشروع — **Supabase نفسه هو الخادم**، عبر سياسات Row Level Security. جدولا `trainers` و`programs` يسمحان بالقراءة لأي مستخدم مسجّل دخول، لكن الإضافة/التعديل/الحذف تتطلب `is_admin() = true` (دالة SQL تتحقق من `profiles.role`). الرفض يحدث **داخل قاعدة البيانات مباشرة** — حتى لو تم التلاعب بواجهة المستخدم أو استدعاء الـ API مباشرة، ستُرفض العملية.
-- **الواجهة (Frontend):** الأزرار والصفحات الخاصة بالإدارة (إضافة/تعديل/حذف) مخفية عن غير الإداريين عبر `body.is-admin`، ودوال الحفظ/الحذف في [forms.ts](src/forms.ts) تتحقق من `state.role === "admin"` قبل أي استدعاء لقاعدة البيانات (حماية إضافية، وليست الحماية الأساسية).
-- **منع ترقية الحساب الذاتية:** لا توجد أي صلاحية `UPDATE` على جدول `profiles` بتاتًا — لا يمكن لأي مستخدم (حتى admin) تغيير أي `role` من التطبيق أو الـ API؛ الترقية تتم فقط يدويًا من SQL Editor كما في الخطوة أعلاه.
-- **لا يوجد توجيه (routing) بروابط منفصلة:** هذا تطبيق صفحة واحدة (SPA) بعلامات تبويب، وليس بروابط URL منفصلة لكل قسم — لذلك لا يوجد "رابط لوحة إدارة" يمكن لمستخدم عادي زيارته مباشرة؛ عناصر الإدارة تُخفى بنفس آلية إظهار/إخفاء الأقسام.
-
-## 6. البنية
-
-```
-GCA/
-├── index.html            نقطة الدخول HTML
-├── src/
-│   ├── main.ts            تشغيل التطبيق (bootstrap)
-│   ├── boot.ts             تسجيل الدخول/الخروج وحالة الجلسة
-│   ├── auth.ts             دوال Supabase Auth
-│   ├── data.ts             عمليات قاعدة البيانات (CRUD) للبرامج والمدربين
-│   ├── render.ts            كل دوال عرض الواجهة (لوحة المتابعة، الجداول، التقرير، البطاقة)
-│   ├── forms.ts             نماذج الإضافة/التعديل + التصدير (CSV/JSON) + الطباعة
-│   ├── state.ts             حالة التطبيق أثناء التشغيل
-│   ├── types.ts             أنواع TypeScript (Trainer, Program...)
-│   ├── constants.ts         قوائم الحالات الثابتة
-│   ├── utils.ts             أدوات مساعدة عامة
-│   └── styles.css           التنسيقات الكاملة
-├── supabase/
-│   └── schema.sql            السكيما الكاملة لقاعدة البيانات (نسخ ولصق في SQL Editor)
-├── .env.example
-└── package.json
-```
-
-## 7. البناء للإنتاج
-
-```bash
-npm run build
-```
-
-الناتج يكون في مجلد `dist/` — جاهز للنشر على أي استضافة ثابتة (Vercel, Netlify, Cloudflare Pages...).
