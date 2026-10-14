@@ -127,7 +127,7 @@
       <select id="pfTrainer"><option value="">كل المدربين</option></select>
     </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>رقم شهادة الإنجاز</th><th>رقم الفاتورة</th><th>رقم أمر الشراء</th><th>اسم البرنامج</th><th>المسار</th><th>النوع</th><th>قيمة العقد</th><th>الدفعة المستحقة</th><th>نسبة الاستحقاق</th><th>قيمة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
+      <thead><tr><th>رقم شهادة الإنجاز</th><th>رقم الفاتورة</th><th>رقم أمر الشراء</th><th>اسم البرنامج</th><th>النوع</th><th>قيمة العقد</th><th>الدفعة المستحقة</th><th>نسبة الاستحقاق</th><th>قيمة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
       <tbody id="programsBodyTr"></tbody>
     </table></div>
     <p class="hint" style="margin-top:8px" id="programsCountTr"></p>
@@ -157,12 +157,12 @@
     <form class="card" id="trainerPaymentForm">
       <div class="form">
         <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><input id="tpay_program" list="programTitles" required></div>
-        <div class="field"><label>المسار</label><input id="tpay_track"></div>
-        <div class="field"><label>اسم المدرب</label><select id="tpay_trainer"></select></div>
-        <div class="field"><label>الدفعة</label><select id="tpay_portion"></select></div>
-        <div class="field"><label>نسبة الاستحقاق %</label><input type="number" id="tpay_percent" min="0" max="100" step="0.1"></div>
-        <div class="field"><label>تاريخ الاستحقاق</label><input type="date" id="tpay_dueDate" lang="en"></div>
-        <div class="field"><label>حالة الدفع</label><select id="tpay_status"></select></div>
+        <div class="field full"><label>اسم المدرب</label><select id="tpay_trainer"></select></div>
+        <div class="field full">
+          <label>الدفعات</label>
+          <div id="tpayBlocks" class="pp-list"></div>
+          <button type="button" class="btn sm" id="btnAddTpayBlock">＋ إضافة دفعة</button>
+        </div>
       </div>
       <input type="hidden" id="tpay_id">
     </form>
@@ -219,7 +219,7 @@
     </table></div>
     <h3 class="table-split-head">مدفوعات المدربين الخاصة بالبرنامج</h3>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>المسار</th><th>اسم المدرب</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th></tr></thead>
+      <thead><tr><th>اسم المدرب</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th></tr></thead>
       <tbody id="paymentDetailTrainerRows"></tbody>
     </table></div>
   </section>

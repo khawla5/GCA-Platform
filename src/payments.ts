@@ -162,10 +162,10 @@ export function openPaymentDetail(programId: string): void {
       ? rows
           .map((tp) => {
             const tr = state.trainers.find((t) => t.id === tp.trainer_id);
-            return `<tr><td>${esc(tp.track || "—")}</td><td>${esc(tr?.name || "—")}</td><td>${esc(tp.due_portion || "—")}</td><td>${tp.entitlement_percent != null ? `${tp.entitlement_percent}%` : "—"}</td><td>${fmtDate(tp.due_date)}</td><td>${pill(PAYMENT_STATUS, tp.payment_status)}</td></tr>`;
+            return `<tr><td>${esc(tr?.name || "—")}</td><td>${esc(tp.due_portion || "—")}</td><td>${tp.entitlement_percent != null ? `${tp.entitlement_percent}%` : "—"}</td><td>${fmtDate(tp.due_date)}</td><td>${pill(PAYMENT_STATUS, tp.payment_status)}</td></tr>`;
           })
           .join("")
-      : `<tr><td colspan="6"><div class="empty"><b>لا توجد مدفوعات مدربين لهذا البرنامج</b></div></td></tr>`;
+      : `<tr><td colspan="5"><div class="empty"><b>لا توجد مدفوعات مدربين لهذا البرنامج</b></div></td></tr>`;
   }
 
   const editBtn = $("#btnEditFromPaymentDetail") as HTMLElement | null;

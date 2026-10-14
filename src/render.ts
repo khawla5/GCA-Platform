@@ -244,7 +244,6 @@ function programPaymentRow(pp: ProgramPayment, p: Program): string {
     <td>${esc(pp.invoice_number || "—")}</td>
     <td><span class="sub" style="font-size:12.5px">${esc(p.ref || "—")}</span></td>
     <td><span class="t">${esc(p.title)}</span></td>
-    <td>${esc(p.target_group || "—")}</td>
     <td>${esc(p.type || "—")}</td>
     <td>${fmtMoney(p.contract_value)}</td>
     <td>${esc(pp.due_portion || "—")}</td>
@@ -296,7 +295,7 @@ export function renderPrograms(): void {
   if (trBody) {
     trBody.innerHTML = ppRows.length
       ? paginate("programsBodyTr", ppRows, renderPrograms).map(({ pp, p }) => programPaymentRow(pp, p)).join("")
-      : emptyMsg("لا توجد دفعات مطابقة", 13);
+      : emptyMsg("لا توجد دفعات مطابقة", 12);
   }
   const cntTr = $("#programsCountTr");
   if (cntTr) cntTr.textContent = `${ppRows.length} من ${state.programPayments.length} دفعة`;
