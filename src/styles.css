@@ -322,8 +322,8 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 #panel-programForm.view-mode #btnDeleteProgram,
 #panel-programForm.view-mode .page-actions,
 #panel-programForm.view-mode #btnAddProgramPayment,
-#panel-programForm.view-mode .pp-portion:disabled,.pb-portion:disabled,.tb-portion:disabled{opacity:1;color:var(--ink);-webkit-text-fill-color:var(--ink);cursor:default;appearance:none;-webkit-appearance:none;background-image:none}
-.pp-remove{display:none}
+#panel-programForm.view-mode .pp-remove{display:none}
+.pp-portion:disabled,.pb-portion:disabled,.tb-portion:disabled{opacity:1;color:var(--ink);-webkit-text-fill-color:var(--ink);cursor:default;appearance:none;-webkit-appearance:none;background-image:none}
 #panel-programForm.view-mode input:disabled,
 #panel-programForm.view-mode select:disabled,
 #panel-programForm.view-mode textarea:disabled{opacity:1;color:var(--ink);-webkit-text-fill-color:var(--ink);cursor:default}
