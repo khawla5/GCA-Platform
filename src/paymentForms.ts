@@ -49,7 +49,7 @@ function payBlockHtml(portion: string, removable: boolean): string {
     <div class="pp-grid">
       <div class="field"><label>الجزء المستحق</label><select class="pb-portion" disabled>${opts(DUE_PORTION_OPTIONS, portion)}</select></div>
       <div class="field"><label>قيمة الاستحقاق</label><input type="number" class="pb-value" min="0" step="0.01"></div>
-      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pb-date" lang="en"></div>
+      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pb-date date-empty" lang="en"></div>
       <div class="field"><label>حالة الدفع</label><select class="pb-status">${opts(PAYMENT_STATUS.map((s) => s[0]), "تم الطلب")}</select></div>
       <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input class="pb-coc"></div>
       <div class="field"><label>رقم الفاتورة</label><input class="pb-invoice"></div>
@@ -150,7 +150,7 @@ function tpBlockHtml(portion: string, removable: boolean, tp?: TrainerPayment | 
     <div class="pp-grid">
       <div class="field"><label>الدفعة</label><select class="tb-portion" disabled>${opts(DUE_PORTION_OPTIONS, portion)}</select></div>
       <div class="field"><label>نسبة الاستحقاق %</label><input type="number" class="tb-percent" min="0" max="100" step="0.1" value="${tp?.entitlement_percent ?? ""}"></div>
-      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="tb-date" lang="en" value="${esc(tp?.due_date || "")}"></div>
+      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="tb-date${tp?.due_date ? "" : " date-empty"}" lang="en" value="${esc(tp?.due_date || "")}"></div>
       <div class="field"><label>حالة الدفع</label><select class="tb-status">${opts([...PAYMENT_STATUS.map((s) => s[0]), ...(tp?.payment_status && !PAYMENT_STATUS.some(([s]) => s === tp.payment_status) ? [tp.payment_status] : [])], tp?.payment_status || "تم الطلب")}</select></div>
     </div>
   </div>`;
