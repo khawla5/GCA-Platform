@@ -232,6 +232,15 @@ td .sub{display:block;font-size:12px;color:var(--muted)}
 #panel-trainers td .sub,#panel-trainers td .sub a{text-align:start}
 .tbl-center th,.tbl-center td,.rep-trainers th,.rep-trainers td{text-align:center}
 .tbl-center th:first-child,.tbl-center td:first-child,.rep-trainers th:nth-child(2),.rep-trainers td:nth-child(2){text-align:start}
+#trainerPaymentsTable th:first-child,#trainerPaymentsTable td:first-child{text-align:right}
+#trainerPaymentsTable th:nth-child(2),#trainerPaymentsTable td:nth-child(2){text-align:center}
+#trainerPaymentsTable th:nth-child(6),#trainerPaymentsTable td:nth-child(6){text-align:right}
+#orgPaymentsTable th:nth-child(1),#orgPaymentsTable td:nth-child(1),
+#orgPaymentsTable th:nth-child(2),#orgPaymentsTable td:nth-child(2),
+#orgPaymentsTable th:nth-child(5),#orgPaymentsTable td:nth-child(5),
+#orgPaymentsTable th:nth-child(6),#orgPaymentsTable td:nth-child(6),
+#orgPaymentsTable th:nth-child(8),#orgPaymentsTable td:nth-child(8),
+#orgPaymentsTable th:nth-child(9),#orgPaymentsTable td:nth-child(9){text-align:center}
 .rep-trainers th:first-child,.rep-trainers td:first-child{width:48px}
 .tbl-all-center th,.tbl-all-center td{text-align:center}
 .tbl-last-start th:last-child,.tbl-last-start td:last-child{text-align:start}

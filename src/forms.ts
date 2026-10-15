@@ -71,7 +71,7 @@ async function saveProgramPaymentsList(programId: string): Promise<void> {
       entitlement_percent: g(".pp-percent") ? +g(".pp-percent") : null,
       entitlement_value: g(".pp-value") ? +g(".pp-value") : null,
       due_date: g(".pp-date") || null,
-      payment_status: g(".pp-status") || "تم الطلب",
+      payment_status: g(".pp-status") || "غير مستحق",
       coc_number: g(".pp-coc") || null,
       invoice_number: g(".pp-invoice") || null,
     };

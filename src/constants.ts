@@ -28,8 +28,9 @@ export const TRAINER_STATUS: [string, string][] = [
 
 export const PAYMENT_STATUS: [string, string][] = [
   ["تم الطلب", "info"],
-  ["معلقة", "warn"],
-  ["تم الدفع", "ok"],
+  ["غير مستحق", "neutral"],
+  ["مدفوع جزئياً", "gold"],
+  ["مدفوع بالكامل", "ok"],
 ];
 
 // حالات الدفع الخاصة بأوامر الشراء في تبويب المدفوعات
