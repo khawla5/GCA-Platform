@@ -69,8 +69,8 @@ export const PAYMENT_CARD_DONE_COLOR = "#7A6238"; // اكتمل سداد كل ا
 export const PAYMENT_CARD_WAITING_COLOR = "#B7CDB0"; // أخضر فاتح: بانتظار صدور أمر الشراء
 
 // حسابان ثابتان فقط: مشاهدة وإدارة (لا يوجد تسجيل عام). أنشئهما في Supabase كما هو موضح في README.
-export const VIEWER_EMAIL = "viewer@gca.local";
-export const ADMIN_EMAIL = "admin@yaaseer.sa";
+export const VIEWER_EMAIL = "user@gca.local";
+export const ADMIN_EMAIL = "admin@yaaseer.local";
 
 export const AR_MONTHS = [
   "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
