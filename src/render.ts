@@ -1,5 +1,5 @@
 import { AR_MONTHS, DEFAULT_CARD_COLOR, DUE_PORTION_OPTIONS, GCA_STATUS, PAYMENT_STATUS, PO_PAYMENT_STATUS, STATUS_CARD_COLORS, TR_STATUS, TRAINER_STATUS, TYPES } from "./constants";
-import { paginate, pageStart, resetPage } from "./pager";
+import { paginate, resetPage } from "./pager";
 import { renderPayments } from "./payments";
 import { state } from "./state";
 import type { Program, ProgramPayment } from "./types";
@@ -79,8 +79,9 @@ export function renderGallery(): void {
       const clickAttr = state.role === "admin" ? `data-view="${esc(p.id)}"` : `data-open="${esc(p.id)}"`;
       const isCurrent = current && p.id === current.id;
       const color = STATUS_CARD_COLORS[p.status_gca] || DEFAULT_CARD_COLOR;
+      const isGoldCard = p.status_gca === "منجز";
       const purchaseOrder = state.payments.find((pay) => pay.program_name === p.title)?.purchase_order;
-      return `<article class="prog-card${isCurrent ? " is-current" : ""}" style="--card-color:${color}" ${clickAttr}>
+      return `<article class="prog-card${isCurrent ? " is-current" : ""}${isGoldCard ? " is-gold-card" : ""}" style="--card-color:${color}" ${clickAttr}>
         <div class="bars-wm"><i></i><i></i><i></i><i></i></div>
         <div class="row1"><span class="eyebrow">${esc(p.type || "—")}</span><span class="ref">${esc(purchaseOrder || "—")}</span></div>
         <h4>${esc(p.title)}</h4>
@@ -190,8 +191,10 @@ function renderTrainerLoad(): void {
     .sort((a, b) => b.n - a.n);
   const el = $("#trainerLoad");
   if (!el) return;
+  const stalePager = el.closest(".tbl-wrap")?.nextElementSibling;
+  if (stalePager?.matches('.pager[data-for="trainerLoad"]')) stalePager.remove();
   el.innerHTML = rows.length
-    ? paginate("trainerLoad", rows, renderTrainerLoad)
+    ? rows
         .map(
           (r) =>
             `<tr data-trainer="${esc(r.t.id)}"><td class="t">${esc(r.t.name)}</td><td>${pill(TRAINER_STATUS, r.t.status)}</td><td>${r.n}</td><td>${r.run}</td><td>${r.h}</td><td>${r.last ? esc(r.last.title) + `<span class="sub">${fmtDate(r.last.start_date)}</span>` : "—"}</td></tr>`
@@ -305,10 +308,12 @@ export function renderTrainers(): void {
   const T = state.trainers.slice().sort((a, b) => a.name.localeCompare(b.name, "ar"));
   const el = $("#trainersBody");
   if (!el) return;
+  const stalePager = el.closest(".tbl-wrap")?.nextElementSibling;
+  if (stalePager?.matches('.pager[data-for="trainersBody"]')) stalePager.remove();
   el.innerHTML = T.length
-    ? paginate("trainersBody", T, renderTrainers).map((t, i) => {
+    ? T.map((t, i) => {
         const ps = state.programs.filter((p) => p.trainer_id === t.id);
-        return `<tr data-trainer="${esc(t.id)}"><td>${pageStart("trainersBody") + i + 1}</td><td class="t">${esc(t.name)}${t.city ? `<span class="sub">${esc(t.city)}</span>` : ""}${t.cv_url ? `<a href="${esc(t.cv_url)}" target="_blank" rel="noopener" class="sub" onclick="event.stopPropagation()">📄 CV</a>` : ""}</td><td dir="ltr">${esc(t.email || "—")}</td><td dir="ltr">${esc(t.phone || "—")}</td><td>${pill(TRAINER_STATUS, t.status)}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td class="admin-only"><button class="btn sm" data-edit-trainer="${esc(t.id)}">✎</button></td></tr>`;
+        return `<tr data-trainer="${esc(t.id)}"><td>${i + 1}</td><td class="t">${esc(t.name)}${t.city ? `<span class="sub">${esc(t.city)}</span>` : ""}${t.cv_url ? `<a href="${esc(t.cv_url)}" target="_blank" rel="noopener" class="sub" onclick="event.stopPropagation()">📄 CV</a>` : ""}</td><td dir="ltr">${esc(t.email || "—")}</td><td dir="ltr">${esc(t.phone || "—")}</td><td>${pill(TRAINER_STATUS, t.status)}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td class="admin-only"><button class="btn sm" data-edit-trainer="${esc(t.id)}">✎</button></td></tr>`;
       }).join("")
     : `<tr><td colspan="8"><div class="empty"><b>لا يوجد مدربون بعد</b>${state.role === "admin" ? "أضف أول مدرب من الزر أعلاه" : ""}</div></td></tr>`;
 }
@@ -332,7 +337,7 @@ export function renderReport(): void {
     <h3>١. ملخص الحالة مع الديوان</h3>
     <div class="tbl-wrap"><table class="tbl-all-center"><thead><tr><th>الحالة</th><th>عدد البرامج</th><th>النسبة</th></tr></thead><tbody>${byStatus.map(([s, n]) => `<tr><td>${pill(GCA_STATUS, s)}</td><td>${n}</td><td>${Math.round((n / P.length) * 100)}%</td></tr>`).join("") || `<tr><td colspan="3" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
     <h3>٢. سجل البرامج</h3>
-    <div class="tbl-wrap"><table><thead><tr><th>#</th><th>رقم أمر الشراء</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>تاريخ البداية</th><th>تاريخ النهاية</th><th>المدة</th><th>المتدربون</th><th>مع الديوان</th><th>مع المدرب</th></tr></thead><tbody>${P.map((p, i) => `<tr data-open="${esc(p.id)}"><td>${i + 1}</td><td>${esc(p.ref || "")}</td><td class="t">${esc(p.title)}</td><td>${esc(p.type || "")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}</td><td>${fmtDate(p.end_date)}</td><td>${durationText(p)}</td><td>${p.participants || "—"}</td><td>${pill(GCA_STATUS, p.status_gca)}</td><td>${pill(TR_STATUS, p.status_trainer)}</td></tr>`).join("") || `<tr><td colspan="10" class="empty">لا برامج في هذه الفترة</td></tr>`}</tbody></table></div>
+    <div class="tbl-wrap"><table><thead><tr><th>#</th><th>رقم أمر الشراء</th><th>البرنامج</th><th>النوع</th><th>المدرب</th><th>تاريخ البداية</th><th>تاريخ النهاية</th><th>المدة</th><th>المتدربون</th><th>الحالة مع المدرب</th><th>الحالة مع الديوان</th></tr></thead><tbody>${P.map((p, i) => `<tr data-open="${esc(p.id)}"><td>${i + 1}</td><td>${esc(p.ref || "")}</td><td class="t">${esc(p.title)}</td><td>${esc(p.type || "")}</td><td>${esc(trainerName(p, state.trainers))}</td><td>${fmtDate(p.start_date)}</td><td>${fmtDate(p.end_date)}</td><td>${durationText(p)}</td><td>${p.participants || "—"}</td><td>${pill(TR_STATUS, p.status_trainer)}</td><td>${pill(GCA_STATUS, p.status_gca)}</td></tr>`).join("") || `<tr><td colspan="10" class="empty">لا برامج في هذه الفترة</td></tr>`}</tbody></table></div>
     <h3>٣. توزيع البرامج على المدربين</h3>
     <div class="tbl-wrap"><table class="rep-trainers"><thead><tr><th>#</th><th>المدرب</th><th>عدد البرامج</th><th>عدد الساعات</th><th>منجز</th><th>تم التعاقد</th></tr></thead><tbody>${byTrainer.map(({ t, ps }, i) => `<tr><td>${i + 1}</td><td class="t">${esc(t.name)}</td><td>${ps.length}</td><td>${ps.reduce((s, p) => s + (+(p.hours || 0)), 0)}</td><td>${ps.filter((p) => p.status_gca === "منجز").length}</td><td>${ps.filter((p) => p.status_trainer === "تم التعاقد").length}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">لا بيانات</td></tr>`}</tbody></table></div>
     <div class="pcard-f" style="margin-top:18px;border-radius:8px"><span>يسير لإدارة المشاريع · info@yaaseer.com · +966 50 168 3310 · الرياض</span><span>وثيقة متابعة مشتركة — للاستخدام بين الطرفين</span></div>`;

@@ -12,14 +12,14 @@
   --r:10px;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --navy:#1B6B3A; --navy-2:#001A0B; --gold:#AE9768; --gold-2:#C9B58A;
+  --navy:#1B6B3A; --navy-2:#003218; --gold:#AE9768; --gold-2:#C9B58A;
   --bg:#003217; --bg-grad:#003217; --surface:#003218; --surface-2:#0A4526; --line:#1F5C39;
   --ink:#F3EDDD; --muted:#BDB398; --faint:#8B8467;
   --ok:#7FD19C; --ok-bg:#0F4A2A; --warn:#D8BE85; --warn-bg:#3F3418; --bad:#F09A90; --bad-bg:#4A1F1C; --info:#9EC4AE; --info-bg:#123F2A; --neutral:#BDB398; --neutral-bg:#1B4A31;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.4);
 }}
 :root[data-theme="dark"]{
-  --navy:#1B6B3A; --navy-2:#001A0B; --gold:#AE9768; --gold-2:#C9B58A;
+  --navy:#1B6B3A; --navy-2:#003218; --gold:#AE9768; --gold-2:#C9B58A;
   --bg:#003217; --bg-grad:#003217; --surface:#003218; --surface-2:#0A4526; --line:#1F5C39;
   --ink:#F3EDDD; --muted:#BDB398; --faint:#8B8467;
   --ok:#7FD19C; --ok-bg:#0F4A2A; --warn:#D8BE85; --warn-bg:#3F3418; --bad:#F09A90; --bad-bg:#4A1F1C; --info:#9EC4AE; --info-bg:#123F2A; --neutral:#BDB398; --neutral-bg:#1B4A31;
@@ -175,7 +175,8 @@ body.is-admin .pay-card:hover{border-color:var(--gold)}
 .prog-card .bars-wm i:nth-child(3){height:100px}
 .prog-card .bars-wm i:nth-child(4){height:130px}
 .prog-card .row1{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.prog-card .eyebrow{font-size:11px;letter-spacing:.02em;color:var(--gold);background:rgba(174,151,104,.16);border:1px solid rgba(174,151,104,.32);border-radius:999px;padding:3px 10px;font-weight:600;white-space:nowrap}
+.prog-card .eyebrow{font-size:11px;letter-spacing:.02em;color:#fff;background:rgba(174,151,104,.16);border:1px solid rgba(174,151,104,.32);border-radius:999px;padding:3px 10px;font-weight:600;white-space:nowrap}
+.prog-card.is-gold-card .eyebrow{color:#fff;background:rgba(0,50,24,.35);border-color:rgba(0,50,24,.5)}
 .prog-card .ref{font-size:11px;color:rgba(255,255,255,.55);font-family:Tajawal,sans-serif}
 .prog-card h4{position:relative;z-index:1;font-family:Tajawal,sans-serif;font-size:18.5px;font-weight:800;line-height:1.35;margin:16px 0 8px}
 .prog-card .meta{position:relative;z-index:1;font-size:12.5px;color:rgba(255,255,255,.68);margin-bottom:auto}
@@ -217,8 +218,10 @@ td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
 tr:last-child td{border-bottom:0}
 tbody tr{cursor:pointer}
 tbody tr:hover td{background:color-mix(in srgb,var(--surface-2) 60%,transparent)}
-td .t{font-weight:600}
+td.t,td .t{font-weight:600}
 td .sub{display:block;font-size:12px;color:var(--muted)}
+#trainersTable td.t{white-space:nowrap}
+#trainersTable td .sub{white-space:nowrap}
 .empty{padding:40px 20px;text-align:center;color:var(--muted)}
 .empty b{display:block;font-family:Tajawal,sans-serif;font-size:17px;color:var(--ink);margin-bottom:4px}
 
@@ -229,6 +232,15 @@ td .sub{display:block;font-size:12px;color:var(--muted)}
 #panel-trainers td .sub,#panel-trainers td .sub a{text-align:start}
 .tbl-center th,.tbl-center td,.rep-trainers th,.rep-trainers td{text-align:center}
 .tbl-center th:first-child,.tbl-center td:first-child,.rep-trainers th:nth-child(2),.rep-trainers td:nth-child(2){text-align:start}
+#trainerPaymentsTable th:first-child,#trainerPaymentsTable td:first-child{text-align:right}
+#trainerPaymentsTable th:nth-child(2),#trainerPaymentsTable td:nth-child(2){text-align:center}
+#trainerPaymentsTable th:nth-child(6),#trainerPaymentsTable td:nth-child(6){text-align:right}
+#orgPaymentsTable th:nth-child(1),#orgPaymentsTable td:nth-child(1),
+#orgPaymentsTable th:nth-child(2),#orgPaymentsTable td:nth-child(2),
+#orgPaymentsTable th:nth-child(5),#orgPaymentsTable td:nth-child(5),
+#orgPaymentsTable th:nth-child(6),#orgPaymentsTable td:nth-child(6),
+#orgPaymentsTable th:nth-child(8),#orgPaymentsTable td:nth-child(8),
+#orgPaymentsTable th:nth-child(9),#orgPaymentsTable td:nth-child(9){text-align:center}
 .rep-trainers th:first-child,.rep-trainers td:first-child{width:48px}
 .tbl-all-center th,.tbl-all-center td{text-align:center}
 .tbl-last-start th:last-child,.tbl-last-start td:last-child{text-align:start}
@@ -332,9 +344,9 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 .pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
 @media (max-width:640px){.pp-grid{grid-template-columns:1fr}}
 
-/* program card (بطاقة) */
-.pcard{border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.pcard-h{background:var(--navy-2);color:#fff;padding:16px 20px;display:flex;gap:14px;align-items:center;border-bottom:3px solid var(--gold)}
+/* program card (بطاقة) — ألوان ثابتة بغض النظر عن وضع التطبيق (فاتح/غامق) عشان تطلع واضحة دايمًا عند الطباعة/المعاينة */
+.pcard{border:1px solid #DDD3BC;border-radius:12px;overflow:hidden;background:#fff;color:#003218}
+.pcard-h{background:#003218;color:#fff;padding:16px 20px;display:flex;gap:14px;align-items:center;border-bottom:3px solid #AE9768}
 .pcard-emblem{height:64px;width:auto;flex-shrink:0}
 .pcard-h .who{flex:1}
 .pcard-h .who b{font-family:Tajawal,sans-serif;font-size:16px;display:block}
@@ -342,18 +354,18 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 .pcard-h .ref{font-size:12px;opacity:.8;text-align:start}
 .pcard-h .ref b{display:block;font-size:14px;opacity:1;font-family:Tajawal,sans-serif}
 .pcard-title{padding:18px 20px 6px}
-.pcard-title h2{font-size:21px;font-weight:800}
-.pcard-title .type{color:var(--muted);font-size:13px;margin-top:4px}
+.pcard-title h2{font-size:21px;font-weight:800;color:#003218}
+.pcard-title .type{color:#5E6B60;font-size:13px;margin-top:4px}
 .pcard-status{display:flex;gap:10px;flex-wrap:wrap;padding:8px 20px 14px}
-.pcard-status .st{border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:200px;flex:1}
-.pcard-status .st small{display:block;color:var(--muted);font-size:11.5px;margin-bottom:4px}
-.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;border-top:1px solid var(--line)}
-.kv div{padding:10px 20px;border-bottom:1px solid var(--line)}
-.kv small{display:block;color:var(--muted);font-size:11.5px}
-.kv b{font-weight:600}
-.pcard-notes{padding:12px 20px;font-size:13.5px;border-top:1px solid var(--line)}
-.pcard-notes small{display:block;color:var(--muted);font-size:11.5px}
-.pcard-f{display:flex;justify-content:space-between;gap:10px;padding:10px 20px;background:var(--surface-2);font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.pcard-status .st{border:1px solid #DDD3BC;border-radius:8px;padding:8px 12px;min-width:200px;flex:1}
+.pcard-status .st small{display:block;color:#5E6B60;font-size:11.5px;margin-bottom:4px}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;border-top:1px solid #DDD3BC}
+.kv div{padding:10px 20px;border-bottom:1px solid #DDD3BC}
+.kv small{display:block;color:#5E6B60;font-size:11.5px}
+.kv b{font-weight:600;color:#003218}
+.pcard-notes{padding:12px 20px;font-size:13.5px;border-top:1px solid #DDD3BC}
+.pcard-notes small{display:block;color:#5E6B60;font-size:11.5px}
+.pcard-f{display:flex;justify-content:space-between;gap:10px;padding:10px 20px;background:#ECE6D6;font-size:11.5px;color:#5E6B60;flex-wrap:wrap}
 
 /* report */
 .report{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px 28px}
@@ -465,7 +477,8 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 /* ---------- المدفوعات: دائرة الاكتمال داخل بطاقة المعرض (نفس مقاس حلقة البرامج) ---------- */
-.pay-prog.is-done{border-top-color:var(--ok-hi)}
+.pay-prog.is-done{border-top-color:#324A31}
+.pay-prog.is-done .eyebrow{color:#fff;background:rgba(0,50,24,.16);border-color:rgba(0,50,24,.32)}
 .pay-prog .stats-row{margin-top:auto;padding-top:18px}
 .pay-status{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .pay-status small{font-size:11px;color:rgba(255,255,255,.6);font-weight:600}
@@ -493,4 +506,4 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 .pay-prog.is-partial .meta{color:rgba(0,50,24,.75)}
 .pay-prog.is-partial .avatar{background:rgba(0,50,24,.12);border-color:rgba(0,50,24,.3);color:#003218}
 .pay-prog.is-partial .pay-status small{color:rgba(0,50,24,.65)}
-.pay-prog.is-partial .eyebrow{color:#003218;background:rgba(0,50,24,.12);border-color:rgba(0,50,24,.25)}
+.pay-prog.is-partial .eyebrow{color:#fff;background:rgba(0,50,24,.12);border-color:rgba(0,50,24,.25)}

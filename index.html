@@ -95,7 +95,7 @@
   <!-- ===== TRAINERS ===== -->
   <section class="panel" id="panel-trainers">
     <div class="section-head"><h2>قاعدة المدربين</h2><span class="spacer"></span><button class="btn primary admin-only" id="btnNewTrainer">＋ إضافة مدرب</button></div>
-    <div class="tbl-wrap"><table>
+    <div class="tbl-wrap"><table id="trainersTable">
       <thead><tr><th>#</th><th>الاسم</th><th>البريد الإلكتروني</th><th>رقم الجوال</th><th>الحالة</th><th>البرامج</th><th>الساعات</th><th class="admin-only"></th></tr></thead>
       <tbody id="trainersBody"></tbody>
     </table></div>
@@ -126,7 +126,7 @@
       <select id="pfPortion"><option value="">كل الدفعات</option></select>
       <select id="pfTrainer"><option value="">كل المدربين</option></select>
     </div>
-    <div class="tbl-wrap"><table>
+    <div class="tbl-wrap"><table id="orgPaymentsTable">
       <thead><tr><th>رقم شهادة الإنجاز</th><th>رقم الفاتورة</th><th>رقم أمر الشراء</th><th>اسم البرنامج</th><th>النوع</th><th>قيمة العقد</th><th>الدفعة المستحقة</th><th>نسبة الاستحقاق</th><th>قيمة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
       <tbody id="programsBodyTr"></tbody>
     </table></div>
@@ -139,7 +139,7 @@
       <select id="tfPortion"><option value="">كل الدفعات</option></select>
       <select id="tfTrainer"><option value="">كل المدربين</option></select>
     </div>
-    <div class="tbl-wrap"><table class="tbl-center">
+    <div class="tbl-wrap"><table class="tbl-center" id="trainerPaymentsTable">
       <thead><tr><th>اسم البرنامج</th><th>اسم المدرب</th><th>الدفعة</th><th>نسبة الاستحقاق</th><th>تاريخ الاستحقاق</th><th>حالة الدفع</th><th class="admin-only"></th></tr></thead>
       <tbody id="trainerPaymentsBody"></tbody>
     </table></div>
@@ -185,7 +185,7 @@
       <div class="form">
         <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><select id="pay_program" required></select></div>
         <div class="field"><label>أمر الشراء</label><input id="pay_po" dir="ltr" readonly placeholder="يُسحب تلقائيًا من رقم أمر الشراء الخاص بالبرنامج"></div>
-        <div class="field"><label>قيمة العقد</label><input type="number" id="pay_contract" min="0" step="0.01"></div>
+        <div class="field"><label>قيمة العقد</label><input type="number" id="pay_contract" min="0" step="0.01" readonly placeholder="يُسحب تلقائيًا من قيمة عقد البرنامج"></div>
         <div class="field full">
           <label>الدفعات</label>
           <div id="payBlocks" class="pp-list"></div>
@@ -260,11 +260,11 @@
         <div class="field full"><label>اسم البرنامج <span class="req">*</span></label><input id="p_title" required></div>
         <div class="field"><label>رقم أمر الشراء</label><input id="p_ref" placeholder="فضلاً قم بإدخال أمر الشراء الصادر من الديوان"></div>
         <div class="field"><label>نوع البرنامج <span class="req">*</span></label><select id="p_type" required></select></div>
-        <div class="field"><label>المدرب <span class="req">*</span></label><select id="p_trainer" required></select></div>
+        <div class="field"><label>المدرب</label><select id="p_trainer"></select></div>
         <div class="field"><label>أسلوب التنفيذ</label><select id="p_mode"><option>حضوري</option><option>افتراضي</option><option>هجين</option></select></div>
         <div class="field"><label>تاريخ البداية <span class="req">*</span></label><input type="date" id="p_start" required lang="en"></div>
         <div class="field"><label>تاريخ النهاية <span class="req">*</span></label><input type="date" id="p_end" required lang="en"></div>
-        <div class="field"><label>عدد الأيام</label><input type="number" id="p_days" min="1" placeholder="يُحسب من التواريخ"></div>
+        <div class="field"><label>عدد الأيام</label><input type="number" id="p_days" min="1" readonly placeholder="يُحسب من التواريخ"></div>
         <div class="field"><label>عدد الساعات التدريبية</label><input type="number" id="p_hours" min="0" step="0.5"></div>
         <div class="field"><label>مكان التنفيذ</label><select id="p_location"></select></div>
         <div class="field"><label>عدد المتدربين</label><input type="number" id="p_participants" min="0"></div>
@@ -352,7 +352,7 @@
         </div>
 
         <form class="login-form" id="loginForm">
-          <div class="field full"><label>اسم المستخدم</label><input type="text" id="activeUser" value="admin@gca.local" readonly dir="ltr"></div>
+          <div class="field full"><label>اسم المستخدم</label><input type="text" id="activeUser" value="admin@yaaseer.sa" dir="ltr"></div>
           <div class="field full"><label>كلمة المرور</label><input type="password" id="activePw" placeholder="كلمة المرور" autocomplete="current-password" dir="ltr"></div>
           <button type="button" class="btn primary block pill" id="btnLoginGo">دخول</button>
         </form>

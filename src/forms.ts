@@ -49,7 +49,12 @@ function programPaymentRowHtml(pp?: ProgramPayment, portion?: string): string {
 function renderProgramPaymentsList(programId: string | null): void {
   const list = $("#programPaymentsList");
   if (!list) return;
-  const rows = programId ? state.programPayments.filter((pp) => pp.program_id === programId) : [];
+  const rows = programId
+    ? state.programPayments
+        .filter((pp) => pp.program_id === programId)
+        .slice()
+        .sort((a, b) => DUE_PORTION_OPTIONS.indexOf(a.due_portion || "") - DUE_PORTION_OPTIONS.indexOf(b.due_portion || ""))
+    : [];
   list.innerHTML = rows.map((pp) => programPaymentRowHtml(pp)).join("");
 }
 
@@ -66,7 +71,7 @@ async function saveProgramPaymentsList(programId: string): Promise<void> {
       entitlement_percent: g(".pp-percent") ? +g(".pp-percent") : null,
       entitlement_value: g(".pp-value") ? +g(".pp-value") : null,
       due_date: g(".pp-date") || null,
-      payment_status: g(".pp-status") || "تم الطلب",
+      payment_status: g(".pp-status") || "غير مستحق",
       coc_number: g(".pp-coc") || null,
       invoice_number: g(".pp-invoice") || null,
     };
@@ -434,14 +439,21 @@ export function wireForms(): void {
     await save(`بطاقة-${(p.ref || p.title).replace(/[\\/:*?"<>|]/g, "-")}.html`, html);
   });
 
+  const updateDaysFromDates = () => {
+    setv("p_days", v("p_start") && v("p_end") ? daysBetween(v("p_start"), v("p_end")) : "");
+  };
   $("#p_start")?.addEventListener("change", () => {
     const endEl = $("#p_end") as HTMLInputElement | null;
     if (endEl && (!v("p_end") || v("p_end") < v("p_start"))) endEl.value = v("p_start");
     // بمجرد تحديد تاريخ البداية يصير البرنامج "قيد التنفيذ" تلقائيًا (ما لم يكن منجزًا أصلًا)
     if (v("p_start") && v("p_statusGca") !== "منجز") setv("p_statusGca", "قيد التنفيذ");
+    updateDaysFromDates();
     updateStageHero();
   });
-  $("#p_end")?.addEventListener("change", updateStageHero);
+  $("#p_end")?.addEventListener("change", () => {
+    updateDaysFromDates();
+    updateStageHero();
+  });
   $("#p_title")?.addEventListener("input", updateStageHero);
   $("#p_mode")?.addEventListener("change", () => updateLocationOptions());
   $("#p_statusGca")?.addEventListener("change", updateStageHero);

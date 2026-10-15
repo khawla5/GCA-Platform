@@ -93,12 +93,10 @@ function wireRoleTabs(): void {
   const pwInput = $("#activePw") as HTMLInputElement | null;
   const goBtn = $("#btnLoginGo") as HTMLButtonElement | null;
 
-  let selectedEmail = ADMIN_EMAIL;
-
   const selectTab = (btn: HTMLButtonElement) => {
-    selectedEmail = btn.dataset.role === "viewer" ? VIEWER_EMAIL : ADMIN_EMAIL;
+    const email = btn.dataset.role === "viewer" ? VIEWER_EMAIL : ADMIN_EMAIL;
     tabs.forEach((t) => t.classList.toggle("active", t === btn));
-    if (userInput) userInput.value = selectedEmail;
+    if (userInput) userInput.value = email;
     if (pwInput) pwInput.value = "";
     clearAuthError();
   };
@@ -106,12 +104,13 @@ function wireRoleTabs(): void {
   tabs.forEach((btn) => btn.addEventListener("click", () => selectTab(btn)));
 
   const attempt = async () => {
+    const email = userInput?.value.trim() || "";
     const password = pwInput?.value || "";
-    if (!password) return;
+    if (!email || !password) return;
     clearAuthError();
     if (goBtn) goBtn.disabled = true;
     try {
-      await signIn(selectedEmail, password);
+      await signIn(email, password);
       if (pwInput) pwInput.value = "";
     } catch (err) {
       showAuthError((err as Error)?.message || "تعذّر تسجيل الدخول — تحقق من كلمة المرور");
@@ -123,6 +122,9 @@ function wireRoleTabs(): void {
   goBtn?.addEventListener("click", attempt);
   pwInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") attempt();
+  });
+  userInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") pwInput?.focus();
   });
 }
 

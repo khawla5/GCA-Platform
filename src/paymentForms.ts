@@ -49,8 +49,8 @@ function payBlockHtml(portion: string, removable: boolean): string {
     <div class="pp-grid">
       <div class="field"><label>الجزء المستحق</label><select class="pb-portion" disabled>${opts(DUE_PORTION_OPTIONS, portion)}</select></div>
       <div class="field"><label>قيمة الاستحقاق</label><input type="number" class="pb-value" min="0" step="0.01"></div>
-      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pb-date" lang="en"></div>
-      <div class="field"><label>حالة الدفع</label><select class="pb-status">${opts(PAYMENT_STATUS.map((s) => s[0]), "تم الطلب")}</select></div>
+      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="pb-date date-empty" lang="en"></div>
+      <div class="field"><label>حالة الدفع</label><select class="pb-status">${opts(PAYMENT_STATUS.map((s) => s[0]), "غير مستحق")}</select></div>
       <div class="field"><label>رقم شهادة الإنجاز (COC)</label><input class="pb-coc"></div>
       <div class="field"><label>رقم الفاتورة</label><input class="pb-invoice"></div>
     </div>
@@ -113,7 +113,7 @@ async function savePayment(): Promise<void> {
         entitlement_percent: contract && value != null ? Math.round((value / contract) * 1000) / 10 : null,
         entitlement_value: value,
         due_date: g(row, ".pb-date") || null,
-        payment_status: g(row, ".pb-status") || "تم الطلب",
+        payment_status: g(row, ".pb-status") || "غير مستحق",
         coc_number: g(row, ".pb-coc") || null,
         invoice_number: g(row, ".pb-invoice") || null,
       });
@@ -150,8 +150,8 @@ function tpBlockHtml(portion: string, removable: boolean, tp?: TrainerPayment | 
     <div class="pp-grid">
       <div class="field"><label>الدفعة</label><select class="tb-portion" disabled>${opts(DUE_PORTION_OPTIONS, portion)}</select></div>
       <div class="field"><label>نسبة الاستحقاق %</label><input type="number" class="tb-percent" min="0" max="100" step="0.1" value="${tp?.entitlement_percent ?? ""}"></div>
-      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="tb-date" lang="en" value="${esc(tp?.due_date || "")}"></div>
-      <div class="field"><label>حالة الدفع</label><select class="tb-status">${opts([...PAYMENT_STATUS.map((s) => s[0]), ...(tp?.payment_status && !PAYMENT_STATUS.some(([s]) => s === tp.payment_status) ? [tp.payment_status] : [])], tp?.payment_status || "تم الطلب")}</select></div>
+      <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="tb-date${tp?.due_date ? "" : " date-empty"}" lang="en" value="${esc(tp?.due_date || "")}"></div>
+      <div class="field"><label>حالة الدفع</label><select class="tb-status">${opts([...PAYMENT_STATUS.map((s) => s[0]), ...(tp?.payment_status && !PAYMENT_STATUS.some(([s]) => s === tp.payment_status) ? [tp.payment_status] : [])], tp?.payment_status || "غير مستحق")}</select></div>
     </div>
   </div>`;
 }
@@ -211,7 +211,7 @@ async function saveTrainerPayment(): Promise<void> {
         due_portion: g(row, ".tb-portion") || null,
         entitlement_percent: g(row, ".tb-percent") ? Math.min(100, +g(row, ".tb-percent")) : null,
         due_date: g(row, ".tb-date") || null,
-        payment_status: g(row, ".tb-status") || "تم الطلب",
+        payment_status: g(row, ".tb-status") || "غير مستحق",
       };
       await upsertTrainerPayment(id, input);
     }
