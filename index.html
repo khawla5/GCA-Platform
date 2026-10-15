@@ -322,7 +322,10 @@
         <div class="field full">
           <label>رابط الـ CV</label>
           <input type="file" id="t_cv" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg">
-          <a id="t_cvCurrent" href="#" target="_blank" rel="noopener" class="hint" style="display:none">📄 عرض الملف الحالي</a>
+          <span id="t_cvCurrentWrap" class="hint" style="display:none">
+            <a id="t_cvCurrent" href="#" target="_blank" rel="noopener">📄 عرض الملف الحالي</a>
+            · <button type="button" id="btnRemoveCv" class="link-btn">حذف المستند</button>
+          </span>
         </div>
         <div class="field full"><label>ملاحظات</label><textarea id="t_notes"></textarea></div>
       </div>

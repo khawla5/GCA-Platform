@@ -258,6 +258,8 @@ async function removeProgram(): Promise<void> {
 }
 
 /* ---------- trainer form ---------- */
+let cvRemoved = false;
+
 export function openTrainerForm(id?: string): void {
   if (state.role !== "admin") return;
   const t = id ? state.trainers.find((x) => x.id === id) : null;
@@ -275,13 +277,15 @@ export function openTrainerForm(id?: string): void {
   setv("t_notes", t?.notes);
   const cvInput = $("#t_cv") as HTMLInputElement | null;
   if (cvInput) cvInput.value = "";
+  cvRemoved = false;
   const cvLink = $("#t_cvCurrent") as HTMLAnchorElement | null;
-  if (cvLink) {
+  const cvWrap = $("#t_cvCurrentWrap") as HTMLElement | null;
+  if (cvLink && cvWrap) {
     if (t?.cv_url) {
       cvLink.href = t.cv_url;
-      cvLink.style.display = "";
+      cvWrap.style.display = "";
     } else {
-      cvLink.style.display = "none";
+      cvWrap.style.display = "none";
     }
   }
   openModal("trainerModal");
@@ -294,7 +298,7 @@ async function saveTrainer(): Promise<void> {
   const id = v("t_id") || null;
   const existing = id ? state.trainers.find((x) => x.id === id) : null;
   const cvFile = ($("#t_cv") as HTMLInputElement | null)?.files?.[0] || null;
-  let cvUrl = existing?.cv_url ?? null;
+  let cvUrl = cvRemoved ? null : existing?.cv_url ?? null;
   if (cvFile) {
     try {
       cvUrl = await uploadTrainerCv(cvFile);
@@ -504,6 +508,11 @@ export function wireForms(): void {
   $("#btnNewTrainer")?.addEventListener("click", () => openTrainerForm());
   $("#btnSaveTrainer")?.addEventListener("click", saveTrainer);
   $("#btnDeleteTrainer")?.addEventListener("click", removeTrainer);
+  $("#btnRemoveCv")?.addEventListener("click", () => {
+    cvRemoved = true;
+    const cvWrap = $("#t_cvCurrentWrap") as HTMLElement | null;
+    if (cvWrap) cvWrap.style.display = "none";
+  });
 
   $("#btnCsvPrograms")?.addEventListener("click", exportProgramsCsv);
   $("#btnCsvTrainers")?.addEventListener("click", exportTrainersCsv);
