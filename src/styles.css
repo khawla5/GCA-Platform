@@ -412,6 +412,10 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-right-inner{border-color:#AA8E60;--ink:#fff;--muted:#fff;--field-ink:#fff;--field-muted:#fff;--field-bg:var(--surface-2);}}
 :root[data-theme="dark"] .login-right-inner{border-color:#AA8E60;--ink:#fff;--muted:#fff;--field-ink:#fff;--field-muted:#fff;--field-bg:var(--surface-2);}
 .login-avatar{display:block;height:116px;width:116px;object-fit:contain;margin:0 auto 16px;border-radius:50%;background:transparent;padding:16px;content:url('/images/gca-emblem-aa8e60.png')}
+/* شعار الديوان في الوضع الفاتح أبيض، ويبقى ذهبيًا في الوضع الداكن */
+.login-avatar{filter:brightness(0) invert(1)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-avatar{filter:none}}
+:root[data-theme="dark"] .login-avatar{filter:none}
 .login-right-inner h2{text-align:center;font-size:26px;font-weight:800;margin-bottom:4px}
 .login-right-inner > p{text-align:center;color:var(--muted);margin:0 0 24px;font-size:13.5px}
 
