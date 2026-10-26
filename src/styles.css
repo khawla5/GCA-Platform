@@ -390,9 +390,9 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 
 /* login / auth — بطاقة عائمة بقطع مائل، فوق خلفية واضحة لنفس صورة المبنى */
 .login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:32px;overflow:hidden}
-.login::before{content:"";position:absolute;inset:0;--tint:rgba(230,220,195,.35);background:linear-gradient(var(--tint),var(--tint)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;z-index:-1}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login::before{--tint:rgba(120,190,150,.3)}}
-:root[data-theme="dark"] .login::before{--tint:rgba(120,190,150,.3)}
+.login::before{content:"";position:absolute;inset:-12px;--tint:rgba(230,220,195,.75);background:linear-gradient(var(--tint),var(--tint)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;filter:blur(8px);z-index:-1}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login::before{--tint:rgba(120,190,150,.75)}}
+:root[data-theme="dark"] .login::before{--tint:rgba(120,190,150,.75)}
 
 .login-card{--login-surface-solid:#e4d4b8;--login-surface:rgba(195, 175, 148, 0.75);--muted:#44554A;color:var(--ink);position:relative;width:min(1320px,96vw);height:min(780px,94vh);display:flex;flex-direction:row;background:var(--login-surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:32px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.25)}
 /* جهة الفورم في الوضع الغامق فقط: #013119 */
