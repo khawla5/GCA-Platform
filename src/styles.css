@@ -389,10 +389,10 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
 
 /* login / auth — بطاقة عائمة بقطع مائل، فوق خلفية واضحة لنفس صورة المبنى */
-.login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:32px;overflow:hidden}
-.login::before{content:"";position:absolute;inset:0;--tint:rgba(239,230,210,.25);background:linear-gradient(var(--tint),var(--tint)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;z-index:-1}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login::before{--tint:rgba(1,36,20,.35)}}
-:root[data-theme="dark"] .login::before{--tint:rgba(1,36,20,.35)}
+.login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:32px;overflow:hidden;--tint:rgba(230,220,195,.75);--tint-bg:rgba(230,220,195,.15)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login{--tint:rgba(120,190,150,.75);--tint-bg:rgba(120,190,150,.15)}}
+:root[data-theme="dark"] .login{--tint:rgba(120,190,150,.75);--tint-bg:rgba(120,190,150,.15)}
+.login::before{content:"";position:absolute;inset:-12px;background:linear-gradient(var(--tint-bg),var(--tint-bg)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;filter:blur(3px);z-index:-1}
 
 .login-card{--login-surface-solid:#e4d4b8;--login-surface:rgba(195, 175, 148, 0.75);--muted:#44554A;color:var(--ink);position:relative;width:min(1320px,96vw);height:min(780px,94vh);display:flex;flex-direction:row;background:var(--login-surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:32px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.25)}
 /* جهة الفورم في الوضع الغامق فقط: #013119 */
@@ -418,7 +418,7 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 /* لوحة الصورة: مؤطّرة بهامش من الداخل، وحوافها مستديرة عبر overflow:hidden على الحاوية،
    بينما الصورة نفسها (طبقة داخلية) تُقصّ بخط مائل — فتظهر خلفية البطاقة نفسها في المنطقة المقصوصة دون أي تصحيح لوني */
 .login-left{flex:0 0 46%;position:relative;margin:22px 0 22px 22px;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:32px;transform:translateZ(0)}
-.login-left-photo{position:absolute;inset:0;background:linear-gradient(rgba(0,60,26,.4),rgba(1,59,27,.3) 50%,rgba(0,26,11,.62)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;clip-path:polygon(0 0,100% 0,63% 100%,0 100%)}
+.login-left-photo{position:absolute;inset:0;background:url('/images/gca-building-5.jpg') center 30%/cover no-repeat;clip-path:polygon(0 0,100% 0,63% 100%,0 100%)}
 /* بوردر يحيط بالصورة بنفس شكلها (يُرسم في loginFrame.ts): أخضر غامق في الفاتح، بيج في الداكن */
 .login-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .login-frame path{fill:none;stroke:#013119;stroke-width:2;stroke-linejoin:round}
