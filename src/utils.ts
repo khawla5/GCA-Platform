@@ -39,6 +39,18 @@ export const today = (): string => new Date().toISOString().slice(0, 10);
 export const daysBetween = (a: string, b: string): number =>
   Math.max(1, Math.round((+new Date(b) - +new Date(a)) / 864e5) + 1);
 
+// عدد أيام التدريب الفعلية بين تاريخين، باستثناء عطلة نهاية الأسبوع (الجمعة والسبت)
+export const workDaysBetween = (a: string, b: string): number => {
+  const start = new Date(a);
+  const end = new Date(b);
+  let count = 0;
+  for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const day = d.getDay(); // 0=الأحد … 5=الجمعة، 6=السبت
+    if (day !== 5 && day !== 6) count++;
+  }
+  return Math.max(1, count);
+};
+
 export const trainerName = (p: Program, trainers: Trainer[]): string =>
   trainers.find((t) => t.id === p.trainer_id)?.name || "—";
 
