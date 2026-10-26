@@ -418,7 +418,7 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 /* لوحة الصورة: مؤطّرة بهامش من الداخل، وحوافها مستديرة عبر overflow:hidden على الحاوية،
    بينما الصورة نفسها (طبقة داخلية) تُقصّ بخط مائل — فتظهر خلفية البطاقة نفسها في المنطقة المقصوصة دون أي تصحيح لوني */
 .login-left{flex:0 0 46%;position:relative;margin:22px 0 22px 22px;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:32px;transform:translateZ(0)}
-.login-left-photo{position:absolute;inset:0;background:linear-gradient(var(--tint),var(--tint)),url('/images/gca-building-5.jpg') center 30%/cover no-repeat;clip-path:polygon(0 0,100% 0,63% 100%,0 100%)}
+.login-left-photo{position:absolute;inset:0;background:url('/images/gca-building-5.jpg') center 30%/cover no-repeat;clip-path:polygon(0 0,100% 0,63% 100%,0 100%)}
 /* بوردر يحيط بالصورة بنفس شكلها (يُرسم في loginFrame.ts): أخضر غامق في الفاتح، بيج في الداكن */
 .login-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .login-frame path{fill:none;stroke:#013119;stroke-width:2;stroke-linejoin:round}
