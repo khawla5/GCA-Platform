@@ -2,7 +2,7 @@ import { DUE_PORTION_OPTIONS, PAYMENT_STATUS, TYPES } from "./constants";
 import { deleteProgram, deleteProgramPayment, deleteTrainer, upsertProgram, upsertProgramPayment, upsertTrainer, uploadTrainerCv } from "./data";
 import { state } from "./state";
 import type { ProgramInput, ProgramPayment, ProgramPaymentInput, TrainerInput } from "./types";
-import { $, $$, closeModal, csv, daysBetween, esc, fill, openModal, requireAdmin, save, setv, toast, today, trainerName, v } from "./utils";
+import { $, $$, closeModal, csv, daysBetween, esc, fill, openModal, requireAdmin, save, setv, toast, today, trainerName, v, workDaysBetween } from "./utils";
 import { buildProgressLine, cardHtml } from "./render";
 import { buildPaymentHero } from "./payments";
 import { refreshData } from "./boot";
@@ -221,7 +221,7 @@ async function persistProgram(): Promise<void> {
     mode: v("p_mode"),
     start_date: v("p_start"),
     end_date: v("p_end"),
-    days: +v("p_days") || daysBetween(v("p_start"), v("p_end")),
+    days: +v("p_days") || workDaysBetween(v("p_start"), v("p_end")),
     hours: +v("p_hours") || 0,
     location: v("p_location"),
     target_group: existing?.target_group ?? null,
@@ -444,7 +444,7 @@ export function wireForms(): void {
   });
 
   const updateDaysFromDates = () => {
-    setv("p_days", v("p_start") && v("p_end") ? daysBetween(v("p_start"), v("p_end")) : "");
+    setv("p_days", v("p_start") && v("p_end") ? workDaysBetween(v("p_start"), v("p_end")) : "");
   };
   $("#p_start")?.addEventListener("change", () => {
     const endEl = $("#p_end") as HTMLInputElement | null;

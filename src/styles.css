@@ -394,7 +394,7 @@ legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 6px}
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login::before{--tint:rgba(1,36,20,.35)}}
 :root[data-theme="dark"] .login::before{--tint:rgba(1,36,20,.35)}
 
-.login-card{--login-surface-solid:#e4d4b8;--login-surface:rgba(201, 191, 174, 0.55);--muted:#44554A;color:var(--ink);position:relative;width:min(1320px,96vw);height:min(780px,94vh);display:flex;flex-direction:row;background:var(--login-surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:32px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.25)}
+.login-card{--login-surface-solid:#e4d4b8;--login-surface:rgba(195, 175, 148, 0.75);--muted:#44554A;color:var(--ink);position:relative;width:min(1320px,96vw);height:min(780px,94vh);display:flex;flex-direction:row;background:var(--login-surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:32px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.25)}
 /* جهة الفورم في الوضع الغامق فقط: #013119 */
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .login-card{--login-surface-solid:#013119;--login-surface:rgba(1,49,25,.7);--ink:#F3EDDD;--muted:#BDB398;--surface-2:rgba(255,255,255,.07);--line:rgba(174,151,104,.4);--bad:#F09A90;--bad-bg:#4A1F1C;}}
 :root[data-theme="dark"] .login-card{--login-surface-solid:#013119;--login-surface:rgba(1,49,25,.7);--ink:#F3EDDD;--muted:#BDB398;--surface-2:rgba(255,255,255,.07);--line:rgba(174,151,104,.4);--bad:#F09A90;--bad-bg:#4A1F1C;}
